@@ -25,3 +25,10 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
 .upload-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .upload-label { color: #aaa; font-size: 15px; }
 .upload-status { min-height: 1.4em; color: #ffd479; font-size: 15px; }
+
+.artifact-strip { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  max-width: 480px; }
+.artifact-strip img { width: 96px; height: 54px; object-fit: cover;
+  border-radius: 8px; opacity: 0; animation: artifact-in 600ms ease forwards; }
+@keyframes artifact-in { to { opacity: 1; } }
+.replay-clip { margin-top: 16px; background: #2d2d3a; }

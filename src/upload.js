@@ -1,20 +1,33 @@
-// Read an NDJSON experience stream; call onStatus per status event,
-// resolve with the scene, reject on error events or missing scene.
-export async function consumeExperienceStream(response, { onStatus }) {
+// src/upload.js
+
+// Read an NDJSON experience stream, dispatching callbacks as artifacts arrive.
+// Resolves with { scene, images, clipUrl } when the stream ends.
+export async function consumeExperienceStream(
+  response,
+  { onStatus = () => {}, onScene = () => {}, onImage = () => {}, onClip = () => {} } = {},
+) {
   if (!response.ok) {
     throw new Error(`Upload failed (${response.status ?? 'network error'})`)
   }
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
-  let scene = null
+  const summary = { scene: null, images: {}, clipUrl: null }
 
   const handleLine = (line) => {
     if (!line.trim()) return
     const event = JSON.parse(line)
-    if (event.type === 'status') onStatus(event.label)
-    else if (event.type === 'scene') scene = event.scene
-    else if (event.type === 'error') throw new Error(event.message)
+    if (event.type === 'status') onStatus(event.label, event.stage)
+    else if (event.type === 'scene') {
+      summary.scene = event.scene
+      onScene(event.scene)
+    } else if (event.type === 'image') {
+      summary.images[event.index] = event.src
+      onImage(event.index, event.src)
+    } else if (event.type === 'clip') {
+      summary.clipUrl = event.url
+      onClip(event.url)
+    } else if (event.type === 'error') throw new Error(event.message)
   }
 
   while (true) {
@@ -29,8 +42,8 @@ export async function consumeExperienceStream(response, { onStatus }) {
   }
   if (buffer.trim()) handleLine(buffer)
 
-  if (!scene) throw new Error('Stream ended with no scene.')
-  return scene
+  if (!summary.scene) throw new Error('Stream ended with no scene.')
+  return summary
 }
 
 // Convert a File to { imageBase64, mediaType } for the API.
@@ -47,13 +60,13 @@ export function fileToBase64(file) {
   })
 }
 
-// Full upload flow: POST the photo, stream progress, return the scene.
-export async function requestExperience(file, { onStatus }) {
+// Full upload flow: POST the photo, dispatch artifact callbacks, resolve at stream end.
+export async function requestExperience(file, handlers) {
   const payload = await fileToBase64(file)
   const response = await fetch('/api/experience', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return consumeExperienceStream(response, { onStatus })
+  return consumeExperienceStream(response, handlers)
 }

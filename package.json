@@ -7,7 +7,7 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "server": "node server/index.js"
+    "server": "node --env-file-if-exists=.env server/index.js"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",

@@ -3,20 +3,13 @@ import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenAI } from '@google/genai'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
 import { loadReferenceImages, generateBeatImages } from './images.js'
-import { generateSceneClip } from './video.js'
+import { generateBeatClips } from './video.js'
+import { loadVoiceConfig, generateBeatSpeech } from './speech.js'
 import { GENERATED_DIR } from './paths.js'
 
 function defaultGenAi() {
   if (!process.env.GEMINI_API_KEY) return null
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-}
-
-// Pick the most dramatic beat to animate: first high-intensity shake, else beat 0.
-function heroBeatIndex(scene) {
-  const i = scene.beats.findIndex((b) =>
-    (b.effects ?? []).some((e) => e.type === 'shake' && e.intensity === 'high'),
-  )
-  return i >= 0 ? i : 0
 }
 
 export async function runExperiencePipeline({
@@ -26,8 +19,10 @@ export async function runExperiencePipeline({
   client = new Anthropic(),
   genAi = defaultGenAi(),
   references = loadReferenceImages(),
+  voiceConfig = loadVoiceConfig(),
   saveDir = GENERATED_DIR,
   sleep,
+  fetchImpl,
 }) {
   emit({ type: 'status', stage: 'reading', label: 'Reading the page...' })
 
@@ -67,37 +62,39 @@ export async function runExperiencePipeline({
   const scene = JSON.parse(textBlock.text)
   emit({ type: 'scene', scene })
 
-  // Phase B visuals — skip gracefully when unavailable (Phase A behavior preserved).
-  if (!genAi || references.length === 0) {
+  // Visuals and speech — skip gracefully when unavailable (Phase A behavior preserved).
+  const canDraw = Boolean(genAi) && references.length > 0
+  const canSpeak = Boolean(voiceConfig)
+
+  if (!canDraw && !canSpeak) {
     emit({ type: 'status', stage: 'done', label: 'Experience ready!' })
     return
   }
 
-  emit({ type: 'status', stage: 'drawing', label: 'Drawing the scenes...' })
-  const images = await generateBeatImages({ scene, references, emit, ai: genAi })
+  emit({ type: 'status', stage: 'drawing', label: 'Illustrating and voicing the scenes...' })
+  const [images] = await Promise.all([
+    canDraw
+      ? generateBeatImages({ scene, references, emit, ai: genAi })
+      : Promise.resolve([]),
+    canSpeak
+      ? generateBeatSpeech({
+          scene, config: voiceConfig, emit, saveDir,
+          ...(fetchImpl ? { fetchImpl } : {}),
+        })
+      : Promise.resolve([]),
+  ])
 
-  // Frontend starts the image-backed experience on this signal;
-  // the clip keeps generating in the background.
-  emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scene...' })
+  // Frontend starts the image+voice experience on this signal;
+  // per-beat clips keep generating in the background.
+  emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })
 
-  const heroIdx = heroBeatIndex(scene)
-  const hero = images.find((img) => img.index === heroIdx) ?? images[0]
-  if (hero) {
+  if (images.length > 0) {
     try {
-      await generateSceneClip({
-        imageBase64: hero.src.slice(hero.src.indexOf(',') + 1),
-        // Pass the actual encoding from the data URL (Nano Banana may return JPEG).
-        mimeType: hero.src.slice(5, hero.src.indexOf(';')),
-        prompt:
-          `${scene.beats[hero.index].amplifiedCaption}. ` +
-          `Cinematic children's storybook animation, gentle camera movement, matching the illustration's art style.`,
-        emit,
-        ai: genAi,
-        saveDir,
+      await generateBeatClips({
+        scene, images, emit, ai: genAi, saveDir,
         ...(sleep ? { sleep } : {}),
       })
     } catch (err) {
-      // Clip is an upgrade, not a requirement — the image experience already played.
       console.error('clip generation failed:', err?.message ?? err)
       emit({ type: 'status', stage: 'animating', label: 'Animation unavailable this time.' })
     }

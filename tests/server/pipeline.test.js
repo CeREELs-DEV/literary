@@ -12,6 +12,7 @@ const validScene = {
       duration: 3000,
       narration: 'The door slammed shut.',
       effects: [{ type: 'shake', intensity: 'high', duration: 600 }],
+      speech: [{ speaker: 'narrator', text: 'The door slammed shut.', delivery: 'normal' }],
     },
   ],
 }
@@ -147,5 +148,55 @@ describe('runExperiencePipeline — Phase B visuals', () => {
     expect(events.filter((e) => e.type === 'clip')).toHaveLength(0)
     expect(events.filter((e) => e.type === 'error')).toHaveLength(0)
     expect(events.at(-1)).toMatchObject({ type: 'status', stage: 'done' })
+  })
+})
+
+describe('runExperiencePipeline — Phase C speech and per-beat clips', () => {
+  const base = { imageBase64: 'aGVsbG8=', mediaType: 'image/jpeg' }
+  const references = [{ data: 'cmVm', mimeType: 'image/png' }]
+  const voiceConfig = {
+    apiKey: 'k',
+    voices: { narrator: 'n', 'character-1': 'd1', 'character-2': 'd2' },
+  }
+  const fakeFetch = () =>
+    vi.fn(async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1]).buffer }))
+
+  it('emits speech events alongside images during drawing', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({
+      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
+      voiceConfig, fetchImpl: fakeFetch(),
+      saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    const types = emit.mock.calls.map((c) => c[0].type)
+    expect(types).toContain('speech')
+    expect(types).toContain('image')
+    expect(types).toContain('clip')
+    // clip events are indexed now
+    const clip = emit.mock.calls.map((c) => c[0]).find((e) => e.type === 'clip')
+    expect(clip.index).toBeDefined()
+  })
+
+  it('generates speech even when visuals are unavailable', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({
+      ...base, emit, client: fakeClient(), genAi: null, references: [],
+      voiceConfig, fetchImpl: fakeFetch(), saveDir: '/tmp/generated',
+    })
+    const types = emit.mock.calls.map((c) => c[0].type)
+    expect(types).toContain('speech')
+    expect(types).not.toContain('image')
+    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
+  })
+
+  it('skips speech gracefully without voiceConfig (existing visual path intact)', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({
+      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
+      voiceConfig: null, saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    const types = emit.mock.calls.map((c) => c[0].type)
+    expect(types).not.toContain('speech')
+    expect(types).toContain('image')
   })
 })

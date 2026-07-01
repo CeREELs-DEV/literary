@@ -29,6 +29,7 @@ export function loadVoiceConfig(env = process.env) {
 // Beats are processed sequentially to respect API concurrency limits; a failing
 // beat is skipped (the frontend falls back to browser TTS for it).
 export async function generateBeatSpeech({ scene, config, emit, saveDir, fetchImpl = fetch }) {
+  fs.mkdirSync(saveDir, { recursive: true })
   const results = []
   for (const [index, beat] of scene.beats.entries()) {
     try {

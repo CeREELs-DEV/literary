@@ -25,6 +25,11 @@ export function loadReferenceImages(dir = DEFAULT_REFERENCE_DIR) {
     }))
 }
 
+// Detect the actual encoding of generated image bytes (the API may return JPEG or PNG).
+export function sniffImageMime(base64) {
+  return base64.startsWith('/9j/') ? 'image/jpeg' : 'image/png'
+}
+
 function beatPrompt(scene, beat) {
   return (
     `The attached reference images show the characters and art style of a children's story ` +
@@ -48,7 +53,13 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
         input: [{ type: 'text', text: beatPrompt(scene, beat) }, ...referenceParts],
         response_format: { type: 'image', aspect_ratio: '16:9' },
       })
-      const src = `data:image/png;base64,${interaction.output_image.data}`
+      const data = interaction?.output_image?.data
+      if (!data) {
+        // Diagnosable failure on API-shape drift instead of a silent black screen.
+        console.warn(`no image data in response for beat ${index}`)
+        throw new Error(`no image data in response for beat ${index}`)
+      }
+      const src = `data:${sniffImageMime(data)};base64,${data}`
       emit({ type: 'image', index, src })
       return { index, src }
     }),

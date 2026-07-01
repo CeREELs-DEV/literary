@@ -62,7 +62,7 @@ describe('generateSceneClip', () => {
     expect(params.model).toBe('veo-3.1-fast-generate-preview')
     expect(params.image).toEqual({ imageBytes: 'aW1n', mimeType: 'image/png' })
     expect(params.config).toEqual({
-      durationSeconds: '8',
+      durationSeconds: 8, // number — the API rejects string values
       resolution: '720p',
       aspectRatio: '16:9',
     })

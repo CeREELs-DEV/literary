@@ -18,7 +18,8 @@ export async function generateSceneClip({
     model: 'veo-3.1-fast-generate-preview',
     prompt,
     image: { imageBytes: imageBase64, mimeType },
-    config: { durationSeconds: '8', resolution: '720p', aspectRatio: '16:9' },
+    // durationSeconds must be a NUMBER — the API rejects string values.
+    config: { durationSeconds: 8, resolution: '720p', aspectRatio: '16:9' },
   })
 
   while (!operation.done) {

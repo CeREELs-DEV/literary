@@ -51,7 +51,11 @@ async function playScene(rawScene, { images = {}, clipUrl = null, withBgm = fals
   )
 
   const engine = createTimelineEngine({ stage })
-  await engine.play({ ...scene, beats })
+  try {
+    await engine.play({ ...scene, beats })
+  } finally {
+    stopBgm() // don't keep looping after the experience ends
+  }
 }
 
 startBtn?.addEventListener('click', () => {

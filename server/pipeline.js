@@ -86,6 +86,8 @@ export async function runExperiencePipeline({
     try {
       await generateSceneClip({
         imageBase64: hero.src.slice(hero.src.indexOf(',') + 1),
+        // Pass the actual encoding from the data URL (Nano Banana may return JPEG).
+        mimeType: hero.src.slice(5, hero.src.indexOf(';')),
         prompt:
           `${scene.beats[hero.index].amplifiedCaption}. ` +
           `Cinematic children's storybook animation, gentle camera movement, matching the illustration's art style.`,
@@ -94,8 +96,9 @@ export async function runExperiencePipeline({
         saveDir,
         ...(sleep ? { sleep } : {}),
       })
-    } catch {
+    } catch (err) {
       // Clip is an upgrade, not a requirement — the image experience already played.
+      console.error('clip generation failed:', err?.message ?? err)
       emit({ type: 'status', stage: 'animating', label: 'Animation unavailable this time.' })
     }
   }

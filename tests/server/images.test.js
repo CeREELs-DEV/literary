@@ -1,6 +1,15 @@
 // tests/server/images.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { generateBeatImages } from '../../server/images.js'
+import { generateBeatImages, sniffImageMime } from '../../server/images.js'
+
+describe('sniffImageMime', () => {
+  it('detects JPEG bytes by base64 magic prefix', () => {
+    expect(sniffImageMime('/9j/4AAQSkZJRg')).toBe('image/jpeg')
+  })
+  it('defaults to PNG otherwise', () => {
+    expect(sniffImageMime('iVBORw0KGgo')).toBe('image/png')
+  })
+})
 
 const scene = {
   id: 's', title: 't',

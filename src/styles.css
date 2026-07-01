@@ -1,0 +1,23 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #0d0d12; color: #f5f5f5; }
+.screen { min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px; }
+.hidden { display: none; }
+button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
+  background: #6c5ce7; color: #fff; cursor: pointer; }
+
+#stage { position: relative; width: 90vw; max-width: 900px; height: 70vh;
+  overflow: hidden; border-radius: 16px; background: #14141c; }
+#stage > div { position: absolute; inset: 0; }
+#clip-layer, #image-layer { background-size: cover; background-position: center; }
+#flash-layer { pointer-events: none; opacity: 0; background: #fff; }
+#text-layer { display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 32px; gap: 8px; }
+#beat-text { font-size: 28px; line-height: 1.5; }
+#beat-caption { font-size: 20px; color: #ffd479; font-style: italic; opacity: 0.9; }
+
+/* 카메라 흔들림 */
+@keyframes shake-low  { 10%,90% { transform: translate(-1px,0); } 50% { transform: translate(1px,1px); } }
+@keyframes shake-high { 10%,90% { transform: translate(-6px,-4px); } 50% { transform: translate(8px,6px); } }
+.shake-low  { animation: shake-low  var(--shake-dur,400ms) ease-in-out; }
+.shake-high { animation: shake-high var(--shake-dur,600ms) ease-in-out; }

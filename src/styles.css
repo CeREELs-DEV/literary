@@ -16,7 +16,7 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
 #beat-text { font-size: 28px; line-height: 1.5; }
 #beat-caption { font-size: 20px; color: #ffd479; font-style: italic; opacity: 0.9; }
 
-/* 카메라 흔들림 */
+/* camera shake */
 @keyframes shake-low  { 10%,90% { transform: translate(-1px,0); } 50% { transform: translate(1px,1px); } }
 @keyframes shake-high { 10%,90% { transform: translate(-6px,-4px); } 50% { transform: translate(8px,6px); } }
 .shake-low  { animation: shake-low  var(--shake-dur,400ms) ease-in-out; }

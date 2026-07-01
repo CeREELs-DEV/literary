@@ -8,18 +8,18 @@ describe('shake', () => {
     document.body.appendChild(stage)
   })
 
-  it('high 강도는 shake-high 클래스를 붙인다', () => {
+  it('applies the shake-high class for high intensity', () => {
     shake(stage, { intensity: 'high', duration: 600 })
     expect(stage.classList.contains('shake-high')).toBe(true)
     expect(stage.style.getPropertyValue('--shake-dur')).toBe('600ms')
   })
 
-  it('기본 강도는 shake-low 클래스를 붙인다', () => {
+  it('applies the shake-low class by default', () => {
     shake(stage, {})
     expect(stage.classList.contains('shake-low')).toBe(true)
   })
 
-  it('animationend 이후 클래스를 제거한다', () => {
+  it('removes the class after animationend', () => {
     shake(stage, { intensity: 'high', duration: 600 })
     stage.dispatchEvent(new Event('animationend'))
     expect(stage.classList.contains('shake-high')).toBe(false)

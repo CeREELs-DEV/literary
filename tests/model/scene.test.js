@@ -4,30 +4,30 @@ import { validateScene } from '../../src/model/scene.js'
 describe('validateScene', () => {
   const validScene = {
     id: 'sample',
-    title: '샘플',
+    title: 'Sample',
     beats: [
-      { text: '문이 닫혔다.', duration: 1000, effects: [{ type: 'shake', intensity: 'high' }] },
+      { text: 'The door slammed shut.', duration: 1000, effects: [{ type: 'shake', intensity: 'high' }] },
     ],
   }
 
-  it('유효한 씬은 그대로 반환한다', () => {
+  it('returns a valid scene unchanged', () => {
     expect(validateScene(validScene)).toEqual(validScene)
   })
 
-  it('id가 없으면 던진다', () => {
+  it('throws if id is missing', () => {
     expect(() => validateScene({ ...validScene, id: undefined })).toThrow(/id/)
   })
 
-  it('beats가 비어 있으면 던진다', () => {
+  it('throws if beats is empty', () => {
     expect(() => validateScene({ ...validScene, beats: [] })).toThrow(/beats/)
   })
 
-  it('beat.duration이 양수가 아니면 던진다', () => {
+  it('throws if beat.duration is not positive', () => {
     const bad = { ...validScene, beats: [{ text: 'x', duration: 0, effects: [] }] }
     expect(() => validateScene(bad)).toThrow(/duration/)
   })
 
-  it('effect.type이 없으면 던진다', () => {
+  it('throws if effect.type is missing', () => {
     const bad = { ...validScene, beats: [{ text: 'x', duration: 100, effects: [{ intensity: 'high' }] }] }
     expect(() => validateScene(bad)).toThrow(/type/)
   })

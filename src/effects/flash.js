@@ -4,7 +4,7 @@ export function flash(stage, { color = '#fff', strength = 0.6, duration = 300 } 
   layer.style.background = color
   layer.style.transition = 'none'
   layer.style.opacity = String(strength)
-  // 다음 프레임에 페이드 아웃
+  // fade out on the next frame
   requestAnimationFrame(() => {
     layer.style.transition = `opacity ${duration}ms ease-out`
     layer.style.opacity = '0'

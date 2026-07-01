@@ -3,3 +3,4 @@ dist
 .claude/
 .omc/
 .env
+server/generated/

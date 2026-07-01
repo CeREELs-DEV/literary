@@ -1,10 +1,14 @@
 // server/app.js
 import express from 'express'
+import fs from 'node:fs'
 import { runExperiencePipeline } from './pipeline.js'
+import { GENERATED_DIR } from './paths.js'
 
 export function createApp({ pipeline = runExperiencePipeline } = {}) {
   const app = express()
   app.use(express.json({ limit: '20mb' })) // base64 book photos
+  fs.mkdirSync(GENERATED_DIR, { recursive: true })
+  app.use('/api/media', express.static(GENERATED_DIR))
 
   app.get('/api/health', (req, res) => {
     res.json({ ok: true })

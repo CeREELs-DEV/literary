@@ -36,7 +36,7 @@ export const SCENE_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['text', 'amplifiedCaption', 'duration', 'narration', 'effects'],
+        required: ['text', 'amplifiedCaption', 'duration', 'narration', 'effects', 'speech'],
         properties: {
           text: { type: 'string', description: 'verbatim sentence(s) from the page' },
           amplifiedCaption: {
@@ -48,6 +48,28 @@ export const SCENE_SCHEMA = {
           effects: {
             type: 'array',
             items: { anyOf: [shakeEffect, flashEffect] },
+          },
+          speech: {
+            type: 'array',
+            description:
+              'the beat text split into voice segments, in reading order (1-4 segments)',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['speaker', 'text', 'delivery'],
+              properties: {
+                speaker: {
+                  enum: ['narrator', 'character-1', 'character-2'],
+                  description:
+                    'narrator for prose; character-1/2 for quoted dialogue, assigned consistently',
+                },
+                text: { type: 'string', description: 'the exact words to speak' },
+                delivery: {
+                  enum: ['normal', 'whisper', 'excited', 'shout', 'sad'],
+                  description: 'vocal delivery implied by the text',
+                },
+              },
+            },
           },
         },
       },
@@ -66,6 +88,14 @@ Rules:
   the caption might be "The whole house shuddered with a thud". Evocative, concrete, sensory.
 - beat.narration: copy of beat.text (used for read-aloud).
 - beat.duration: 2500-4500 ms depending on text length.
+- beat.speech: split the beat's text into voice segments in reading order.
+  Prose and attribution ("she said") go to speaker "narrator". Quoted dialogue goes to
+  "character-1" or "character-2" — assign each story character one id and keep it
+  consistent across all beats. Strip the surrounding quotes from dialogue text.
+- delivery: infer from the text. "...he whispered" -> the dialogue segment gets
+  delivery "whisper". Shouting/exclamations -> "shout". Excitement -> "excited".
+  Sorrow -> "sad". Otherwise "normal". The narrator is usually "normal" but may
+  whisper for tense, quiet moments.
 - effects: use shake for physical impact/movement (high for slams, crashes, thunder;
   low for wind, trembling, footsteps). Use flash for light/impact moments
   (white flash for lightning/brightness, dark flash color #000000 for dread/impact).

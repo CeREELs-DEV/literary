@@ -39,4 +39,23 @@ describe('SCENE_SCHEMA', () => {
     expect(typeof USER_INSTRUCTION).toBe('string')
     expect(USER_INSTRUCTION.length).toBeGreaterThan(0)
   })
+
+  it('defines speech segments with speaker and delivery enums', () => {
+    const speech = SCENE_SCHEMA.properties.beats.items.properties.speech
+    expect(SCENE_SCHEMA.properties.beats.items.required).toContain('speech')
+    expect(speech.items.required).toEqual(['speaker', 'text', 'delivery'])
+    expect(speech.items.properties.speaker.enum).toEqual([
+      'narrator', 'character-1', 'character-2',
+    ])
+    expect(speech.items.properties.delivery.enum).toEqual([
+      'normal', 'whisper', 'excited', 'shout', 'sad',
+    ])
+    expect(speech.items.additionalProperties).toBe(false)
+  })
+
+  it('prompt instructs dialogue splitting and delivery tagging', () => {
+    expect(SYSTEM_PROMPT).toMatch(/speech/)
+    expect(SYSTEM_PROMPT).toMatch(/whisper/i)
+    expect(SYSTEM_PROMPT).toMatch(/character-1/)
+  })
 })

@@ -1,12 +1,33 @@
 // server/pipeline.js
 import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenAI } from '@google/genai'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
+import { loadReferenceImages, generateBeatImages } from './images.js'
+import { generateSceneClip } from './video.js'
+import { GENERATED_DIR } from './paths.js'
+
+function defaultGenAi() {
+  if (!process.env.GEMINI_API_KEY) return null
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+}
+
+// Pick the most dramatic beat to animate: first high-intensity shake, else beat 0.
+function heroBeatIndex(scene) {
+  const i = scene.beats.findIndex((b) =>
+    (b.effects ?? []).some((e) => e.type === 'shake' && e.intensity === 'high'),
+  )
+  return i >= 0 ? i : 0
+}
 
 export async function runExperiencePipeline({
   imageBase64,
   mediaType,
   emit,
   client = new Anthropic(),
+  genAi = defaultGenAi(),
+  references = loadReferenceImages(),
+  saveDir = GENERATED_DIR,
+  sleep,
 }) {
   emit({ type: 'status', stage: 'reading', label: 'Reading the page...' })
 
@@ -45,4 +66,39 @@ export async function runExperiencePipeline({
 
   const scene = JSON.parse(textBlock.text)
   emit({ type: 'scene', scene })
+
+  // Phase B visuals — skip gracefully when unavailable (Phase A behavior preserved).
+  if (!genAi || references.length === 0) {
+    emit({ type: 'status', stage: 'done', label: 'Experience ready!' })
+    return
+  }
+
+  emit({ type: 'status', stage: 'drawing', label: 'Drawing the scenes...' })
+  const images = await generateBeatImages({ scene, references, emit, ai: genAi })
+
+  // Frontend starts the image-backed experience on this signal;
+  // the clip keeps generating in the background.
+  emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scene...' })
+
+  const heroIdx = heroBeatIndex(scene)
+  const hero = images.find((img) => img.index === heroIdx) ?? images[0]
+  if (hero) {
+    try {
+      await generateSceneClip({
+        imageBase64: hero.src.slice(hero.src.indexOf(',') + 1),
+        prompt:
+          `${scene.beats[hero.index].amplifiedCaption}. ` +
+          `Cinematic children's storybook animation, gentle camera movement, matching the illustration's art style.`,
+        emit,
+        ai: genAi,
+        saveDir,
+        ...(sleep ? { sleep } : {}),
+      })
+    } catch {
+      // Clip is an upgrade, not a requirement — the image experience already played.
+      emit({ type: 'status', stage: 'animating', label: 'Animation unavailable this time.' })
+    }
+  }
+
+  emit({ type: 'status', stage: 'done', label: 'Experience complete!' })
 }

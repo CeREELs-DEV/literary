@@ -40,7 +40,7 @@ describe('runExperiencePipeline', () => {
     })
     const types = emit.mock.calls.map((c) => c[0].type)
     expect(types[0]).toBe('status')
-    expect(types[types.length - 1]).toBe('scene')
+    expect(types).toContain('scene')
     const sceneEvent = emit.mock.calls.find((c) => c[0].type === 'scene')[0]
     expect(sceneEvent.scene).toEqual(validScene)
   })
@@ -76,5 +76,76 @@ describe('runExperiencePipeline', () => {
       }),
     ).rejects.toThrow(/refus/i)
     expect(emit.mock.calls.find((c) => c[0].type === 'scene')).toBeUndefined()
+  })
+})
+
+// --- Phase B additions ---
+
+function fakeGenAi() {
+  return {
+    interactions: {
+      create: vi.fn(async () => ({ output_image: { data: 'aW1n' } })),
+    },
+    models: {
+      generateVideos: vi.fn(async () => ({
+        done: true,
+        response: { generatedVideos: [{ video: { name: 'files/x' } }] },
+      })),
+    },
+    operations: { getVideosOperation: vi.fn() },
+    files: { download: vi.fn(async () => {}) },
+  }
+}
+
+describe('runExperiencePipeline — Phase B visuals', () => {
+  const base = { imageBase64: 'aGVsbG8=', mediaType: 'image/jpeg' }
+  const references = [{ data: 'cmVm', mimeType: 'image/png' }]
+
+  it('skips visual stages gracefully when genAi is unavailable', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({ ...base, emit, client: fakeClient(), genAi: null, references })
+    const types = emit.mock.calls.map((c) => c[0].type)
+    expect(types).toContain('scene')
+    expect(types).not.toContain('image')
+    expect(types).not.toContain('clip')
+    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
+  })
+
+  it('skips visual stages gracefully when no reference images exist', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({ ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references: [] })
+    const types = emit.mock.calls.map((c) => c[0].type)
+    expect(types).not.toContain('image')
+    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
+  })
+
+  it('runs drawing then animating stages and emits images and clip', async () => {
+    const emit = vi.fn()
+    await runExperiencePipeline({
+      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
+      saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    const events = emit.mock.calls.map((c) => c[0])
+    const stages = events.filter((e) => e.type === 'status').map((e) => e.stage)
+    expect(stages).toEqual(['reading', 'designing', 'drawing', 'animating', 'done'])
+    expect(events.filter((e) => e.type === 'image')).toHaveLength(1) // validScene has 1 beat
+    expect(events.filter((e) => e.type === 'clip')).toHaveLength(1)
+    // scene must arrive BEFORE drawing starts (frontend shows artifacts progressively)
+    expect(events.findIndex((e) => e.type === 'scene'))
+      .toBeLessThan(events.findIndex((e) => e.type === 'status' && e.stage === 'drawing'))
+  })
+
+  it('still reaches done when clip generation fails', async () => {
+    const genAi = fakeGenAi()
+    genAi.models.generateVideos = vi.fn(async () => { throw new Error('veo down') })
+    const emit = vi.fn()
+    await runExperiencePipeline({
+      ...base, emit, client: fakeClient(), genAi, references,
+      saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    const events = emit.mock.calls.map((c) => c[0])
+    expect(events.filter((e) => e.type === 'clip')).toHaveLength(0)
+    expect(events.filter((e) => e.type === 'error')).toHaveLength(0)
+    expect(events.at(-1)).toMatchObject({ type: 'status', stage: 'done' })
   })
 })

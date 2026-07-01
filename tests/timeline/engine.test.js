@@ -49,3 +49,38 @@ describe('createTimelineEngine', () => {
     await expect(done).resolves.toBeUndefined()
   })
 })
+
+describe('createTimelineEngine — audio-synced beats', () => {
+  const audioScene = {
+    id: 's', title: 't',
+    beats: [
+      {
+        text: 'A', duration: 99999, narration: 'A',
+        audioUrls: ['/api/media/a1.mp3', '/api/media/a2.mp3'],
+        effects: [],
+      },
+      { text: 'B', duration: 1, effects: [] },
+    ],
+  }
+
+  it('advances when the audio chain ends instead of the fixed duration', async () => {
+    const apply = vi.fn()
+    const played = []
+    const playAudio = vi.fn(async (url) => { played.push(url) })
+    const engine = createTimelineEngine({ stage: {}, apply, playAudio })
+    await engine.play(audioScene)
+    expect(played).toEqual(['/api/media/a1.mp3', '/api/media/a2.mp3'])
+    // beat B was reached without waiting 99999ms
+    expect(apply.mock.calls.some((c) => c[1].type === 'text' && c[1].text === 'B')).toBe(true)
+  })
+
+  it('does not trigger browser TTS narrate when audioUrls are present', async () => {
+    const apply = vi.fn()
+    const engine = createTimelineEngine({ stage: {}, apply, playAudio: async () => {} })
+    await engine.play(audioScene)
+    const narrateForA = apply.mock.calls.find(
+      (c) => c[1].type === 'narrate' && c[1].text === 'A',
+    )
+    expect(narrateForA).toBeUndefined()
+  })
+})

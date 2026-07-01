@@ -4,6 +4,9 @@ import path from 'node:path'
 
 const MIME_BY_EXT = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' }
 
+// Cap on reference images sent to the API per request (loadReferenceImages may load more).
+const MAX_REFERENCES = 8
+
 const DEFAULT_REFERENCE_DIR = path.join(
   path.dirname(new URL(import.meta.url).pathname),
   '..',
@@ -41,7 +44,7 @@ function beatPrompt(scene, beat) {
 
 // Generate one illustration per beat (Nano Banana 2 Lite), emitting each as it completes.
 export async function generateBeatImages({ scene, references, emit, ai }) {
-  const referenceParts = references.map((ref) => ({
+  const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
     type: 'image',
     mime_type: ref.mimeType,
     data: ref.data,

@@ -68,3 +68,15 @@ describe('generateBeatImages', () => {
     expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(1)
   })
 })
+
+describe('reference cap', () => {
+  it('caps references sent to the API at MAX_REFERENCES', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({
+      data: `cmVm${i}`, mimeType: 'image/png',
+    }))
+    const ai = fakeAi()
+    await generateBeatImages({ scene, references: many, emit: vi.fn(), ai })
+    const parts = ai.interactions.create.mock.calls[0][0].input.filter((p) => p.type === 'image')
+    expect(parts.length).toBeLessThanOrEqual(8)
+  })
+})

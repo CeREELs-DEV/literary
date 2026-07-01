@@ -1,6 +1,6 @@
 // tests/server/video.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { generateSceneClip } from '../../server/video.js'
+import { generateSceneClip, generateBeatClips } from '../../server/video.js'
 
 function fakeAi({ polls = 2 } = {}) {
   let remaining = polls
@@ -66,5 +66,49 @@ describe('generateSceneClip', () => {
       resolution: '720p',
       aspectRatio: '16:9',
     })
+  })
+})
+
+describe('generateBeatClips', () => {
+  const scene = {
+    id: 's', title: 't',
+    beats: [
+      { text: 'A', amplifiedCaption: 'wind', duration: 3000, effects: [] },
+      { text: 'B', amplifiedCaption: 'slam', duration: 3000, effects: [] },
+    ],
+  }
+  const images = [
+    { index: 0, src: 'data:image/jpeg;base64,aW1nMA==' },
+    { index: 1, src: 'data:image/jpeg;base64,aW1nMQ==' },
+  ]
+
+  it('generates one clip per image in parallel and emits indexed clip events', async () => {
+    const ai = fakeAi({ polls: 0 })
+    const emit = vi.fn()
+    const clips = await generateBeatClips({
+      scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    expect(clips).toHaveLength(2)
+    expect(ai.models.generateVideos).toHaveBeenCalledTimes(2)
+    // correct mime passed through from the data URL
+    expect(ai.models.generateVideos.mock.calls[0][0].image.mimeType).toBe('image/jpeg')
+    const events = emit.mock.calls.map((c) => c[0]).filter((e) => e.type === 'clip')
+    expect(events.map((e) => e.index).sort()).toEqual([0, 1])
+    expect(events[0].url).toMatch(/^\/api\/media\/clip-.+\.mp4$/)
+  })
+
+  it('tolerates one failed clip and still returns the rest', async () => {
+    const ai = fakeAi({ polls: 0 })
+    let call = 0
+    const original = ai.models.generateVideos
+    ai.models.generateVideos = vi.fn(async (params) => {
+      if (call++ === 0) throw new Error('veo down')
+      return original(params)
+    })
+    const emit = vi.fn()
+    const clips = await generateBeatClips({
+      scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    expect(clips).toHaveLength(1)
   })
 })

@@ -27,7 +27,7 @@ export async function generateSceneClip({
     operation = await ai.operations.getVideosOperation({ operation })
   }
 
-  const filename = `clip-${Date.now()}.mp4`
+  const filename = `clip-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`
   const downloadPath = path.join(saveDir, filename)
   await ai.files.download({
     file: operation.response.generatedVideos[0].video,
@@ -37,4 +37,29 @@ export async function generateSceneClip({
   const url = `/api/media/${filename}`
   emit({ type: 'clip', url })
   return url
+}
+
+// Animate every beat illustration into its own clip, in parallel.
+// Emits an indexed clip event as each finishes; one failure doesn't sink the rest.
+export async function generateBeatClips({ scene, images, emit, ai, saveDir, sleep }) {
+  const results = await Promise.allSettled(
+    images.map(async ({ index, src }) => {
+      const url = await generateSceneClip({
+        imageBase64: src.slice(src.indexOf(',') + 1),
+        mimeType: src.slice(5, src.indexOf(';')),
+        prompt:
+          `${scene.beats[index].amplifiedCaption}. ` +
+          `Cinematic children's storybook animation, gentle camera movement, matching the illustration's art style.`,
+        emit: () => {}, // suppress the un-indexed event; we emit an indexed one below
+        ai,
+        saveDir,
+        ...(sleep ? { sleep } : {}),
+      })
+      emit({ type: 'clip', index, url })
+      return { index, url }
+    }),
+  )
+  const failed = results.filter((r) => r.status === 'rejected')
+  for (const f of failed) console.error('beat clip failed:', f.reason?.message ?? f.reason)
+  return results.filter((r) => r.status === 'fulfilled').map((r) => r.value)
 }

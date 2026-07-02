@@ -45,10 +45,21 @@ export function createApp({ pipeline = runExperiencePipeline, reimagine = reimag
       res.status(400).json({ error: 'text and wish are required' })
       return
     }
+
+    // NDJSON stream: still image first, then the animated loop when ready
+    res.setHeader('Content-Type', 'application/x-ndjson')
+    res.setHeader('Cache-Control', 'no-cache')
+
+    const emit = (event) => {
+      res.write(JSON.stringify(event) + '\n')
+    }
+
     try {
-      res.json(await reimagine({ text, sceneTitle, wish }))
+      await reimagine({ text, sceneTitle, wish, emit })
     } catch (err) {
-      res.status(500).json({ error: err?.message ?? 'reimagine failed' })
+      emit({ type: 'error', message: err?.message ?? 'reimagine failed' })
+    } finally {
+      res.end()
     }
   })
 

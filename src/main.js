@@ -113,39 +113,61 @@ eraChips.forEach((chip) => {
   })
 })
 
-imagineBtn?.addEventListener('click', async () => {
+imagineBtn?.addEventListener('click', () => {
   const wish = eraInput.value.trim()
   if (!selectedBeat || !wish) return
   imagineBtn.disabled = true
   imagineStatus.textContent = 'Imagining...'
   if (!bgm) startBgm(0.2)
-  try {
-    const result = await requestReimagine({
-      text: selectedBeat.text,
-      sceneTitle: currentScene?.title ?? '',
-      wish,
-    })
-    const card = document.createElement('div')
-    card.className = 'remix-card'
-    const frame = document.createElement('div')
-    frame.className = 'frame'
-    const img = document.createElement('img')
-    img.src = result.src
-    img.alt = result.label
-    frame.appendChild(img)
-    const label = document.createElement('p')
-    label.className = 'remix-label'
-    const firstWords = selectedBeat.text.split(' ').slice(0, 6).join(' ')
-    label.textContent = `${result.label} · ${firstWords}`
-    card.appendChild(frame)
-    card.appendChild(label)
-    remixGallery.appendChild(card)
-    imagineStatus.textContent = ''
-  } catch (err) {
+
+  const beat = selectedBeat
+  let card = null
+  let frame = null
+
+  requestReimagine(
+    { text: beat.text, sceneTitle: currentScene?.title ?? '', wish },
+    {
+      onImage: (label, src) => {
+        card = document.createElement('div')
+        card.className = 'remix-card'
+        frame = document.createElement('div')
+        frame.className = 'frame'
+        const img = document.createElement('img')
+        img.src = src
+        img.alt = label
+        frame.appendChild(img)
+        const labelEl = document.createElement('p')
+        labelEl.className = 'remix-label'
+        const firstWords = beat.text.split(' ').slice(0, 6).join(' ')
+        labelEl.textContent = `${label} · ${firstWords} · coming alive...`
+        card.appendChild(frame)
+        card.appendChild(labelEl)
+        remixGallery.appendChild(card)
+        // The still is on screen — the child can fire the next imagining
+        // while Veo animates this one in the background.
+        imagineStatus.textContent = ''
+        imagineBtn.disabled = false
+      },
+      onClip: (url) => {
+        if (!card || !frame) return
+        const video = document.createElement('video')
+        video.src = url
+        video.muted = true // the bgm is the soundtrack
+        video.loop = true
+        video.autoplay = true
+        video.playsInline = true
+        frame.replaceChildren(video)
+        video.play?.()?.catch(() => {})
+        const labelEl = card.querySelector('.remix-label')
+        if (labelEl) {
+          labelEl.textContent = labelEl.textContent.replace(' · coming alive...', '')
+        }
+      },
+    },
+  ).catch((err) => {
     imagineStatus.textContent = err.message
-  } finally {
     imagineBtn.disabled = false
-  }
+  })
 })
 
 let currentScene = null

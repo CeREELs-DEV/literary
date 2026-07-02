@@ -74,3 +74,14 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
 
 .remix-card.original .remix-label { color: #9ad0ff; }
 .remix-card.has-audio { cursor: pointer; }
+
+#passage-viewer { display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: 90vw; max-width: 720px; }
+#passage-viewer.hidden { display: none; }
+#version-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.version-tab { font-size: 14px; padding: 8px 16px; background: #2d2d3a; border-radius: 999px; }
+.version-tab.active { background: #6c5ce7; }
+#viewer-card { width: 100%; }
+#viewer-card .frame.pending { display: flex; align-items: center; justify-content: center; }
+#viewer-card .frame.pending::after { content: 'imagining...'; color: #ffd479;
+  font-style: italic; }

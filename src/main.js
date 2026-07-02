@@ -1,7 +1,8 @@
 // src/main.js
 import { requestExperience } from './upload.js'
 import { requestReimagine } from './remix.js'
-import { loadSampleBook, manifestToScene, renderOriginalCards } from './samples.js'
+import { loadSampleBook, manifestToScene, originalsByIndex } from './samples.js'
+import { createPassageViewer } from './viewer.js'
 
 const startScreen = document.getElementById('start-screen')
 const experienceScreen = document.getElementById('experience-screen')
@@ -20,7 +21,12 @@ const eraChips = document.querySelectorAll('.era-chip')
 const eraInput = document.getElementById('era-input')
 const imagineBtn = document.getElementById('imagine-btn')
 const imagineStatus = document.getElementById('imagine-status')
-const remixGallery = document.getElementById('remix-gallery')
+
+const viewer = createPassageViewer({
+  root: document.getElementById('passage-viewer'),
+  tabs: document.getElementById('version-tabs'),
+  card: document.getElementById('viewer-card'),
+})
 
 // The start screen hides once playback begins — mirror status to both screens.
 function setStatus(label) {
@@ -61,9 +67,11 @@ startBtn?.addEventListener('click', async () => {
   currentScene = manifestToScene(manifest)
   renderBook(currentScene)
   showExperienceScreen()
-  remixGallery.innerHTML = ''
-  renderOriginalCards(manifest, remixGallery)
-  setStatus('')
+  // Seed each passage's Original tab — the viewer opens on passage click.
+  for (const [index, original] of originalsByIndex(manifest)) {
+    viewer.setOriginal(index, original)
+  }
+  setStatus('Tap a highlighted sentence to see its scene.')
   if (!bgm) startBgm(0.2)
 })
 
@@ -76,19 +84,22 @@ function renderBook(scene) {
     span.className = 'passage'
     span.dataset.index = String(index)
     span.textContent = beat.text + ' '
-    span.addEventListener('click', () => selectPassage(span, beat))
+    span.addEventListener('click', () => selectPassage(span, beat, index))
     bookPages.appendChild(span)
   })
   book.classList.remove('hidden')
 }
 
 let selectedBeat = null
+let selectedIndex = null
 
-function selectPassage(span, beat) {
+function selectPassage(span, beat, index) {
   bookPages.querySelectorAll('.passage.selected').forEach((el) => el.classList.remove('selected'))
   span.classList.add('selected')
   selectedBeat = beat
+  selectedIndex = index
   selectedPassage.textContent = beat.text
+  viewer.show(index) // this passage's scene: Original tab (loop + voices) first
   imaginePanel.classList.remove('hidden')
 }
 
@@ -100,14 +111,14 @@ eraChips.forEach((chip) => {
 
 imagineBtn?.addEventListener('click', () => {
   const wish = eraInput.value.trim()
-  if (!selectedBeat || !wish) return
+  if (!selectedBeat || !wish || selectedIndex == null) return
   imagineBtn.disabled = true
   imagineStatus.textContent = 'Imagining...'
   if (!bgm) startBgm(0.2)
 
   const beat = selectedBeat
-  let card = null
-  let frame = null
+  const index = selectedIndex
+  let tabId = null
 
   requestReimagine(
     {
@@ -119,66 +130,20 @@ imagineBtn?.addEventListener('click', () => {
     },
     {
       onImage: (label, src) => {
-        card = document.createElement('div')
-        card.className = 'remix-card'
-        frame = document.createElement('div')
-        frame.className = 'frame'
-        const img = document.createElement('img')
-        img.src = src
-        img.alt = label
-        frame.appendChild(img)
-        const labelEl = document.createElement('p')
-        labelEl.className = 'remix-label'
-        const firstWords = beat.text.split(' ').slice(0, 6).join(' ')
-        labelEl.textContent = `${label} · ${firstWords} · coming alive...`
-        card.appendChild(frame)
-        card.appendChild(labelEl)
-        remixGallery.appendChild(card)
-        // The picture emerges slowly from a dot in the dark — the reveal itself
-        // is the "still animating" signal, paced to land with the moving loop.
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => frame.classList.add('revealing')),
-        )
+        // The transform appears as a new tab on this passage and is selected.
+        tabId = viewer.addTransform(index, { label, still: src, clip: null })
         // The child can fire the next imagining while this one comes alive.
         imagineStatus.textContent = ''
         imagineBtn.disabled = false
       },
       onClip: (url) => {
-        if (!card || !frame) return
-        const video = document.createElement('video')
-        video.src = url
-        video.muted = true // the bgm is the soundtrack
-        video.loop = true
-        video.autoplay = true
-        video.playsInline = true
-        frame.appendChild(video) // over the still; crossfades in
-        frame.classList.add('revealed') // finish the circle quickly
-        video.play?.()?.catch(() => {})
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => video.classList.add('live')),
-        )
-        const labelEl = card.querySelector('.remix-label')
-        if (labelEl) {
-          labelEl.textContent = labelEl.textContent.replace(' · coming alive...', '')
-        }
+        if (tabId != null) viewer.updateTransform(index, tabId, { clip: url })
       },
     },
-  )
-    .then((summary) => {
-      // Stream ended without a clip — show the finished still plainly.
-      if (!summary.clipUrl && frame) {
-        frame.classList.add('revealed')
-        const labelEl = card?.querySelector('.remix-label')
-        if (labelEl) {
-          labelEl.textContent = labelEl.textContent.replace(' · coming alive...', '')
-        }
-      }
-    })
-    .catch((err) => {
-      imagineStatus.textContent = err.message
-      imagineBtn.disabled = false
-      if (frame) frame.classList.add('revealed') // never leave a black card
-    })
+  ).catch((err) => {
+    imagineStatus.textContent = err.message
+    imagineBtn.disabled = false
+  })
 })
 
 let currentScene = null

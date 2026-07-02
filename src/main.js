@@ -12,7 +12,14 @@ const stage = document.getElementById('stage')
 const photoInput = document.getElementById('book-photo')
 const uploadStatus = document.getElementById('upload-status')
 const artifactStrip = document.getElementById('artifact-strip')
+const experienceStatus = document.getElementById('experience-status')
 const watchFilmBtn = document.getElementById('watch-film')
+
+// The start screen hides once playback begins — mirror status to both screens.
+function setStatus(label) {
+  uploadStatus.textContent = label
+  experienceStatus.textContent = label
+}
 
 let bgm = null
 let currentEngine = null
@@ -91,23 +98,23 @@ photoInput?.addEventListener('change', async () => {
   const startPlayback = () => {
     if (playbackStarted || !scene) return
     playbackStarted = true
-    uploadStatus.textContent = ''
+    // keep the current status visible — film progress continues underneath
     playScene(scene, { images, speech, withBgm: true }).catch((err) => {
-      uploadStatus.textContent = err.message
+      setStatus(err.message)
     })
   }
 
   try {
     const summary = await requestExperience(file, {
       onStatus: (label, stageName) => {
-        uploadStatus.textContent = label
+        setStatus(label)
         // Images and voices are done once filming starts — begin the experience now.
         if (stageName === 'animating') startPlayback()
         if (stageName === 'done') startPlayback() // covers the no-visuals path
       },
       onScene: (s) => {
         scene = s
-        uploadStatus.textContent = `"${s.title}" — designing the experience...`
+        setStatus(`"${s.title}" — designing the experience...`)
       },
       onImage: (index, src) => {
         images[index] = src
@@ -132,7 +139,7 @@ photoInput?.addEventListener('change', async () => {
     scene = summary.scene
     startPlayback()
   } catch (err) {
-    uploadStatus.textContent = err.message
+    setStatus(err.message)
   } finally {
     photoInput.disabled = false
   }

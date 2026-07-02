@@ -83,4 +83,20 @@ describe('createTimelineEngine — audio-synced beats', () => {
     )
     expect(narrateForA).toBeUndefined()
   })
+
+  it('advances past a stalled audio chain via the stall-guard cap', async () => {
+    vi.useFakeTimers()
+    try {
+      const apply = vi.fn()
+      const playAudio = vi.fn(() => new Promise(() => {})) // never resolves
+      const engine = createTimelineEngine({ stage: {}, apply, playAudio })
+      const done = engine.play(audioScene)
+      // cap is 15000ms * 2 audioUrls; then beat B's tiny duration (1ms)
+      await vi.advanceTimersByTimeAsync(15000 * 2 + 1)
+      await expect(done).resolves.toBeUndefined()
+      expect(apply.mock.calls.some((c) => c[1].type === 'text' && c[1].text === 'B')).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

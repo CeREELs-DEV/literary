@@ -49,24 +49,38 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
     mime_type: ref.mimeType,
     data: ref.data,
   }))
+  const generateOne = async (beat, index) => {
+    const interaction = await ai.interactions.create({
+      model: 'gemini-3.1-flash-lite-image',
+      input: [{ type: 'text', text: beatPrompt(scene, beat) }, ...referenceParts],
+      response_format: { type: 'image', aspect_ratio: '16:9' },
+    })
+    const data = interaction?.output_image?.data
+    if (!data) {
+      // Diagnosable failure on API-shape drift instead of a silent black screen.
+      console.warn(`no image data in response for beat ${index}`)
+      throw new Error(`no image data in response for beat ${index}`)
+    }
+    return data
+  }
+
   const results = await Promise.allSettled(
     scene.beats.map(async (beat, index) => {
-      const interaction = await ai.interactions.create({
-        model: 'gemini-3.1-flash-lite-image',
-        input: [{ type: 'text', text: beatPrompt(scene, beat) }, ...referenceParts],
-        response_format: { type: 'image', aspect_ratio: '16:9' },
-      })
-      const data = interaction?.output_image?.data
-      if (!data) {
-        // Diagnosable failure on API-shape drift instead of a silent black screen.
-        console.warn(`no image data in response for beat ${index}`)
-        throw new Error(`no image data in response for beat ${index}`)
+      // Retry once: a single transient failure shouldn't drop a beat's illustration.
+      let data
+      try {
+        data = await generateOne(beat, index)
+      } catch {
+        data = await generateOne(beat, index)
       }
       const src = `data:${sniffImageMime(data)};base64,${data}`
       emit({ type: 'image', index, src })
       return { index, src }
     }),
   )
+  for (const f of results.filter((r) => r.status === 'rejected')) {
+    console.error('beat image failed:', f.reason?.message ?? f.reason)
+  }
   return results
     .filter((r) => r.status === 'fulfilled')
     .map((r) => r.value)

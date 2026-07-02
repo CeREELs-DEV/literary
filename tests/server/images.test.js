@@ -23,13 +23,17 @@ const references = [
   { data: 'cmVmMg==', mimeType: 'image/png' },
 ]
 
-function fakeAi({ failIndex = -1 } = {}) {
+function fakeAi({ failIndex = -1, failCaption = null } = {}) {
   let call = 0
   return {
     interactions: {
-      create: vi.fn(async () => {
+      create: vi.fn(async (params) => {
         const i = call++
         if (i === failIndex) throw new Error('gen failed')
+        if (failCaption) {
+          const text = params.input.find((p) => p.type === 'text')?.text ?? ''
+          if (text.includes(failCaption)) throw new Error('gen failed')
+        }
         return { output_image: { data: `aW1nJHtpfQ==` } }
       }),
     },
@@ -61,11 +65,26 @@ describe('generateBeatImages', () => {
     expect(params.response_format).toEqual({ type: 'image', aspect_ratio: '16:9' })
   })
 
-  it('tolerates a single failure and still returns the others', async () => {
+  it('retries a failed call once and recovers', async () => {
     const emit = vi.fn()
     const images = await generateBeatImages({ scene, references, emit, ai: fakeAi({ failIndex: 0 }) })
-    expect(images).toHaveLength(1)
-    expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(1)
+    expect(images).toHaveLength(2)
+    expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(2)
+  })
+
+  it('skips a beat that fails twice', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const emit = vi.fn()
+      const images = await generateBeatImages({
+        scene, references, emit, ai: fakeAi({ failCaption: 'wind howled' }),
+      })
+      expect(images).toHaveLength(1)
+      expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(1)
+      expect(errorSpy).toHaveBeenCalled()
+    } finally {
+      errorSpy.mockRestore()
+    }
   })
 })
 

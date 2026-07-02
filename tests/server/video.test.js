@@ -111,4 +111,46 @@ describe('generateBeatClips', () => {
     })
     expect(clips).toHaveLength(1)
   })
+
+  it('bounds clip concurrency to 2 in flight', async () => {
+    const fourImages = [
+      { index: 0, src: 'data:image/jpeg;base64,aW1nMA==' },
+      { index: 1, src: 'data:image/jpeg;base64,aW1nMQ==' },
+      { index: 2, src: 'data:image/jpeg;base64,aW1nMg==' },
+      { index: 3, src: 'data:image/jpeg;base64,aW1nMw==' },
+    ]
+    const fourBeatScene = {
+      id: 's', title: 't',
+      beats: [
+        { text: 'A', amplifiedCaption: 'wind', duration: 3000, effects: [] },
+        { text: 'B', amplifiedCaption: 'slam', duration: 3000, effects: [] },
+        { text: 'C', amplifiedCaption: 'rain', duration: 3000, effects: [] },
+        { text: 'D', amplifiedCaption: 'thunder', duration: 3000, effects: [] },
+      ],
+    }
+    let inFlight = 0
+    let maxInFlight = 0
+    const ai = {
+      models: {
+        generateVideos: vi.fn(async () => {
+          inFlight += 1
+          maxInFlight = Math.max(maxInFlight, inFlight)
+          await new Promise((resolve) => setTimeout(resolve, 0))
+          inFlight -= 1
+          return {
+            done: true,
+            response: { generatedVideos: [{ video: { name: 'files/abc' } }] },
+          }
+        }),
+      },
+      operations: { getVideosOperation: vi.fn(async () => ({ done: true })) },
+      files: { download: vi.fn(async () => {}) },
+    }
+    const clips = await generateBeatClips({
+      scene: fourBeatScene, images: fourImages, emit: vi.fn(), ai,
+      saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    expect(clips).toHaveLength(4)
+    expect(maxInFlight).toBeLessThanOrEqual(2)
+  })
 })

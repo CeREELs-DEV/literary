@@ -36,9 +36,13 @@ export function createTimelineEngine({
         }
         // 3) narration: pre-generated audio syncs the beat; otherwise browser TTS + timer
         if (beat.audioUrls?.length) {
-          beat.audioUrls
-            .reduce((chain, url) => chain.then(() => playAudio(url)), Promise.resolve())
-            .then(next)
+          const chain = beat.audioUrls.reduce(
+            (acc, url) => acc.then(() => playAudio(url)),
+            Promise.resolve(),
+          )
+          // Stall guard: a media element that never fires ended/error must not hang the scene.
+          const cap = new Promise((resolve) => setTimeout(resolve, 15000 * beat.audioUrls.length))
+          Promise.race([chain, cap]).then(next)
         } else {
           if (beat.narration) {
             apply(stage, { type: 'narrate', text: beat.narration })

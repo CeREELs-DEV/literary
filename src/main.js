@@ -143,8 +143,12 @@ imagineBtn?.addEventListener('click', () => {
         card.appendChild(frame)
         card.appendChild(labelEl)
         remixGallery.appendChild(card)
-        // The still is on screen — the child can fire the next imagining
-        // while Veo animates this one in the background.
+        // The picture emerges slowly from a dot in the dark — the reveal itself
+        // is the "still animating" signal, paced to land with the moving loop.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => frame.classList.add('revealing')),
+        )
+        // The child can fire the next imagining while this one comes alive.
         imagineStatus.textContent = ''
         imagineBtn.disabled = false
       },
@@ -156,18 +160,34 @@ imagineBtn?.addEventListener('click', () => {
         video.loop = true
         video.autoplay = true
         video.playsInline = true
-        frame.replaceChildren(video)
+        frame.appendChild(video) // over the still; crossfades in
+        frame.classList.add('revealed') // finish the circle quickly
         video.play?.()?.catch(() => {})
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => video.classList.add('live')),
+        )
         const labelEl = card.querySelector('.remix-label')
         if (labelEl) {
           labelEl.textContent = labelEl.textContent.replace(' · coming alive...', '')
         }
       },
     },
-  ).catch((err) => {
-    imagineStatus.textContent = err.message
-    imagineBtn.disabled = false
-  })
+  )
+    .then((summary) => {
+      // Stream ended without a clip — show the finished still plainly.
+      if (!summary.clipUrl && frame) {
+        frame.classList.add('revealed')
+        const labelEl = card?.querySelector('.remix-label')
+        if (labelEl) {
+          labelEl.textContent = labelEl.textContent.replace(' · coming alive...', '')
+        }
+      }
+    })
+    .catch((err) => {
+      imagineStatus.textContent = err.message
+      imagineBtn.disabled = false
+      if (frame) frame.classList.add('revealed') // never leave a black card
+    })
 })
 
 let currentScene = null

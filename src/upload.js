@@ -1,10 +1,16 @@
 // src/upload.js
 
 // Read an NDJSON experience stream, dispatching callbacks as artifacts arrive.
-// Resolves with { scene, images, clipUrl } when the stream ends.
+// Resolves with { scene, images, speech, clips } when the stream ends.
 export async function consumeExperienceStream(
   response,
-  { onStatus = () => {}, onScene = () => {}, onImage = () => {}, onClip = () => {} } = {},
+  {
+    onStatus = () => {},
+    onScene = () => {},
+    onImage = () => {},
+    onSpeech = () => {},
+    onClip = () => {},
+  } = {},
 ) {
   if (!response.ok) {
     throw new Error(`Upload failed (${response.status ?? 'network error'})`)
@@ -12,7 +18,7 @@ export async function consumeExperienceStream(
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
-  const summary = { scene: null, images: {}, clipUrl: null }
+  const summary = { scene: null, images: {}, speech: {}, clips: {} }
 
   const handleLine = (line) => {
     if (!line.trim()) return
@@ -24,9 +30,12 @@ export async function consumeExperienceStream(
     } else if (event.type === 'image') {
       summary.images[event.index] = event.src
       onImage(event.index, event.src)
+    } else if (event.type === 'speech') {
+      summary.speech[event.index] = event.urls
+      onSpeech(event.index, event.urls)
     } else if (event.type === 'clip') {
-      summary.clipUrl = event.url
-      onClip(event.url)
+      summary.clips[event.index] = event.url
+      onClip(event.index, event.url)
     } else if (event.type === 'error') throw new Error(event.message)
   }
 

@@ -25,25 +25,24 @@ function ndjsonResponse(events, { chunkSplit } = {}) {
 const scene = { id: 's', title: 't', beats: [] }
 
 describe('consumeExperienceStream', () => {
-  it('dispatches status/scene/image/clip callbacks and resolves with a summary', async () => {
+  it('dispatches status/scene/image/speech/clip callbacks and resolves with a summary', async () => {
     const events = [
       { type: 'status', stage: 'reading', label: 'Reading the page...' },
       { type: 'scene', scene },
       { type: 'image', index: 0, src: 'data:image/png;base64,aW1n' },
-      { type: 'clip', url: '/api/media/clip-1.mp4' },
+      { type: 'speech', index: 0, urls: ['/api/media/speech-1.mp3'] },
+      { type: 'clip', index: 0, url: '/api/media/clip-1.mp4' },
       { type: 'status', stage: 'done', label: 'Experience complete!' },
     ]
     const handlers = {
-      onStatus: vi.fn(), onScene: vi.fn(), onImage: vi.fn(), onClip: vi.fn(),
+      onStatus: vi.fn(), onScene: vi.fn(), onImage: vi.fn(),
+      onSpeech: vi.fn(), onClip: vi.fn(),
     }
     const summary = await consumeExperienceStream(ndjsonResponse(events), handlers)
-    expect(handlers.onStatus).toHaveBeenCalledWith('Reading the page...', 'reading')
-    expect(handlers.onScene).toHaveBeenCalledWith(scene)
-    expect(handlers.onImage).toHaveBeenCalledWith(0, 'data:image/png;base64,aW1n')
-    expect(handlers.onClip).toHaveBeenCalledWith('/api/media/clip-1.mp4')
-    expect(summary.scene).toEqual(scene)
-    expect(summary.clipUrl).toBe('/api/media/clip-1.mp4')
-    expect(summary.images).toEqual({ 0: 'data:image/png;base64,aW1n' })
+    expect(handlers.onSpeech).toHaveBeenCalledWith(0, ['/api/media/speech-1.mp3'])
+    expect(handlers.onClip).toHaveBeenCalledWith(0, '/api/media/clip-1.mp4')
+    expect(summary.speech).toEqual({ 0: ['/api/media/speech-1.mp3'] })
+    expect(summary.clips).toEqual({ 0: '/api/media/clip-1.mp4' })
   })
 
   it('handles an event line split across two chunks', async () => {

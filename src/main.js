@@ -1,7 +1,6 @@
 // src/main.js
 import { validateScene } from './model/scene.js'
 import { createTimelineEngine } from './timeline/engine.js'
-import { applyEffect } from './effects/registry.js'
 import { sampleScene } from './scenes/sample.js'
 import { requestExperience } from './upload.js'
 
@@ -34,27 +33,31 @@ function showExperienceScreen() {
   experienceScreen.classList.remove('hidden')
 }
 
-// Play a scene; images (index -> src) become per-beat backgrounds unless a clip is playing.
-async function playScene(rawScene, { images = {}, clipUrl = null, withBgm = false } = {}) {
+// Play a scene with per-beat media: images/clips become backgrounds, speech syncs beats.
+async function playScene(
+  rawScene,
+  { images = {}, speech = {}, clips = {}, useClips = false, withBgm = false } = {},
+) {
   const scene = validateScene(rawScene)
   showExperienceScreen()
   if (withBgm) startBgm()
 
-  applyEffect(stage, { type: 'image', src: '' }) // clear previous background
-  if (clipUrl) applyEffect(stage, { type: 'clip', src: clipUrl })
-  else applyEffect(stage, { type: 'clip', src: '' })
-
-  const beats = scene.beats.map((beat, i) =>
-    !clipUrl && images[i]
-      ? { ...beat, effects: [{ type: 'image', src: images[i] }, ...beat.effects] }
-      : beat,
-  )
+  const beats = scene.beats.map((beat, i) => {
+    const media = []
+    if (useClips && clips[i]) {
+      media.push({ type: 'clip', src: clips[i] }, { type: 'image', src: '' })
+    } else if (images[i]) {
+      media.push({ type: 'image', src: images[i] }, { type: 'clip', src: '' })
+    }
+    const audioUrls = speech[i]
+    return { ...beat, effects: [...media, ...beat.effects], ...(audioUrls ? { audioUrls } : {}) }
+  })
 
   const engine = createTimelineEngine({ stage })
   try {
     await engine.play({ ...scene, beats })
   } finally {
-    stopBgm() // don't keep looping after the experience ends
+    stopBgm()
   }
 }
 
@@ -71,15 +74,27 @@ photoInput?.addEventListener('change', async () => {
 
   let scene = null
   const images = {}
+  const speech = {}
+  const clips = {}
   let playbackStarted = false
 
   const startPlayback = () => {
     if (playbackStarted || !scene) return
     playbackStarted = true
     uploadStatus.textContent = ''
-    playScene(scene, { images, withBgm: true }).catch((err) => {
+    playScene(scene, { images, speech, withBgm: true }).catch((err) => {
       uploadStatus.textContent = err.message
     })
+  }
+
+  const showReplay = () => {
+    replayBtn.classList.remove('hidden')
+    replayBtn.onclick = () => {
+      replayBtn.classList.add('hidden')
+      playScene(scene, { images, speech, clips, useClips: true, withBgm: true }).catch(
+        (err) => console.error(err),
+      )
+    }
   }
 
   try {
@@ -101,14 +116,12 @@ photoInput?.addEventListener('change', async () => {
         img.alt = `Scene ${index + 1}`
         artifactStrip.appendChild(img)
       },
-      onClip: (url) => {
-        replayBtn.classList.remove('hidden')
-        replayBtn.onclick = () => {
-          replayBtn.classList.add('hidden')
-          playScene(scene, { clipUrl: url, withBgm: true }).catch((err) =>
-            console.error(err),
-          )
-        }
+      onSpeech: (index, urls) => {
+        speech[index] = urls
+      },
+      onClip: (index, url) => {
+        clips[index] = url
+        showReplay() // first clip onward — replay uses whichever clips have arrived
       },
     })
     // Stream finished — make sure playback happened even if no status fired.

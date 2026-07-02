@@ -51,7 +51,7 @@ export const SCENE_SCHEMA = {
           motionPrompt: {
             type: 'string',
             description:
-              'how elements ALREADY IN the illustration would move if animated — subtle, physically plausible motion only; never introduce new objects, structures, or characters',
+              "choreography of this moment's action: who moves, in which direction, with what emotion — spatial logic must match the story (fleeing means moving AWAY from the threat); use only elements already in the illustration, never new objects or structures",
           },
           duration: { type: 'integer', description: 'milliseconds, 2500-4500' },
           narration: { type: 'string', description: 'same as text, for read-aloud' },
@@ -113,9 +113,12 @@ Rules:
 - keyBeatIndex: choose the ONE beat where seeing the moment would most expand a child's
   imagination — the most vivid, transformative, or emotionally charged image in the passage.
   Not necessarily the loudest beat: pick the moment a child would most want to picture.
-- beat.motionPrompt: describe ONLY how things already visible in that moment would move
-  (e.g. "her cloak ripples in the wind, leaves drift past, the camera drifts in slowly").
-  Grounded, gentle, physically plausible. Never invent new objects, walls, structures,
+- beat.motionPrompt: choreograph this moment's ACTION for an animator. State who moves,
+  in which direction, and with what emotion, so the motion tells the story correctly:
+  a character fleeing a mouse runs AWAY from the mouse, looking back in fear; a hug pulls
+  two characters together. Get the spatial and emotional logic exactly right — a wrong
+  direction breaks the story. Use only elements already visible in that moment,
+  physically plausible, no teleporting. Never invent new objects, walls, structures,
   characters, or scene changes — animation must stay inside the illustrated moment.
 - ALL output text must be in English. If the page is in another language, translate it.
 - The scene id must be kebab-case; the title short and evocative.`

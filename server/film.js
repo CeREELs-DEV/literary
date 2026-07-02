@@ -55,11 +55,12 @@ export async function generateFilm({
     ai.models.generateVideos({
       model,
       prompt:
-        `Animate this exact illustration — it is the first frame and its art style is the law. ` +
-        `Preserve the characters, linework, color palette, and composition unchanged; do not ` +
-        `restyle, redraw, or add realism. Nothing new may enter the frame: no new objects, ` +
-        `walls, structures, or characters may appear, form, or morph. ` +
-        `Only this gentle, physically plausible motion: ${motion}`,
+        `This is one moment from a children's story: "${beat.text}" — ${beat.amplifiedCaption}. ` +
+        `Animate this exact illustration as that moment unfolds. The illustration is the first ` +
+        `frame and its art style is the law: preserve the characters, linework, color palette, ` +
+        `and composition; do not restyle, redraw, or add realism. Nothing new may enter the ` +
+        `frame: no new objects, walls, structures, or characters may appear, form, or morph. ` +
+        `The motion must follow the story's spatial and emotional logic exactly: ${motion}`,
       image: {
         imageBytes: image.src.slice(image.src.indexOf(',') + 1),
         mimeType: image.src.slice(5, image.src.indexOf(';')),

@@ -62,7 +62,11 @@ describe('generateFilm', () => {
     // Lite is the primary model — its quota pool is the one we actually have
     expect(params.model).toBe('veo-3.1-lite-generate-preview')
     expect(params.image).toEqual({ imageBytes: 'aW1nMQ==', mimeType: 'image/jpeg' })
-    // Claude's constrained motion design drives the animation, not the dramatic caption
+    // Story context gives the motion its direction and intent...
+    expect(params.prompt).toContain('"B"')
+    expect(params.prompt).toContain('door slammed')
+    expect(params.prompt).toContain("story's spatial and emotional logic")
+    // ...Claude's choreography drives the actual movement, inside a closed frame
     expect(params.prompt).toContain('the door swings shut')
     expect(params.prompt).toContain('Nothing new may enter the frame')
     expect(params.config).toMatchObject({

@@ -1,9 +1,14 @@
 import { applyEffect } from '../effects/registry.js'
 
 // Play a pre-generated narration file; resolve when it ends (or fails).
-function defaultPlayAudio(url) {
+// `register` receives a cancel function that pauses the audio and resolves early.
+function defaultPlayAudio(url, { register } = {}) {
   return new Promise((resolve) => {
     const audio = new Audio(url)
+    register?.(() => {
+      audio.pause()
+      resolve()
+    })
     audio.onended = resolve
     audio.onerror = resolve
     const playing = audio.play?.()
@@ -16,12 +21,28 @@ export function createTimelineEngine({
   apply = applyEffect,
   playAudio = defaultPlayAudio,
 } = {}) {
+  let session = 0
+  let cancelCurrent = null // stops the in-flight audio or pending timer
+
+  function stop() {
+    session += 1
+    cancelCurrent?.()
+    cancelCurrent = null
+    if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel()
+  }
+
   function play(scene) {
+    stop()
+    const mySession = session
     return new Promise((resolve) => {
       const beats = scene.beats
       let index = 0
 
       function next() {
+        if (mySession !== session) {
+          resolve()
+          return
+        }
         if (index >= beats.length) {
           resolve()
           return
@@ -37,17 +58,22 @@ export function createTimelineEngine({
         // 3) narration: pre-generated audio syncs the beat; otherwise browser TTS + timer
         if (beat.audioUrls?.length) {
           const chain = beat.audioUrls.reduce(
-            (acc, url) => acc.then(() => playAudio(url)),
+            (acc, url) =>
+              acc.then(() => {
+                if (mySession !== session) return undefined
+                return playAudio(url, { register: (cancel) => { cancelCurrent = cancel } })
+              }),
             Promise.resolve(),
           )
           // Stall guard: a media element that never fires ended/error must not hang the scene.
-          const cap = new Promise((resolve) => setTimeout(resolve, 15000 * beat.audioUrls.length))
+          const cap = new Promise((r) => setTimeout(r, 15000 * beat.audioUrls.length))
           Promise.race([chain, cap]).then(next)
         } else {
           if (beat.narration) {
             apply(stage, { type: 'narrate', text: beat.narration })
           }
-          setTimeout(next, beat.duration)
+          const timer = setTimeout(next, beat.duration)
+          cancelCurrent = () => clearTimeout(timer)
         }
       }
 
@@ -55,5 +81,5 @@ export function createTimelineEngine({
     })
   }
 
-  return { play }
+  return { play, stop }
 }

@@ -100,3 +100,95 @@ describe('createTimelineEngine — audio-synced beats', () => {
     }
   })
 })
+
+describe('createTimelineEngine — cancellation', () => {
+  const cancelScene = {
+    id: 's', title: 't',
+    beats: [
+      {
+        text: 'A', duration: 99999, narration: 'A',
+        audioUrls: ['/api/media/a1.mp3'],
+        effects: [],
+      },
+      { text: 'B', duration: 1, effects: [] },
+    ],
+  }
+
+  it('stop() halts playback — no further beats are applied', async () => {
+    const apply = vi.fn()
+    let resolveAudio
+    const playAudio = vi.fn(() => new Promise((resolve) => { resolveAudio = resolve }))
+    const engine = createTimelineEngine({ stage: {}, apply, playAudio })
+
+    const done = engine.play(cancelScene)
+    // let the audio chain's .then() run so playAudio has actually been invoked
+    await Promise.resolve()
+    await Promise.resolve()
+    // beat A applied first
+    expect(apply.mock.calls.some((c) => c[1].type === 'text' && c[1].text === 'A')).toBe(true)
+    expect(resolveAudio).toBeInstanceOf(Function)
+
+    engine.stop()
+    resolveAudio()
+    await done
+
+    expect(apply.mock.calls.some((c) => c[1].type === 'text' && c[1].text === 'B')).toBe(false)
+  })
+
+  it('starting a new play cancels the previous run', async () => {
+    const applyOrder = []
+    const apply = vi.fn((_, effect) => {
+      if (effect.type === 'text') applyOrder.push(effect.text)
+    })
+    const resolvers = []
+    const playAudio = vi.fn(() => new Promise((resolve) => { resolvers.push(resolve) }))
+    const engine = createTimelineEngine({ stage: {}, apply, playAudio })
+
+    const sceneA = cancelScene
+    const sceneB = {
+      id: 's2', title: 't2',
+      beats: [
+        { text: 'X', duration: 99999, narration: 'X', audioUrls: ['/api/media/x1.mp3'], effects: [] },
+        { text: 'Y', duration: 1, effects: [] },
+      ],
+    }
+
+    const doneA = engine.play(sceneA)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const doneB = engine.play(sceneB)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // resolve all pending audio (sceneA's stale playAudio + sceneB's)
+    resolvers.forEach((resolve) => resolve())
+    await Promise.all([doneA, doneB])
+
+    // sceneA's beat 2 ("B") must never have been applied once sceneB started
+    expect(applyOrder).not.toContain('B')
+    expect(applyOrder).toContain('X')
+    expect(applyOrder).toContain('Y')
+  })
+
+  it('stop pauses in-flight audio via the register hook', async () => {
+    const apply = vi.fn()
+    let cancelHookCalled = false
+    let capturedCancel
+    const playAudio = vi.fn((_url, { register } = {}) => {
+      register?.(() => { cancelHookCalled = true })
+      return new Promise((resolve) => { capturedCancel = resolve })
+    })
+    const engine = createTimelineEngine({ stage: {}, apply, playAudio })
+
+    const done = engine.play(cancelScene)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    engine.stop()
+    expect(cancelHookCalled).toBe(true)
+
+    capturedCancel?.()
+    await done
+  })
+})

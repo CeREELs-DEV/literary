@@ -39,6 +39,7 @@ export function narrate(stage, { src, text } = {}) {
     return
   }
   if (text && typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.cancel()
     const utter = new SpeechSynthesisUtterance(text)
     utter.lang = 'en-US'
     speechSynthesis.speak(utter)

@@ -14,6 +14,7 @@ const artifactStrip = document.getElementById('artifact-strip')
 const replayBtn = document.getElementById('replay-clip')
 
 let bgm = null
+let currentEngine = null
 
 function startBgm() {
   stopBgm()
@@ -38,6 +39,7 @@ async function playScene(
   rawScene,
   { images = {}, speech = {}, clips = {}, useClips = false, withBgm = false } = {},
 ) {
+  currentEngine?.stop()
   const scene = validateScene(rawScene)
   showExperienceScreen()
   if (withBgm) startBgm()
@@ -54,6 +56,7 @@ async function playScene(
   })
 
   const engine = createTimelineEngine({ stage })
+  currentEngine = engine
   try {
     await engine.play({ ...scene, beats })
   } finally {
@@ -68,6 +71,8 @@ startBtn?.addEventListener('click', () => {
 photoInput?.addEventListener('change', async () => {
   const file = photoInput.files?.[0]
   if (!file) return
+  currentEngine?.stop()
+  stopBgm()
   photoInput.disabled = true
   replayBtn.classList.add('hidden')
   artifactStrip.innerHTML = ''

@@ -26,63 +26,22 @@ const flashEffect = {
 export const SCENE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['id', 'title', 'keyBeatIndex', 'imaginings', 'beats'],
+  required: ['id', 'title', 'beats'],
   properties: {
     id: { type: 'string', description: 'kebab-case scene id' },
     title: { type: 'string', description: 'short scene title' },
-    keyBeatIndex: {
-      type: 'integer',
-      description:
-        '0-based index of the single beat whose imagery most rewards visualization — the key scene',
-    },
-    imaginings: {
-      type: 'array',
-      description:
-        'EXACTLY 3 contrasting ways to imagine the key beat — same story moment, radically different point of view, mood, and composition',
-      items: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['title', 'perspective', 'illustrationPrompt', 'motionPrompt'],
-        properties: {
-          title: {
-            type: 'string',
-            description: 'short evocative label for this imagining, e.g. "Through her eyes"',
-          },
-          perspective: {
-            type: 'string',
-            description:
-              'whose eyes / vantage point sees this moment (a character, an onlooker, a distant window...)',
-          },
-          illustrationPrompt: {
-            type: 'string',
-            description:
-              'how to draw this imagining: composition, framing, mood, lighting — clearly distinct from the other two',
-          },
-          motionPrompt: {
-            type: 'string',
-            description:
-              "choreography of the action from this perspective — spatial and emotional logic must match the story; only elements in the illustration, no new objects",
-          },
-        },
-      },
-    },
     beats: {
       type: 'array',
       description: '3 to 6 beats covering the page text in order',
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['text', 'amplifiedCaption', 'motionPrompt', 'duration', 'narration', 'effects', 'speech'],
+        required: ['text', 'amplifiedCaption', 'duration', 'narration', 'effects', 'speech'],
         properties: {
           text: { type: 'string', description: 'verbatim sentence(s) from the page' },
           amplifiedCaption: {
             type: 'string',
             description: 'imaginative sensory amplification of the text',
-          },
-          motionPrompt: {
-            type: 'string',
-            description:
-              "choreography of this moment's action: who moves, in which direction, with what emotion — spatial logic must match the story (fleeing means moving AWAY from the threat); use only elements already in the illustration, never new objects or structures",
           },
           duration: { type: 'integer', description: 'milliseconds, 2500-4500' },
           narration: { type: 'string', description: 'same as text, for read-aloud' },
@@ -141,22 +100,6 @@ Rules:
   low for wind, trembling, footsteps). Use flash for light/impact moments
   (white flash for lightning/brightness, dark flash color #000000 for dread/impact).
   Quiet beats may have an empty effects array - silence is also a sensory choice.
-- keyBeatIndex: choose the ONE beat where seeing the moment would most expand a child's
-  imagination — the most vivid, transformative, or emotionally charged image in the passage.
-  Not necessarily the loudest beat: pick the moment a child would most want to picture.
-- imaginings: design EXACTLY 3 contrasting imaginings of that key beat, Rashomon-style —
-  the SAME story moment, imagined three genuinely different ways. Vary the point of view
-  (a character's eyes, a bystander, a faraway vantage), the mood (tense, tender, dreamlike),
-  and the composition (close-up, wide, silhouette). Do NOT invent new story facts — only
-  the way of seeing changes. The point is to show a child that one sentence can be
-  imagined many ways.
-- beat.motionPrompt: choreograph this moment's ACTION for an animator. State who moves,
-  in which direction, and with what emotion, so the motion tells the story correctly:
-  a character fleeing a mouse runs AWAY from the mouse, looking back in fear; a hug pulls
-  two characters together. Get the spatial and emotional logic exactly right — a wrong
-  direction breaks the story. Use only elements already visible in that moment,
-  physically plausible, no teleporting. Never invent new objects, walls, structures,
-  characters, or scene changes — animation must stay inside the illustrated moment.
 - ALL output text must be in English. If the page is in another language, translate it.
 - The scene id must be kebab-case; the title short and evocative.`
 

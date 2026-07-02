@@ -14,33 +14,7 @@ function collectObjects(node, out = []) {
 
 describe('SCENE_SCHEMA', () => {
   it('matches the Tier 1 scene shape at the top level', () => {
-    expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'keyBeatIndex', 'imaginings', 'beats'])
-  })
-
-  it('defines three contrasting imaginings of the key beat (Rashomon mode)', () => {
-    const imaginings = SCENE_SCHEMA.properties.imaginings
-    expect(imaginings.type).toBe('array')
-    expect(imaginings.items.required).toEqual([
-      'title', 'perspective', 'illustrationPrompt', 'motionPrompt',
-    ])
-    expect(imaginings.items.additionalProperties).toBe(false)
-    expect(SYSTEM_PROMPT).toMatch(/EXACTLY 3 contrasting imaginings/)
-    expect(SYSTEM_PROMPT).toMatch(/Rashomon/)
-    expect(SYSTEM_PROMPT).toMatch(/Do NOT invent new story facts/)
-  })
-
-  it('requires a grounded motion prompt per beat', () => {
-    const beat = SCENE_SCHEMA.properties.beats.items
-    expect(beat.required).toContain('motionPrompt')
-    expect(beat.properties.motionPrompt.type).toBe('string')
-    expect(SYSTEM_PROMPT).toMatch(/motionPrompt/)
-    expect(SYSTEM_PROMPT).toMatch(/Never invent new objects/)
-  })
-
-  it('asks Claude to pick the single key scene to film', () => {
-    expect(SCENE_SCHEMA.properties.keyBeatIndex.type).toBe('integer')
-    expect(SYSTEM_PROMPT).toMatch(/keyBeatIndex/)
-    expect(SYSTEM_PROMPT).toMatch(/ONE beat/)
+    expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'beats'])
   })
 
   it('every object schema forbids additional properties (structured outputs requirement)', () => {

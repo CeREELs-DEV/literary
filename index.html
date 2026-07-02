@@ -30,10 +30,15 @@
             <p id="beat-caption"></p>
           </div>
         </div>
-        <button id="replay-clip" type="button" class="replay-clip hidden">
-          ✨ Watch the animated version
+        <button id="watch-film" type="button" class="replay-clip hidden">
+          🎬 Watch the film
         </button>
       </section>
+    </div>
+    <div id="cinema" class="hidden">
+      <video id="film-video" playsinline></video>
+      <div id="film-subtitle-bar"><p id="film-subtitle"></p></div>
+      <button id="cinema-close" type="button" aria-label="Close">✕</button>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

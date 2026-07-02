@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenAI } from '@google/genai'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
 import { loadReferenceImages, generateBeatImages } from './images.js'
-import { generateBeatClips } from './video.js'
+import { generateFilm } from './film.js'
 import { loadVoiceConfig, generateBeatSpeech } from './speech.js'
 import { GENERATED_DIR } from './paths.js'
 
@@ -84,20 +84,20 @@ export async function runExperiencePipeline({
       : Promise.resolve([]),
   ])
 
-  // Frontend starts the image+voice experience on this signal;
-  // per-beat clips keep generating in the background.
-  emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })
-
+  // The frontend starts the image+voice experience on the first 'animating'
+  // status; the continuous film keeps generating in the background.
   if (images.length > 0) {
     try {
-      await generateBeatClips({
+      await generateFilm({
         scene, images, emit, ai: genAi, saveDir,
         ...(sleep ? { sleep } : {}),
       })
     } catch (err) {
-      console.error('clip generation failed:', err?.message ?? err)
-      emit({ type: 'status', stage: 'animating', label: 'Animation unavailable this time.' })
+      console.error('film generation failed:', err?.message ?? err)
+      emit({ type: 'status', stage: 'animating', label: 'Film unavailable this time.' })
     }
+  } else {
+    emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })
   }
 
   emit({ type: 'status', stage: 'done', label: 'Experience complete!' })

@@ -35,3 +35,16 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
   border-radius: 8px; opacity: 0; animation: artifact-in 600ms ease forwards; }
 @keyframes artifact-in { to { opacity: 1; } }
 .replay-clip { margin-top: 16px; background: #2d2d3a; }
+
+#cinema { position: fixed; inset: 0; z-index: 50; background: #000;
+  display: flex; align-items: center; justify-content: center; }
+#cinema.hidden { display: none; }
+#film-video { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+#film-subtitle-bar { position: absolute; left: 0; right: 0; bottom: 6vh;
+  display: flex; justify-content: center; pointer-events: none; }
+#film-subtitle { max-width: 80vw; padding: 10px 22px; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 22px;
+  line-height: 1.4; text-align: center; }
+#cinema-close { position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
+  border-radius: 50%; font-size: 18px; background: rgba(255, 255, 255, 0.15);
+  color: #fff; padding: 0; }

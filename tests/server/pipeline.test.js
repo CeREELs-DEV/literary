@@ -120,7 +120,7 @@ describe('runExperiencePipeline — Phase B visuals', () => {
     expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
   })
 
-  it('runs drawing then animating stages and emits images and clip', async () => {
+  it('runs drawing then animating stages and emits images and the film', async () => {
     const emit = vi.fn()
     await runExperiencePipeline({
       ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
@@ -128,15 +128,17 @@ describe('runExperiencePipeline — Phase B visuals', () => {
     })
     const events = emit.mock.calls.map((c) => c[0])
     const stages = events.filter((e) => e.type === 'status').map((e) => e.stage)
-    expect(stages).toEqual(['reading', 'designing', 'drawing', 'animating', 'done'])
+    // the film emits its own per-segment 'animating' labels — compare deduped order
+    expect([...new Set(stages)]).toEqual(['reading', 'designing', 'drawing', 'animating', 'done'])
     expect(events.filter((e) => e.type === 'image')).toHaveLength(1) // validScene has 1 beat
-    expect(events.filter((e) => e.type === 'clip')).toHaveLength(1)
+    expect(events.filter((e) => e.type === 'film')).toHaveLength(1)
+    expect(events.filter((e) => e.type === 'clip')).toHaveLength(0)
     // scene must arrive BEFORE drawing starts (frontend shows artifacts progressively)
     expect(events.findIndex((e) => e.type === 'scene'))
       .toBeLessThan(events.findIndex((e) => e.type === 'status' && e.stage === 'drawing'))
   })
 
-  it('still reaches done when clip generation fails', async () => {
+  it('still reaches done when film generation fails', async () => {
     const genAi = fakeGenAi()
     genAi.models.generateVideos = vi.fn(async () => { throw new Error('veo down') })
     const emit = vi.fn()
@@ -145,13 +147,13 @@ describe('runExperiencePipeline — Phase B visuals', () => {
       saveDir: '/tmp/generated', sleep: async () => {},
     })
     const events = emit.mock.calls.map((c) => c[0])
-    expect(events.filter((e) => e.type === 'clip')).toHaveLength(0)
+    expect(events.filter((e) => e.type === 'film')).toHaveLength(0)
     expect(events.filter((e) => e.type === 'error')).toHaveLength(0)
     expect(events.at(-1)).toMatchObject({ type: 'status', stage: 'done' })
   })
 })
 
-describe('runExperiencePipeline — Phase C speech and per-beat clips', () => {
+describe('runExperiencePipeline — Phase C speech and the film', () => {
   const base = { imageBase64: 'aGVsbG8=', mediaType: 'image/jpeg' }
   const references = [{ data: 'cmVm', mimeType: 'image/png' }]
   const voiceConfig = {
@@ -171,10 +173,8 @@ describe('runExperiencePipeline — Phase C speech and per-beat clips', () => {
     const types = emit.mock.calls.map((c) => c[0].type)
     expect(types).toContain('speech')
     expect(types).toContain('image')
-    expect(types).toContain('clip')
-    // clip events are indexed now
-    const clip = emit.mock.calls.map((c) => c[0]).find((e) => e.type === 'clip')
-    expect(clip.index).toBeDefined()
+    expect(types).toContain('film')
+    expect(types).not.toContain('clip')
   })
 
   it('generates speech even when visuals are unavailable', async () => {

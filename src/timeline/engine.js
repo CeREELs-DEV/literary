@@ -43,6 +43,10 @@ export function createTimelineEngine({
           resolve()
           return
         }
+        // Hard boundary between beats: whatever audio/timer the previous beat
+        // left behind is silenced before the next one starts (no voice overlap).
+        cancelCurrent?.()
+        cancelCurrent = null
         if (index >= beats.length) {
           resolve()
           return
@@ -61,6 +65,8 @@ export function createTimelineEngine({
             (acc, url) =>
               acc.then(() => {
                 if (mySession !== session) return undefined
+                // Silence the previous segment before the next one speaks.
+                cancelCurrent?.()
                 return playAudio(url, { register: (cancel) => { cancelCurrent = cancel } })
               }),
             Promise.resolve(),

@@ -229,12 +229,17 @@ export async function reimaginePassage({
     data: ref.data,
   }))
   const prompt =
-    `The attached reference images show the characters and art style of a children's ` +
-    `story. ` +
+    `STYLE LOCK — this is one cut of an ongoing animated series. The first attached ` +
+    `reference images define the series' art style: flat cel-shaded 2D animation style, ` +
+    `clean uniform line weight, simple flat color fills, soft muted palette. Every cut ` +
+    `must look drawn by the same hand: same line weight, same flat shading (no painterly ` +
+    `rendering, no watercolor, no 3D, no photorealism), same character proportions and ` +
+    `face designs, same color palette, same level of background detail. ` +
     (extraReferences.length
-      ? `The last ${Math.min(extraReferences.length, 3)} attached image(s) are neighbouring ` +
-        `scenes from the same book — match their exact rendering style, character ` +
-        `designs, palette, and level of detail so the cuts feel like one book. `
+      ? `The last ${Math.min(extraReferences.length, 3)} attached image(s) are the ` +
+        `IMMEDIATELY PRECEDING cuts of this very scene — the same characters wearing the ` +
+        `same outfits in the same location and lighting. Continue them exactly: reuse ` +
+        `their character renderings, palette, and rendering technique verbatim. `
       : '') +
     (bookContext
       ? `Canon (characters and world): "${clampText(bookContext, 900)}". `
@@ -242,10 +247,10 @@ export async function reimaginePassage({
     (bookText
       ? `The full story, so the moment fits its context: "${clampText(bookText, 1200)}". `
       : '') +
-    `Reimagine this story moment: "${text}" — transported to ${design.label}. ` +
-    `${design.illustrationPrompt} Keep EXACTLY the reference art style, palette, and ` +
-    `linework; adapt only the costumes, architecture, props, and landscape to the ` +
-    `period. Wide cinematic composition. No text or letters in the image.`
+    `Now illustrate this story moment: "${text}" — transported to ${design.label}. ` +
+    `${design.illustrationPrompt} Adapt only the costumes, architecture, props, and ` +
+    `landscape to the period; the art style stays locked. Wide cinematic composition. ` +
+    `No text or letters in the image.`
   const generate = async (model) => {
     const interaction = await ai.interactions.create({
       model,

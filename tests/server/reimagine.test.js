@@ -131,7 +131,7 @@ describe('reimaginePassage', () => {
     const promptText = imageParams.input.find((p) => p.type === 'text').text
     expect(promptText).toContain('1800s Joseon Korea')
     expect(promptText).toContain('The door slammed shut.')
-    expect(promptText).toContain('Keep EXACTLY the reference art style')
+    expect(promptText).toContain('STYLE LOCK')
 
     const events = emit.mock.calls.map((c) => c[0])
     expect(events[0].type).toBe('image')
@@ -209,7 +209,7 @@ describe('reimaginePassage', () => {
     const imageParts = params.input.filter((p) => p.type === 'image')
     expect(imageParts.at(-1)).toEqual({ type: 'image', mime_type: 'image/png', data: 'c2lzdGVy' })
     const promptText = params.input.find((p) => p.type === 'text').text
-    expect(promptText).toContain('neighbouring scenes from the same book')
+    expect(promptText).toContain('IMMEDIATELY PRECEDING cuts of this very scene')
   })
 
   it('keeps the still card when the clip fails (non-fatal)', async () => {

@@ -41,12 +41,17 @@ export const SCENE_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['text', 'amplifiedCaption', 'duration', 'narration', 'effects', 'speech'],
+        required: ['text', 'amplifiedCaption', 'motionPrompt', 'duration', 'narration', 'effects', 'speech'],
         properties: {
           text: { type: 'string', description: 'verbatim sentence(s) from the page' },
           amplifiedCaption: {
             type: 'string',
             description: 'imaginative sensory amplification of the text',
+          },
+          motionPrompt: {
+            type: 'string',
+            description:
+              'how elements ALREADY IN the illustration would move if animated — subtle, physically plausible motion only; never introduce new objects, structures, or characters',
           },
           duration: { type: 'integer', description: 'milliseconds, 2500-4500' },
           narration: { type: 'string', description: 'same as text, for read-aloud' },
@@ -108,6 +113,10 @@ Rules:
 - keyBeatIndex: choose the ONE beat where seeing the moment would most expand a child's
   imagination — the most vivid, transformative, or emotionally charged image in the passage.
   Not necessarily the loudest beat: pick the moment a child would most want to picture.
+- beat.motionPrompt: describe ONLY how things already visible in that moment would move
+  (e.g. "her cloak ripples in the wind, leaves drift past, the camera drifts in slowly").
+  Grounded, gentle, physically plausible. Never invent new objects, walls, structures,
+  characters, or scene changes — animation must stay inside the illustrated moment.
 - ALL output text must be in English. If the page is in another language, translate it.
 - The scene id must be kebab-case; the title short and evocative.`
 

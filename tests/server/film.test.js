@@ -7,6 +7,7 @@ const scene = {
   beats: [
     { text: 'A', amplifiedCaption: 'wind rose', duration: 3000, effects: [] },
     { text: 'B', amplifiedCaption: 'door slammed', duration: 3000,
+      motionPrompt: 'the door swings shut, dust drifts in the doorway light',
       effects: [{ type: 'shake', intensity: 'high', duration: 600 }] },
     { text: 'C', amplifiedCaption: 'silence fell', duration: 3000, effects: [] },
   ],
@@ -59,10 +60,13 @@ describe('generateFilm', () => {
     expect(ai.models.generateVideos).toHaveBeenCalledTimes(1)
     const params = ai.models.generateVideos.mock.calls[0][0]
     expect(params.image).toEqual({ imageBytes: 'aW1nMQ==', mimeType: 'image/jpeg' })
-    expect(params.prompt).toContain('door slammed')
-    expect(params.config).toEqual({
+    // Claude's constrained motion design drives the animation, not the dramatic caption
+    expect(params.prompt).toContain('the door swings shut')
+    expect(params.prompt).toContain('Nothing new may enter the frame')
+    expect(params.config).toMatchObject({
       durationSeconds: 8, resolution: '720p', aspectRatio: '16:9',
     })
+    expect(params.config.negativePrompt).toContain('structures materializing')
     expect(ai.files.download).toHaveBeenCalledOnce()
     expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
     expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })

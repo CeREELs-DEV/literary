@@ -48,20 +48,31 @@ export async function generateFilm({
 
   emit({ type: 'status', stage: 'animating', label: 'Filming the key scene...' })
 
+  // Claude designs the motion (only what is already in the frame may move);
+  // the amplified caption is a fallback for scenes generated before motionPrompt.
+  const motion = beat.motionPrompt ?? beat.amplifiedCaption
   const request = (model) =>
     ai.models.generateVideos({
       model,
       prompt:
         `Animate this exact illustration — it is the first frame and its art style is the law. ` +
         `Preserve the characters, linework, color palette, and composition unchanged; do not ` +
-        `restyle, redraw, or add realism. Bring it to life with gentle, subtle motion only ` +
-        `(slow camera drift, wind, small character movements) as the moment unfolds: ` +
-        `${beat.amplifiedCaption}.`,
+        `restyle, redraw, or add realism. Nothing new may enter the frame: no new objects, ` +
+        `walls, structures, or characters may appear, form, or morph. ` +
+        `Only this gentle, physically plausible motion: ${motion}`,
       image: {
         imageBytes: image.src.slice(image.src.indexOf(',') + 1),
         mimeType: image.src.slice(5, image.src.indexOf(';')),
       },
-      config: { durationSeconds: 8, resolution: '720p', aspectRatio: '16:9' },
+      config: {
+        durationSeconds: 8,
+        resolution: '720p',
+        aspectRatio: '16:9',
+        negativePrompt:
+          'new objects appearing, structures materializing, walls forming, morphing, ' +
+          'warping, extra characters, scene change, style change, photorealism, ' +
+          'distortion, glitches, text',
+      },
     })
 
   let operation

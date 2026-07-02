@@ -17,6 +17,14 @@ describe('SCENE_SCHEMA', () => {
     expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'keyBeatIndex', 'beats'])
   })
 
+  it('requires a grounded motion prompt per beat', () => {
+    const beat = SCENE_SCHEMA.properties.beats.items
+    expect(beat.required).toContain('motionPrompt')
+    expect(beat.properties.motionPrompt.type).toBe('string')
+    expect(SYSTEM_PROMPT).toMatch(/motionPrompt/)
+    expect(SYSTEM_PROMPT).toMatch(/Never invent new objects/)
+  })
+
   it('asks Claude to pick the single key scene to film', () => {
     expect(SCENE_SCHEMA.properties.keyBeatIndex.type).toBe('integer')
     expect(SYSTEM_PROMPT).toMatch(/keyBeatIndex/)

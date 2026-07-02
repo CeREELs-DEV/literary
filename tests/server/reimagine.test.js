@@ -100,11 +100,14 @@ describe('reimaginePassage', () => {
     const veoParams = ai.models.generateVideos.mock.calls[0][0]
     expect(veoParams.model).toBe('veo-3.1-lite-generate-preview')
     expect(veoParams.config).toMatchObject({
-      durationSeconds: 8, resolution: '720p', aspectRatio: '16:9',
+      durationSeconds: 4, resolution: '720p', aspectRatio: '16:9', // GIF-length loop
     })
     expect(veoParams.config.negativePrompt).toBeUndefined() // lite rejects it
     expect(veoParams.prompt).toContain('lantern light flickers')
     expect(veoParams.prompt).toContain('Nothing new may enter the frame')
+    // real GIF feel: the scene moves, not the camera
+    expect(veoParams.prompt).toContain('KEEP THE CAMERA STILL')
+    expect(veoParams.prompt).toContain('animated GIF')
     expect(veoParams.image.mimeType).toBe('image/jpeg')
   })
 

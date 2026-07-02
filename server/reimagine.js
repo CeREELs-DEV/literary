@@ -25,7 +25,7 @@ export const REIMAGINE_SCHEMA = {
     motionPrompt: {
       type: 'string',
       description:
-        'choreography for animating that illustration as a short loop: who/what moves, in which direction, with what emotion — story logic must be exact (fleeing means moving AWAY from the threat); only elements already in the frame, subtle and loop-friendly',
+        'lively GIF-style motion for that illustration: what the CHARACTERS visibly do (blink, breathe, turn, gesture, step) and what ambient elements move (fabric, hair, flags, dust, light, rain) — continuous and clearly visible, camera stays still; story logic must be exact; only elements already in the frame',
     },
   },
 }
@@ -40,11 +40,12 @@ Rules:
   clothing, architecture, objects, landscape, atmosphere of the wished period and place.
 - Be concrete and period-accurate (an 1800s Joseon village has hanok roofs, hanbok,
   paper lanterns — not neon signs).
-- motionPrompt: choreograph the moment's action for an animator. State who moves, in
-  which direction, with what emotion — the spatial logic must match the story exactly
+- motionPrompt: choreograph the moment like a living animated GIF, not a camera move.
+  The characters must visibly move — blinking, breathing, turning, gesturing, stepping —
+  and ambient elements (fabric, hair, flags, dust, lantern light, rain) keep moving
+  continuously. The camera stays still. Spatial logic must match the story exactly
   (a character fleeing moves AWAY from the threat). Use only elements already visible;
-  never invent new objects, structures, or characters. Subtle, physically plausible,
-  loop-friendly motion.
+  never invent new objects, structures, or characters.
 - The label is a short English name of the era/setting.
 - ALL output must be in English, whatever language the wish is written in.`
 
@@ -70,13 +71,15 @@ async function awaitOperation(ai, operation, sleep) {
 // Lite is the primary model (its quota pool is the one we actually have).
 async function animateStill({ ai, text, design, src, saveDir, sleep }) {
   const prompt =
-    `This is one moment from a children's story: "${text}". Animate this exact ` +
-    `illustration as that moment unfolds. The illustration is the first frame and its ` +
-    `art style is the law: preserve the characters, linework, color palette, and ` +
-    `composition; do not restyle, redraw, or add realism. Nothing new may enter the ` +
-    `frame: no new objects, walls, structures, or characters may appear, form, or ` +
-    `morph. The motion must follow the story's spatial and emotional logic exactly: ` +
-    `${design.motionPrompt}`
+    `This is one moment from a children's story: "${text}". Bring this exact ` +
+    `illustration alive like an animated GIF. The illustration is the first frame and ` +
+    `its art style is the law: preserve the characters, linework, color palette, and ` +
+    `composition; do not restyle, redraw, or add realism. KEEP THE CAMERA STILL — no ` +
+    `zooming or panning; the life must come from the scene itself: the characters ` +
+    `visibly move (blink, breathe, turn, gesture) and ambient elements keep moving. ` +
+    `Nothing new may enter the frame: no new objects, walls, structures, or characters ` +
+    `may appear, form, or morph. The motion follows the story's spatial and emotional ` +
+    `logic exactly: ${design.motionPrompt}`
   const request = (model) =>
     ai.models.generateVideos({
       model,
@@ -86,7 +89,7 @@ async function animateStill({ ai, text, design, src, saveDir, sleep }) {
         mimeType: src.slice(5, src.indexOf(';')),
       },
       config: {
-        durationSeconds: 8,
+        durationSeconds: 4, // GIF-length loop — roughly halves the wait vs 8s
         resolution: '720p',
         aspectRatio: '16:9',
         // The lite model rejects negativePrompt (400) — fast only.

@@ -48,3 +48,14 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
 #cinema-close { position: absolute; top: 20px; right: 24px; width: 44px; height: 44px;
   border-radius: 50%; font-size: 18px; background: rgba(255, 255, 255, 0.15);
   color: #fff; padding: 0; }
+#film-image { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+#imagining-label { position: absolute; top: 24px; left: 28px; color: #fff;
+  font-size: 18px; padding: 8px 16px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55); }
+#question-card { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px; text-align: center;
+  background: #0d0d12; padding: 32px; }
+#question-card.hidden { display: none; }
+#question-card h2 { font-size: 40px; }
+#question-card p { font-size: 20px; color: #ffd479; font-style: italic; }
+#question-card button { margin-top: 12px; background: #2d2d3a; }

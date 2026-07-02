@@ -2,8 +2,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenAI } from '@google/genai'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
-import { loadReferenceImages, generateBeatImages } from './images.js'
-import { generateFilm } from './film.js'
+import { loadReferenceImages, generateBeatImages, generateImaginingImages } from './images.js'
+import { generateImaginingFilms } from './film.js'
 import { loadVoiceConfig, generateBeatSpeech } from './speech.js'
 import { GENERATED_DIR } from './paths.js'
 
@@ -72,7 +72,7 @@ export async function runExperiencePipeline({
   }
 
   emit({ type: 'status', stage: 'drawing', label: 'Illustrating and voicing the scenes...' })
-  const [images] = await Promise.all([
+  const [, , imaginingImages] = await Promise.all([
     canDraw
       ? generateBeatImages({ scene, references, emit, ai: genAi })
       : Promise.resolve([]),
@@ -82,23 +82,25 @@ export async function runExperiencePipeline({
           ...(fetchImpl ? { fetchImpl } : {}),
         })
       : Promise.resolve([]),
+    canDraw
+      ? generateImaginingImages({ scene, references, emit, ai: genAi })
+      : Promise.resolve([]),
   ])
 
   // The frontend starts the image+voice experience on the first 'animating'
-  // status; the continuous film keeps generating in the background.
-  if (images.length > 0) {
-    try {
-      await generateFilm({
-        scene, images, emit, ai: genAi, saveDir,
-        ...(sleep ? { sleep } : {}),
+  // status; the Rashomon films keep generating in the background.
+  if (imaginingImages.length > 0) {
+    const films = await generateImaginingFilms({
+      scene, imaginingImages, emit, ai: genAi, saveDir,
+      ...(sleep ? { sleep } : {}),
+    })
+    if (films.length === 0) {
+      // Per-imagining failures are logged inside; the illustrations stand in.
+      emit({
+        type: 'status',
+        stage: 'animating',
+        label: 'Films unavailable — the illustrations will stand in.',
       })
-    } catch (err) {
-      const msg = String(err?.message ?? err)
-      console.error('film generation failed:', msg)
-      const label = /RESOURCE_EXHAUSTED|429/.test(msg)
-        ? 'Film quota exhausted — try again in a few minutes.'
-        : 'Film unavailable this time.'
-      emit({ type: 'status', stage: 'animating', label })
     }
   } else {
     emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })

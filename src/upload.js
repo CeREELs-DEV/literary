@@ -1,7 +1,7 @@
 // src/upload.js
 
 // Read an NDJSON experience stream, dispatching callbacks as artifacts arrive.
-// Resolves with { scene, images, speech, film } when the stream ends.
+// Resolves with { scene, images, speech, imaginingImages, imaginingFilms }.
 export async function consumeExperienceStream(
   response,
   {
@@ -9,7 +9,8 @@ export async function consumeExperienceStream(
     onScene = () => {},
     onImage = () => {},
     onSpeech = () => {},
-    onFilm = () => {},
+    onImaginingImage = () => {},
+    onImaginingFilm = () => {},
   } = {},
 ) {
   if (!response.ok) {
@@ -18,7 +19,13 @@ export async function consumeExperienceStream(
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
-  const summary = { scene: null, images: {}, speech: {}, film: null }
+  const summary = {
+    scene: null,
+    images: {},
+    speech: {},
+    imaginingImages: {},
+    imaginingFilms: {},
+  }
 
   const handleLine = (line) => {
     if (!line.trim()) return
@@ -33,9 +40,12 @@ export async function consumeExperienceStream(
     } else if (event.type === 'speech') {
       summary.speech[event.index] = event.urls
       onSpeech(event.index, event.urls)
-    } else if (event.type === 'film') {
-      summary.film = { url: event.url, index: event.index }
-      onFilm(event.url, event.index)
+    } else if (event.type === 'imagining-image') {
+      summary.imaginingImages[event.index] = event.src
+      onImaginingImage(event.index, event.src)
+    } else if (event.type === 'imagining-film') {
+      summary.imaginingFilms[event.index] = event.url
+      onImaginingFilm(event.index, event.url)
     } else if (event.type === 'error') throw new Error(event.message)
   }
 

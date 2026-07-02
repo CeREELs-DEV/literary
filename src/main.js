@@ -41,8 +41,12 @@ const cinema = createCinema(
   {
     root: document.getElementById('cinema'),
     video: document.getElementById('film-video'),
+    image: document.getElementById('film-image'),
     subtitle: document.getElementById('film-subtitle'),
+    label: document.getElementById('imagining-label'),
+    questionCard: document.getElementById('question-card'),
     closeBtn: document.getElementById('cinema-close'),
+    replayBtn: document.getElementById('cinema-replay'),
   },
   { onClose: () => stopBgm() },
 )
@@ -93,6 +97,8 @@ photoInput?.addEventListener('change', async () => {
   let scene = null
   const images = {}
   const speech = {}
+  const imaginingImages = {}
+  const imaginingFilms = {}
   let playbackStarted = false
 
   const startPlayback = () => {
@@ -104,13 +110,41 @@ photoInput?.addEventListener('change', async () => {
     })
   }
 
+  // The cinema plays every imagining that has at least an illustration;
+  // films slot in for the ones that finished.
+  const openCinema = () => {
+    currentEngine?.stop() // stop the reading-mode playback and its voices
+    startBgm(0.12) // music under the films' native audio
+    const keyText = scene?.beats?.[scene.keyBeatIndex]?.text ?? ''
+    const playlist = (scene?.imaginings ?? [])
+      .map((imagining, k) => ({
+        title: imagining.title,
+        filmUrl: imaginingFilms[k] ?? null,
+        imageSrc: imaginingImages[k] ?? null,
+        text: keyText,
+      }))
+      .filter((item) => item.filmUrl || item.imageSrc)
+    cinema.open({ playlist })
+  }
+
+  const maybeShowWatch = () => {
+    const hasAnything =
+      Object.keys(imaginingFilms).length > 0 || Object.keys(imaginingImages).length > 0
+    if (!hasAnything) return
+    watchFilmBtn.classList.remove('hidden')
+    watchFilmBtn.onclick = openCinema
+  }
+
   try {
     const summary = await requestExperience(file, {
       onStatus: (label, stageName) => {
         setStatus(label)
         // Images and voices are done once filming starts — begin the experience now.
         if (stageName === 'animating') startPlayback()
-        if (stageName === 'done') startPlayback() // covers the no-visuals path
+        if (stageName === 'done') {
+          startPlayback() // covers the no-visuals path
+          maybeShowWatch() // even film-less imaginings are worth watching
+        }
       },
       onScene: (s) => {
         scene = s
@@ -126,18 +160,18 @@ photoInput?.addEventListener('change', async () => {
       onSpeech: (index, urls) => {
         speech[index] = urls
       },
-      onFilm: (url, index) => {
-        watchFilmBtn.classList.remove('hidden')
-        watchFilmBtn.onclick = () => {
-          currentEngine?.stop() // stop the reading-mode playback and its voices
-          startBgm(0.12) // music under the film's native audio
-          cinema.open({ filmUrl: url, scene, beatIndex: index })
-        }
+      onImaginingImage: (index, src) => {
+        imaginingImages[index] = src
+      },
+      onImaginingFilm: (index, url) => {
+        imaginingFilms[index] = url
+        maybeShowWatch()
       },
     })
     // Stream finished — make sure playback happened even if no status fired.
     scene = summary.scene
     startPlayback()
+    maybeShowWatch()
   } catch (err) {
     setStatus(err.message)
   } finally {

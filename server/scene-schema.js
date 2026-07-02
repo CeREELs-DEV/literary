@@ -26,7 +26,7 @@ const flashEffect = {
 export const SCENE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['id', 'title', 'keyBeatIndex', 'beats'],
+  required: ['id', 'title', 'keyBeatIndex', 'imaginings', 'beats'],
   properties: {
     id: { type: 'string', description: 'kebab-case scene id' },
     title: { type: 'string', description: 'short scene title' },
@@ -34,6 +34,37 @@ export const SCENE_SCHEMA = {
       type: 'integer',
       description:
         '0-based index of the single beat whose imagery most rewards visualization — the key scene',
+    },
+    imaginings: {
+      type: 'array',
+      description:
+        'EXACTLY 3 contrasting ways to imagine the key beat — same story moment, radically different point of view, mood, and composition',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['title', 'perspective', 'illustrationPrompt', 'motionPrompt'],
+        properties: {
+          title: {
+            type: 'string',
+            description: 'short evocative label for this imagining, e.g. "Through her eyes"',
+          },
+          perspective: {
+            type: 'string',
+            description:
+              'whose eyes / vantage point sees this moment (a character, an onlooker, a distant window...)',
+          },
+          illustrationPrompt: {
+            type: 'string',
+            description:
+              'how to draw this imagining: composition, framing, mood, lighting — clearly distinct from the other two',
+          },
+          motionPrompt: {
+            type: 'string',
+            description:
+              "choreography of the action from this perspective — spatial and emotional logic must match the story; only elements in the illustration, no new objects",
+          },
+        },
+      },
     },
     beats: {
       type: 'array',
@@ -113,6 +144,12 @@ Rules:
 - keyBeatIndex: choose the ONE beat where seeing the moment would most expand a child's
   imagination — the most vivid, transformative, or emotionally charged image in the passage.
   Not necessarily the loudest beat: pick the moment a child would most want to picture.
+- imaginings: design EXACTLY 3 contrasting imaginings of that key beat, Rashomon-style —
+  the SAME story moment, imagined three genuinely different ways. Vary the point of view
+  (a character's eyes, a bystander, a faraway vantage), the mood (tense, tender, dreamlike),
+  and the composition (close-up, wide, silhouette). Do NOT invent new story facts — only
+  the way of seeing changes. The point is to show a child that one sentence can be
+  imagined many ways.
 - beat.motionPrompt: choreograph this moment's ACTION for an animator. State who moves,
   in which direction, and with what emotion, so the motion tells the story correctly:
   a character fleeing a mouse runs AWAY from the mouse, looking back in fear; a hug pulls

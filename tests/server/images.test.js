@@ -1,6 +1,10 @@
 // tests/server/images.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { generateBeatImages, sniffImageMime } from '../../server/images.js'
+import {
+  generateBeatImages,
+  generateImaginingImages,
+  sniffImageMime,
+} from '../../server/images.js'
 
 describe('sniffImageMime', () => {
   it('detects JPEG bytes by base64 magic prefix', () => {
@@ -131,5 +135,50 @@ describe('key beat model selection', () => {
       'gemini-3-pro-image',
       'gemini-3.1-flash-lite-image',
     ])
+  })
+})
+
+describe('generateImaginingImages', () => {
+  const rashomonScene = {
+    ...scene,
+    keyBeatIndex: 1,
+    imaginings: [
+      { title: 'Through her eyes', perspective: 'from the fleeing girl',
+        illustrationPrompt: 'close-up, dim light', motionPrompt: 'she runs' },
+      { title: 'From the rafters', perspective: 'from a mouse above',
+        illustrationPrompt: 'tiny figures below', motionPrompt: 'door swings' },
+    ],
+  }
+
+  it('generates one Pro illustration per imagining with story and perspective context', async () => {
+    const ai = fakeAi()
+    const emit = vi.fn()
+    const images = await generateImaginingImages({ scene: rashomonScene, references, emit, ai })
+    expect(images).toHaveLength(2)
+    const calls = ai.interactions.create.mock.calls.map((c) => c[0])
+    for (const params of calls) expect(params.model).toBe('gemini-3-pro-image')
+    expect(calls[0].input[0].text).toContain('B') // key beat text
+    expect(calls[0].input[0].text).toContain('from the fleeing girl')
+    expect(calls[0].input[0].text).toContain('close-up, dim light')
+    const events = emit.mock.calls.map((c) => c[0])
+    expect(events.every((e) => e.type === 'imagining-image')).toBe(true)
+    expect(events.map((e) => e.index).sort()).toEqual([0, 1])
+  })
+
+  it('retries on Lite when Pro fails and returns [] without imaginings', async () => {
+    const ai = {
+      interactions: {
+        create: vi.fn(async (params) => {
+          if (params.model === 'gemini-3-pro-image') throw new Error('pro down')
+          return { output_image: { data: 'aW1n' } }
+        }),
+      },
+    }
+    const images = await generateImaginingImages({
+      scene: rashomonScene, references, emit: vi.fn(), ai,
+    })
+    expect(images).toHaveLength(2)
+    expect(await generateImaginingImages({ scene, references, emit: vi.fn(), ai: fakeAi() }))
+      .toEqual([])
   })
 })

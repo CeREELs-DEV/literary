@@ -93,3 +93,59 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
     .filter((r) => r.status === 'fulfilled')
     .map((r) => r.value)
 }
+
+function imaginingPrompt(scene, keyBeat, imagining) {
+  return (
+    `The attached reference images show the characters and art style of a children's story ` +
+    `titled "${scene.title}". Illustrate this story moment: "${keyBeat.text}" — but imagined ` +
+    `from this perspective: ${imagining.perspective}. ${imagining.illustrationPrompt} ` +
+    `Keep EXACTLY the reference art style, palette, and linework. ` +
+    `Wide cinematic composition. No text or letters in the image.`
+  )
+}
+
+// Generate one illustration per imagining of the key beat (Rashomon mode).
+// Pro model for fidelity, Lite retry so a Pro failure still yields a frame.
+export async function generateImaginingImages({ scene, references, emit, ai }) {
+  const imaginings = scene.imaginings ?? []
+  const keyBeat = scene.beats[scene.keyBeatIndex] ?? scene.beats[0]
+  if (imaginings.length === 0 || !keyBeat) return []
+  const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
+    type: 'image',
+    mime_type: ref.mimeType,
+    data: ref.data,
+  }))
+  const generateOne = async (imagining, index, model) => {
+    const interaction = await ai.interactions.create({
+      model,
+      input: [
+        { type: 'text', text: imaginingPrompt(scene, keyBeat, imagining) },
+        ...referenceParts,
+      ],
+      response_format: { type: 'image', aspect_ratio: '16:9' },
+    })
+    const data = interaction?.output_image?.data
+    if (!data) throw new Error(`no image data in response for imagining ${index}`)
+    return data
+  }
+
+  const results = await Promise.allSettled(
+    imaginings.map(async (imagining, index) => {
+      let data
+      try {
+        data = await generateOne(imagining, index, PRO_MODEL)
+      } catch {
+        data = await generateOne(imagining, index, LITE_MODEL)
+      }
+      const src = `data:${sniffImageMime(data)};base64,${data}`
+      emit({ type: 'imagining-image', index, src })
+      return { index, src }
+    }),
+  )
+  for (const f of results.filter((r) => r.status === 'rejected')) {
+    console.error('imagining image failed:', f.reason?.message ?? f.reason)
+  }
+  return results
+    .filter((r) => r.status === 'fulfilled')
+    .map((r) => r.value)
+}

@@ -52,9 +52,11 @@ export async function generateFilm({
     ai.models.generateVideos({
       model,
       prompt:
-        `A key moment from an animated children's storybook film titled "${scene.title}": ` +
-        `${beat.amplifiedCaption}. Cinematic 2D storybook animation, gentle camera movement, ` +
-        `matching the illustration's art style.`,
+        `Animate this exact illustration — it is the first frame and its art style is the law. ` +
+        `Preserve the characters, linework, color palette, and composition unchanged; do not ` +
+        `restyle, redraw, or add realism. Bring it to life with gentle, subtle motion only ` +
+        `(slow camera drift, wind, small character movements) as the moment unfolds: ` +
+        `${beat.amplifiedCaption}.`,
       image: {
         imageBytes: image.src.slice(image.src.indexOf(',') + 1),
         mimeType: image.src.slice(5, image.src.indexOf(';')),

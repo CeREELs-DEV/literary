@@ -13,8 +13,10 @@ function collectObjects(node, out = []) {
 }
 
 describe('SCENE_SCHEMA', () => {
-  it('matches the Tier 1 scene shape at the top level', () => {
+  it('is a lean text-extraction schema (the book is the product)', () => {
     expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'beats'])
+    expect(SCENE_SCHEMA.properties.beats.items.required).toEqual(['text'])
+    expect(Object.keys(SCENE_SCHEMA.properties.beats.items.properties)).toEqual(['text'])
   })
 
   it('every object schema forbids additional properties (structured outputs requirement)', () => {
@@ -23,39 +25,15 @@ describe('SCENE_SCHEMA', () => {
     }
   })
 
-  it('only allows shake and flash effect types in Phase A', () => {
-    const effectSchemas = SCENE_SCHEMA.properties.beats.items.properties.effects.items.anyOf
-    const types = effectSchemas.map((s) => s.properties.type.const)
-    expect(types.sort()).toEqual(['flash', 'shake'])
-  })
-
   it('does not use unsupported numeric constraints', () => {
     const json = JSON.stringify(SCENE_SCHEMA)
     expect(json).not.toMatch(/"minimum"|"maximum"|"minLength"|"maxLength"/)
   })
 
-  it('prompts are non-empty strings mentioning English output', () => {
+  it('prompts are non-empty strings mentioning English output and passages', () => {
     expect(SYSTEM_PROMPT).toMatch(/English/)
+    expect(SYSTEM_PROMPT).toMatch(/passages/)
     expect(typeof USER_INSTRUCTION).toBe('string')
     expect(USER_INSTRUCTION.length).toBeGreaterThan(0)
-  })
-
-  it('defines speech segments with speaker and delivery enums', () => {
-    const speech = SCENE_SCHEMA.properties.beats.items.properties.speech
-    expect(SCENE_SCHEMA.properties.beats.items.required).toContain('speech')
-    expect(speech.items.required).toEqual(['speaker', 'text', 'delivery'])
-    expect(speech.items.properties.speaker.enum).toEqual([
-      'narrator', 'character-1', 'character-2',
-    ])
-    expect(speech.items.properties.delivery.enum).toEqual([
-      'normal', 'whisper', 'excited', 'shout', 'sad',
-    ])
-    expect(speech.items.additionalProperties).toBe(false)
-  })
-
-  it('prompt instructs dialogue splitting and delivery tagging', () => {
-    expect(SYSTEM_PROMPT).toMatch(/speech/)
-    expect(SYSTEM_PROMPT).toMatch(/whisper/i)
-    expect(SYSTEM_PROMPT).toMatch(/character-1/)
   })
 })

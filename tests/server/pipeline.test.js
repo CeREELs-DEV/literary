@@ -6,14 +6,8 @@ const validScene = {
   id: 'windy-door',
   title: 'A Windy Day',
   beats: [
-    {
-      text: 'The door slammed shut.',
-      amplifiedCaption: 'The whole house shuddered',
-      duration: 3000,
-      narration: 'The door slammed shut.',
-      effects: [{ type: 'shake', intensity: 'high', duration: 600 }],
-      speech: [{ speaker: 'narrator', text: 'The door slammed shut.', delivery: 'normal' }],
-    },
+    { text: 'The door slammed shut.' },
+    { text: 'Everything went quiet.' },
   ],
 }
 
@@ -31,7 +25,7 @@ function fakeClient({ stopReason = 'end_turn', text = JSON.stringify(validScene)
 }
 
 describe('runExperiencePipeline', () => {
-  it('emits status events then the parsed scene', async () => {
+  it('emits reading status, the parsed scene, then done', async () => {
     const emit = vi.fn()
     await runExperiencePipeline({
       imageBase64: 'aGVsbG8=',
@@ -39,11 +33,11 @@ describe('runExperiencePipeline', () => {
       emit,
       client: fakeClient(),
     })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types[0]).toBe('status')
-    expect(types).toContain('scene')
-    const sceneEvent = emit.mock.calls.find((c) => c[0].type === 'scene')[0]
+    const events = emit.mock.calls.map((c) => c[0])
+    expect(events[0]).toMatchObject({ type: 'status', stage: 'reading' })
+    const sceneEvent = events.find((e) => e.type === 'scene')
     expect(sceneEvent.scene).toEqual(validScene)
+    expect(events.at(-1)).toMatchObject({ type: 'status', stage: 'done' })
   })
 
   it('sends the image and schema to Claude', async () => {
@@ -77,108 +71,5 @@ describe('runExperiencePipeline', () => {
       }),
     ).rejects.toThrow(/refus/i)
     expect(emit.mock.calls.find((c) => c[0].type === 'scene')).toBeUndefined()
-  })
-})
-
-// --- Phase B additions ---
-
-function fakeGenAi() {
-  return {
-    interactions: {
-      create: vi.fn(async () => ({ output_image: { data: 'aW1n' } })),
-    },
-    models: {
-      generateVideos: vi.fn(async () => ({
-        done: true,
-        response: { generatedVideos: [{ video: { name: 'files/x' } }] },
-      })),
-    },
-    operations: { getVideosOperation: vi.fn() },
-    files: { download: vi.fn(async () => {}) },
-  }
-}
-
-describe('runExperiencePipeline — Phase B visuals', () => {
-  const base = { imageBase64: 'aGVsbG8=', mediaType: 'image/jpeg' }
-  const references = [{ data: 'cmVm', mimeType: 'image/png' }]
-
-  it('skips visual stages gracefully when genAi is unavailable', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({ ...base, emit, client: fakeClient(), genAi: null, references })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types).toContain('scene')
-    expect(types).not.toContain('image')
-    expect(types).not.toContain('clip')
-    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
-  })
-
-  it('skips visual stages gracefully when no reference images exist', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({ ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references: [] })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types).not.toContain('image')
-    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
-  })
-
-  it('runs drawing then animating stages and emits beat images', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({
-      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
-      saveDir: '/tmp/generated',
-    })
-    const events = emit.mock.calls.map((c) => c[0])
-    const stages = events.filter((e) => e.type === 'status').map((e) => e.stage)
-    expect([...new Set(stages)]).toEqual(['reading', 'designing', 'drawing', 'animating', 'done'])
-    expect(events.filter((e) => e.type === 'image')).toHaveLength(1) // validScene has 1 beat
-    // scene must arrive BEFORE drawing starts (frontend shows artifacts progressively)
-    expect(events.findIndex((e) => e.type === 'scene'))
-      .toBeLessThan(events.findIndex((e) => e.type === 'status' && e.stage === 'drawing'))
-  })
-})
-
-describe('runExperiencePipeline — Phase C speech and the film', () => {
-  const base = { imageBase64: 'aGVsbG8=', mediaType: 'image/jpeg' }
-  const references = [{ data: 'cmVm', mimeType: 'image/png' }]
-  const voiceConfig = {
-    apiKey: 'k',
-    voices: { narrator: 'n', 'character-1': 'd1', 'character-2': 'd2' },
-  }
-  const fakeFetch = () =>
-    vi.fn(async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1]).buffer }))
-
-  it('emits speech events alongside images during drawing', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({
-      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
-      voiceConfig, fetchImpl: fakeFetch(),
-      saveDir: '/tmp/generated',
-    })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types).toContain('speech')
-    expect(types).toContain('image')
-    expect(types).not.toContain('imagining-film')
-  })
-
-  it('generates speech even when visuals are unavailable', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({
-      ...base, emit, client: fakeClient(), genAi: null, references: [],
-      voiceConfig, fetchImpl: fakeFetch(), saveDir: '/tmp/generated',
-    })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types).toContain('speech')
-    expect(types).not.toContain('image')
-    expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
-  })
-
-  it('skips speech gracefully without voiceConfig (existing visual path intact)', async () => {
-    const emit = vi.fn()
-    await runExperiencePipeline({
-      ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
-      voiceConfig: null, saveDir: '/tmp/generated',
-    })
-    const types = emit.mock.calls.map((c) => c[0].type)
-    expect(types).not.toContain('speech')
-    expect(types).toContain('image')
   })
 })

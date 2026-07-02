@@ -1,21 +1,14 @@
 // server/pipeline.js
 import Anthropic from '@anthropic-ai/sdk'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
-import { loadReferenceImages, generateBeatImages } from './images.js'
-import { loadVoiceConfig, generateBeatSpeech } from './speech.js'
-import { GENERATED_DIR } from './paths.js'
-import { defaultGenAi } from './genai.js'
 
+// The upload pipeline is intentionally lean: read the page, deliver the book.
+// Everything visual is generated on demand per passage via /api/reimagine.
 export async function runExperiencePipeline({
   imageBase64,
   mediaType,
   emit,
   client = new Anthropic(),
-  genAi = defaultGenAi(),
-  references = loadReferenceImages(),
-  voiceConfig = loadVoiceConfig(),
-  saveDir = GENERATED_DIR,
-  fetchImpl,
 }) {
   emit({ type: 'status', stage: 'reading', label: 'Reading the page...' })
 
@@ -50,34 +43,11 @@ export async function runExperiencePipeline({
     throw new Error('No text content in model response.')
   }
 
-  emit({ type: 'status', stage: 'designing', label: 'Designing the sensory experience...' })
-
   const scene = JSON.parse(textBlock.text)
   emit({ type: 'scene', scene })
-
-  // Visuals and speech — skip gracefully when unavailable (Phase A behavior preserved).
-  const canDraw = Boolean(genAi) && references.length > 0
-  const canSpeak = Boolean(voiceConfig)
-
-  if (!canDraw && !canSpeak) {
-    emit({ type: 'status', stage: 'done', label: 'Experience ready!' })
-    return
-  }
-
-  emit({ type: 'status', stage: 'drawing', label: 'Illustrating and voicing the scenes...' })
-  await Promise.all([
-    canDraw
-      ? generateBeatImages({ scene, references, emit, ai: genAi })
-      : Promise.resolve([]),
-    canSpeak
-      ? generateBeatSpeech({
-          scene, config: voiceConfig, emit, saveDir,
-          ...(fetchImpl ? { fetchImpl } : {}),
-        })
-      : Promise.resolve([]),
-  ])
-
-  emit({ type: 'status', stage: 'animating', label: 'Bringing the pages to life...' })
-
-  emit({ type: 'status', stage: 'done', label: 'Experience complete!' })
+  emit({
+    type: 'status',
+    stage: 'done',
+    label: 'Your book is ready — tap a sentence and reimagine it!',
+  })
 }

@@ -24,7 +24,6 @@ const eraInput = document.getElementById('era-input')
 const imagineBtn = document.getElementById('imagine-btn')
 const imagineStatus = document.getElementById('imagine-status')
 const remixGallery = document.getElementById('remix-gallery')
-const playReadingBtn = document.getElementById('play-reading')
 
 // The start screen hides once playback begins — mirror status to both screens.
 function setStatus(label) {
@@ -157,54 +156,24 @@ photoInput?.addEventListener('change', async () => {
   currentEngine?.stop()
   stopBgm()
   photoInput.disabled = true
-  playReadingBtn.classList.add('hidden')
   artifactStrip.innerHTML = ''
-
-  let scene = null
-  const images = {}
-  const speech = {}
-
-  const startPlayback = () => {
-    playScene(scene, { images, speech, withBgm: true }).catch((err) => {
-      setStatus(err.message)
-    })
-  }
 
   try {
     const summary = await requestExperience(file, {
-      onStatus: (label, stageName) => {
+      onStatus: (label) => {
         setStatus(label)
-        if (stageName === 'done') {
-          playReadingBtn.classList.remove('hidden')
-        }
       },
       onScene: (s) => {
-        scene = s
         currentScene = s
-        setStatus(`"${s.title}" — designing the experience...`)
+        setStatus('')
         renderBook(s)
         showExperienceScreen()
       },
-      onImage: (index, src) => {
-        images[index] = src
-        const img = document.createElement('img')
-        img.src = src
-        img.alt = `Scene ${index + 1}`
-        artifactStrip.appendChild(img)
-      },
-      onSpeech: (index, urls) => {
-        speech[index] = urls
-      },
     })
-    // Stream finished — make sure the reading button is visible even if no status fired.
-    scene = summary.scene
     currentScene = summary.scene
-    playReadingBtn.classList.remove('hidden')
   } catch (err) {
     setStatus(err.message)
   } finally {
     photoInput.disabled = false
   }
-
-  playReadingBtn.onclick = startPlayback
 })

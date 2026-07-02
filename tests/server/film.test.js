@@ -1,12 +1,13 @@
 // tests/server/film.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { generateFilm } from '../../server/film.js'
+import { generateFilm, pickKeyBeat } from '../../server/film.js'
 
 const scene = {
-  id: 's', title: 't',
+  id: 's', title: 't', keyBeatIndex: 1,
   beats: [
     { text: 'A', amplifiedCaption: 'wind rose', duration: 3000, effects: [] },
-    { text: 'B', amplifiedCaption: 'door slammed', duration: 3000, effects: [] },
+    { text: 'B', amplifiedCaption: 'door slammed', duration: 3000,
+      effects: [{ type: 'shake', intensity: 'high', duration: 600 }] },
     { text: 'C', amplifiedCaption: 'silence fell', duration: 3000, effects: [] },
   ],
 }
@@ -16,12 +17,11 @@ const images = [
 ]
 
 function fakeAi() {
-  let gen = 0
   return {
     models: {
       generateVideos: vi.fn(async () => ({
         done: true,
-        response: { generatedVideos: [{ video: { name: `files/v${gen++}` } }] },
+        response: { generatedVideos: [{ video: { name: 'files/v0' } }] },
       })),
     },
     operations: { getVideosOperation: vi.fn() },
@@ -29,49 +29,54 @@ function fakeAi() {
   }
 }
 
+describe('pickKeyBeat', () => {
+  it('uses keyBeatIndex when it has an illustration', () => {
+    expect(pickKeyBeat(scene, images)).toBe(1)
+  })
+
+  it('falls back to a high-shake illustrated beat when keyBeatIndex has no image', () => {
+    const s = { ...scene, keyBeatIndex: 2 } // beat 2 has no image
+    expect(pickKeyBeat(s, images)).toBe(1) // beat 1 has high shake + image
+  })
+
+  it('falls back to the first illustration otherwise', () => {
+    const s = { ...scene, keyBeatIndex: 2, beats: scene.beats.map((b) => ({ ...b, effects: [] })) }
+    expect(pickKeyBeat(s, images)).toBe(0)
+  })
+
+  it('returns -1 without images', () => {
+    expect(pickKeyBeat(scene, [])).toBe(-1)
+  })
+})
+
 describe('generateFilm', () => {
-  it('chains one initial segment plus one extension per remaining beat', async () => {
+  it('films ONLY the key beat from its illustration and emits an indexed film event', async () => {
     const ai = fakeAi()
     const emit = vi.fn()
     const url = await generateFilm({
       scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
     })
-    // 3 beats => 1 image-to-video + 2 extensions
-    expect(ai.models.generateVideos).toHaveBeenCalledTimes(3)
-    const calls = ai.models.generateVideos.mock.calls.map((c) => c[0])
-    // first call: from the beat-0 illustration
-    expect(calls[0].image).toEqual({ imageBytes: 'aW1nMA==', mimeType: 'image/jpeg' })
-    expect(calls[0].config.durationSeconds).toBe(8)
-    expect(calls[0].prompt).toContain('wind rose')
-    // extensions: chain the PREVIOUS generation's video object, no image
-    expect(calls[1].video).toEqual({ name: 'files/v0' })
-    expect(calls[1].image).toBeUndefined()
-    expect(calls[1].prompt).toContain('door slammed')
-    expect(calls[1].config).toEqual({ numberOfVideos: 1, resolution: '720p' })
-    expect(calls[2].video).toEqual({ name: 'files/v1' })
-    // only the FINAL combined video is downloaded
+    expect(ai.models.generateVideos).toHaveBeenCalledTimes(1)
+    const params = ai.models.generateVideos.mock.calls[0][0]
+    expect(params.image).toEqual({ imageBytes: 'aW1nMQ==', mimeType: 'image/jpeg' })
+    expect(params.prompt).toContain('door slammed')
+    expect(params.config).toEqual({
+      durationSeconds: 8, resolution: '720p', aspectRatio: '16:9',
+    })
     expect(ai.files.download).toHaveBeenCalledOnce()
-    expect(ai.files.download.mock.calls[0][0].file).toEqual({ name: 'files/v2' })
     expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
-    expect(emit).toHaveBeenCalledWith({ type: 'film', url })
+    expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })
   })
 
-  it('emits per-segment progress labels on the animating stage', async () => {
+  it('emits a single filming status label', async () => {
     const emit = vi.fn()
     await generateFilm({
       scene, images, emit, ai: fakeAi(), saveDir: '/tmp/generated', sleep: async () => {},
     })
-    const statusEvents = emit.mock.calls
-      .map((c) => c[0])
-      .filter((e) => e.type === 'status')
-    expect(statusEvents.map((e) => e.label)).toEqual([
-      'Filming scene 1/3...',
-      'Filming scene 2/3...',
-      'Filming scene 3/3...',
+    const statuses = emit.mock.calls.map((c) => c[0]).filter((e) => e.type === 'status')
+    expect(statuses).toEqual([
+      { type: 'status', stage: 'animating', label: 'Filming the key scene...' },
     ])
-    for (const e of statusEvents) {
-      expect(e.stage).toBe('animating')
-    }
   })
 
   it('returns null without images', async () => {
@@ -93,10 +98,20 @@ describe('generateFilm', () => {
     }
     ai.models.generateVideos = vi.fn(async () => pending)
     ai.operations.getVideosOperation = vi.fn(async () => (--polls <= 0 ? finished : pending))
-    const oneBeat = { ...scene, beats: [scene.beats[0]] }
     await generateFilm({
-      scene: oneBeat, images, emit: vi.fn(), ai, saveDir: '/tmp/generated', sleep: async () => {},
+      scene, images, emit: vi.fn(), ai, saveDir: '/tmp/generated', sleep: async () => {},
     })
     expect(ai.operations.getVideosOperation).toHaveBeenCalledTimes(2)
+  })
+
+  it('throws a diagnosable error when the operation carries no video', async () => {
+    const ai = fakeAi()
+    ai.models.generateVideos = vi.fn(async () => ({
+      done: true,
+      error: { message: 'quota exceeded' },
+    }))
+    await expect(
+      generateFilm({ scene, images, emit: vi.fn(), ai, saveDir: '/tmp/generated' }),
+    ).rejects.toThrow('quota exceeded')
   })
 })

@@ -3,15 +3,19 @@ import path from 'node:path'
 
 const POLL_INTERVAL_MS = 10_000
 
-function filmPrompt(scene, beat, isFirst) {
-  const opening = isFirst
-    ? `Opening scene of an animated children's storybook film titled "${scene.title}"`
-    : 'The film continues seamlessly into the next scene'
-  return (
-    `${opening}: ${beat.amplifiedCaption}. ` +
-    `Cinematic 2D storybook animation, gentle camera movement, ` +
-    `consistent characters and art style throughout.`
+// Choose the beat to film: Claude's keyBeatIndex when valid and illustrated,
+// else the most impactful illustrated beat (high shake), else the first illustration.
+export function pickKeyBeat(scene, images) {
+  const has = (i) => images.some((img) => img.index === i)
+  const k = scene.keyBeatIndex
+  if (Number.isInteger(k) && k >= 0 && k < scene.beats.length && has(k)) return k
+  const shaky = scene.beats.findIndex(
+    (b, i) =>
+      has(i) && (b.effects ?? []).some((e) => e.type === 'shake' && e.intensity === 'high'),
   )
+  if (shaky >= 0) return shaky
+  if (images.length === 0) return -1
+  return [...images].sort((a, b) => a.index - b.index)[0].index
 }
 
 async function awaitOperation(ai, operation, sleep) {
@@ -22,9 +26,8 @@ async function awaitOperation(ai, operation, sleep) {
   return operation
 }
 
-// Build one continuous film: image-to-video for the first beat, then one
-// scene extension (+7s) per remaining beat. Each extension returns the full
-// combined video, so only the final one is downloaded.
+// Film ONE key scene — the single moment that most rewards a child's visual
+// imagination. The rest of the passage stays in the reader's head by design.
 export async function generateFilm({
   scene,
   images,
@@ -33,41 +36,36 @@ export async function generateFilm({
   saveDir,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
-  const sorted = [...images].sort((a, b) => a.index - b.index)
-  const first = sorted[0]
-  if (!first) return null
+  const keyIndex = pickKeyBeat(scene, images)
+  if (keyIndex < 0) return null
+  const image = images.find((img) => img.index === keyIndex)
+  const beat = scene.beats[keyIndex]
 
-  const total = scene.beats.length
-  emit({ type: 'status', stage: 'animating', label: `Filming scene 1/${total}...` })
+  emit({ type: 'status', stage: 'animating', label: 'Filming the key scene...' })
 
   let operation = await ai.models.generateVideos({
     model: 'veo-3.1-fast-generate-preview',
-    prompt: filmPrompt(scene, scene.beats[first.index], true),
+    prompt:
+      `A key moment from an animated children's storybook film titled "${scene.title}": ` +
+      `${beat.amplifiedCaption}. Cinematic 2D storybook animation, gentle camera movement, ` +
+      `matching the illustration's art style.`,
     image: {
-      imageBytes: first.src.slice(first.src.indexOf(',') + 1),
-      mimeType: first.src.slice(5, first.src.indexOf(';')),
+      imageBytes: image.src.slice(image.src.indexOf(',') + 1),
+      mimeType: image.src.slice(5, image.src.indexOf(';')),
     },
     config: { durationSeconds: 8, resolution: '720p', aspectRatio: '16:9' },
   })
   operation = await awaitOperation(ai, operation, sleep)
-  let video = operation.response.generatedVideos[0].video
 
-  for (let i = 1; i < total; i += 1) {
-    emit({ type: 'status', stage: 'animating', label: `Filming scene ${i + 1}/${total}...` })
-    let op = await ai.models.generateVideos({
-      model: 'veo-3.1-fast-generate-preview',
-      prompt: filmPrompt(scene, scene.beats[i], false),
-      video,
-      config: { numberOfVideos: 1, resolution: '720p' },
-    })
-    op = await awaitOperation(ai, op, sleep)
-    video = op.response.generatedVideos[0].video
+  const video = operation.response?.generatedVideos?.[0]?.video
+  if (!video) {
+    throw new Error(operation.error?.message ?? 'Veo operation returned no video')
   }
 
   const filename = `film-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`
   await ai.files.download({ file: video, downloadPath: path.join(saveDir, filename) })
 
   const url = `/api/media/${filename}`
-  emit({ type: 'film', url })
+  emit({ type: 'film', url, index: keyIndex })
   return url
 }

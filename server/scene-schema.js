@@ -26,10 +26,15 @@ const flashEffect = {
 export const SCENE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['id', 'title', 'beats'],
+  required: ['id', 'title', 'keyBeatIndex', 'beats'],
   properties: {
     id: { type: 'string', description: 'kebab-case scene id' },
     title: { type: 'string', description: 'short scene title' },
+    keyBeatIndex: {
+      type: 'integer',
+      description:
+        '0-based index of the single beat whose imagery most rewards visualization — the key scene',
+    },
     beats: {
       type: 'array',
       description: '3 to 6 beats covering the page text in order',
@@ -100,6 +105,9 @@ Rules:
   low for wind, trembling, footsteps). Use flash for light/impact moments
   (white flash for lightning/brightness, dark flash color #000000 for dread/impact).
   Quiet beats may have an empty effects array - silence is also a sensory choice.
+- keyBeatIndex: choose the ONE beat where seeing the moment would most expand a child's
+  imagination — the most vivid, transformative, or emotionally charged image in the passage.
+  Not necessarily the loudest beat: pick the moment a child would most want to picture.
 - ALL output text must be in English. If the page is in another language, translate it.
 - The scene id must be kebab-case; the title short and evocative.`
 

@@ -34,8 +34,8 @@ export async function consumeExperienceStream(
       summary.speech[event.index] = event.urls
       onSpeech(event.index, event.urls)
     } else if (event.type === 'film') {
-      summary.film = event.url
-      onFilm(event.url)
+      summary.film = { url: event.url, index: event.index }
+      onFilm(event.url, event.index)
     } else if (event.type === 'error') throw new Error(event.message)
   }
 

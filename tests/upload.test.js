@@ -31,7 +31,7 @@ describe('consumeExperienceStream', () => {
       { type: 'scene', scene },
       { type: 'image', index: 0, src: 'data:image/png;base64,aW1n' },
       { type: 'speech', index: 0, urls: ['/api/media/speech-1.mp3'] },
-      { type: 'film', url: '/api/media/film-1.mp4' },
+      { type: 'film', url: '/api/media/film-1.mp4', index: 2 },
       { type: 'status', stage: 'done', label: 'Experience complete!' },
     ]
     const handlers = {
@@ -40,9 +40,9 @@ describe('consumeExperienceStream', () => {
     }
     const summary = await consumeExperienceStream(ndjsonResponse(events), handlers)
     expect(handlers.onSpeech).toHaveBeenCalledWith(0, ['/api/media/speech-1.mp3'])
-    expect(handlers.onFilm).toHaveBeenCalledWith('/api/media/film-1.mp4')
+    expect(handlers.onFilm).toHaveBeenCalledWith('/api/media/film-1.mp4', 2)
     expect(summary.speech).toEqual({ 0: ['/api/media/speech-1.mp3'] })
-    expect(summary.film).toBe('/api/media/film-1.mp4')
+    expect(summary.film).toEqual({ url: '/api/media/film-1.mp4', index: 2 })
   })
 
   it('handles an event line split across two chunks', async () => {

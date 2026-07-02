@@ -126,12 +126,12 @@ photoInput?.addEventListener('change', async () => {
       onSpeech: (index, urls) => {
         speech[index] = urls
       },
-      onFilm: (url) => {
+      onFilm: (url, index) => {
         watchFilmBtn.classList.remove('hidden')
         watchFilmBtn.onclick = () => {
           currentEngine?.stop() // stop the reading-mode playback and its voices
           startBgm(0.12) // music under the film's native audio
-          cinema.open({ filmUrl: url, scene })
+          cinema.open({ filmUrl: url, scene, beatIndex: index })
         }
       },
     })

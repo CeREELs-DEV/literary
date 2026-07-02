@@ -14,7 +14,13 @@ function collectObjects(node, out = []) {
 
 describe('SCENE_SCHEMA', () => {
   it('matches the Tier 1 scene shape at the top level', () => {
-    expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'beats'])
+    expect(SCENE_SCHEMA.required).toEqual(['id', 'title', 'keyBeatIndex', 'beats'])
+  })
+
+  it('asks Claude to pick the single key scene to film', () => {
+    expect(SCENE_SCHEMA.properties.keyBeatIndex.type).toBe('integer')
+    expect(SYSTEM_PROMPT).toMatch(/keyBeatIndex/)
+    expect(SYSTEM_PROMPT).toMatch(/ONE beat/)
   })
 
   it('every object schema forbids additional properties (structured outputs requirement)', () => {

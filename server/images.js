@@ -42,12 +42,11 @@ function beatPrompt(scene, beat) {
   )
 }
 
-const LITE_MODEL = 'gemini-3.1-flash-lite-image'
-const PRO_MODEL = 'gemini-3-pro-image' // Nano Banana Pro — key scene only
+export const LITE_MODEL = 'gemini-3.1-flash-lite-image'
+export const PRO_MODEL = 'gemini-3-pro-image' // Nano Banana Pro
 
 // Generate one illustration per beat, emitting each as it completes.
-// The key beat (the one that will be filmed) uses Nano Banana Pro for a
-// higher-fidelity first frame; all other beats use the fast Lite model.
+// Every beat uses the fast Lite model for both the initial attempt and the retry.
 export async function generateBeatImages({ scene, references, emit, ai }) {
   const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
     type: 'image',
@@ -71,13 +70,10 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
 
   const results = await Promise.allSettled(
     scene.beats.map(async (beat, index) => {
-      const isKeyBeat = index === scene.keyBeatIndex
-      // Retry once: a single transient failure shouldn't drop a beat's
-      // illustration. The key beat retries on Lite so a Pro-side failure
-      // still leaves the film with a usable frame.
+      // Retry once: a single transient failure shouldn't drop a beat's illustration.
       let data
       try {
-        data = await generateOne(beat, index, isKeyBeat ? PRO_MODEL : LITE_MODEL)
+        data = await generateOne(beat, index, LITE_MODEL)
       } catch {
         data = await generateOne(beat, index, LITE_MODEL)
       }
@@ -88,62 +84,6 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
   )
   for (const f of results.filter((r) => r.status === 'rejected')) {
     console.error('beat image failed:', f.reason?.message ?? f.reason)
-  }
-  return results
-    .filter((r) => r.status === 'fulfilled')
-    .map((r) => r.value)
-}
-
-function imaginingPrompt(scene, keyBeat, imagining) {
-  return (
-    `The attached reference images show the characters and art style of a children's story ` +
-    `titled "${scene.title}". Illustrate this story moment: "${keyBeat.text}" — but imagined ` +
-    `from this perspective: ${imagining.perspective}. ${imagining.illustrationPrompt} ` +
-    `Keep EXACTLY the reference art style, palette, and linework. ` +
-    `Wide cinematic composition. No text or letters in the image.`
-  )
-}
-
-// Generate one illustration per imagining of the key beat (Rashomon mode).
-// Pro model for fidelity, Lite retry so a Pro failure still yields a frame.
-export async function generateImaginingImages({ scene, references, emit, ai }) {
-  const imaginings = scene.imaginings ?? []
-  const keyBeat = scene.beats[scene.keyBeatIndex] ?? scene.beats[0]
-  if (imaginings.length === 0 || !keyBeat) return []
-  const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
-    type: 'image',
-    mime_type: ref.mimeType,
-    data: ref.data,
-  }))
-  const generateOne = async (imagining, index, model) => {
-    const interaction = await ai.interactions.create({
-      model,
-      input: [
-        { type: 'text', text: imaginingPrompt(scene, keyBeat, imagining) },
-        ...referenceParts,
-      ],
-      response_format: { type: 'image', aspect_ratio: '16:9' },
-    })
-    const data = interaction?.output_image?.data
-    if (!data) throw new Error(`no image data in response for imagining ${index}`)
-    return data
-  }
-
-  const results = await Promise.allSettled(
-    imaginings.map(async (imagining, index) => {
-      let data
-      try {
-        data = await generateOne(imagining, index, PRO_MODEL)
-      } catch {
-        data = await generateOne(imagining, index, LITE_MODEL)
-      }
-      const src = `data:${sniffImageMime(data)};base64,${data}`
-      emit({ type: 'imagining-image', index, src })
-      return { index, src }
-    }),
-  )
-  for (const f of results.filter((r) => r.status === 'rejected')) {
-    console.error('imagining image failed:', f.reason?.message ?? f.reason)
   }
   return results
     .filter((r) => r.status === 'fulfilled')

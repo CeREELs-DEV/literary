@@ -2,7 +2,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
   generateBeatImages,
-  generateImaginingImages,
   sniffImageMime,
 } from '../../server/images.js'
 
@@ -101,84 +100,5 @@ describe('reference cap', () => {
     await generateBeatImages({ scene, references: many, emit: vi.fn(), ai })
     const parts = ai.interactions.create.mock.calls[0][0].input.filter((p) => p.type === 'image')
     expect(parts.length).toBeLessThanOrEqual(8)
-  })
-})
-
-describe('key beat model selection', () => {
-  const keyScene = { ...scene, keyBeatIndex: 1 }
-
-  it('uses Nano Banana Pro for the key beat and Lite for the rest', async () => {
-    const ai = fakeAi()
-    await generateBeatImages({ scene: keyScene, references, emit: vi.fn(), ai })
-    const models = ai.interactions.create.mock.calls.map((c) => c[0].model).sort()
-    expect(models).toEqual(['gemini-3-pro-image', 'gemini-3.1-flash-lite-image'])
-  })
-
-  it('falls back to Lite when the Pro call fails, keeping the key beat illustrated', async () => {
-    const ai = {
-      interactions: {
-        create: vi.fn(async (params) => {
-          if (params.model === 'gemini-3-pro-image') throw new Error('pro down')
-          return { output_image: { data: 'aW1n' } }
-        }),
-      },
-    }
-    const emit = vi.fn()
-    const images = await generateBeatImages({ scene: keyScene, references, emit, ai })
-    expect(images).toHaveLength(2)
-    expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(2)
-    // the key beat's retry went to Lite
-    const keyCalls = ai.interactions.create.mock.calls
-      .map((c) => c[0])
-      .filter((p) => p.input.some((part) => part.text?.includes('door slammed')))
-    expect(keyCalls.map((p) => p.model)).toEqual([
-      'gemini-3-pro-image',
-      'gemini-3.1-flash-lite-image',
-    ])
-  })
-})
-
-describe('generateImaginingImages', () => {
-  const rashomonScene = {
-    ...scene,
-    keyBeatIndex: 1,
-    imaginings: [
-      { title: 'Through her eyes', perspective: 'from the fleeing girl',
-        illustrationPrompt: 'close-up, dim light', motionPrompt: 'she runs' },
-      { title: 'From the rafters', perspective: 'from a mouse above',
-        illustrationPrompt: 'tiny figures below', motionPrompt: 'door swings' },
-    ],
-  }
-
-  it('generates one Pro illustration per imagining with story and perspective context', async () => {
-    const ai = fakeAi()
-    const emit = vi.fn()
-    const images = await generateImaginingImages({ scene: rashomonScene, references, emit, ai })
-    expect(images).toHaveLength(2)
-    const calls = ai.interactions.create.mock.calls.map((c) => c[0])
-    for (const params of calls) expect(params.model).toBe('gemini-3-pro-image')
-    expect(calls[0].input[0].text).toContain('B') // key beat text
-    expect(calls[0].input[0].text).toContain('from the fleeing girl')
-    expect(calls[0].input[0].text).toContain('close-up, dim light')
-    const events = emit.mock.calls.map((c) => c[0])
-    expect(events.every((e) => e.type === 'imagining-image')).toBe(true)
-    expect(events.map((e) => e.index).sort()).toEqual([0, 1])
-  })
-
-  it('retries on Lite when Pro fails and returns [] without imaginings', async () => {
-    const ai = {
-      interactions: {
-        create: vi.fn(async (params) => {
-          if (params.model === 'gemini-3-pro-image') throw new Error('pro down')
-          return { output_image: { data: 'aW1n' } }
-        }),
-      },
-    }
-    const images = await generateImaginingImages({
-      scene: rashomonScene, references, emit: vi.fn(), ai,
-    })
-    expect(images).toHaveLength(2)
-    expect(await generateImaginingImages({ scene, references, emit: vi.fn(), ai: fakeAi() }))
-      .toEqual([])
   })
 })

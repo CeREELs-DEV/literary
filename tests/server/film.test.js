@@ -59,6 +59,8 @@ describe('generateFilm', () => {
     })
     expect(ai.models.generateVideos).toHaveBeenCalledTimes(1)
     const params = ai.models.generateVideos.mock.calls[0][0]
+    // Lite is the primary model — its quota pool is the one we actually have
+    expect(params.model).toBe('veo-3.1-lite-generate-preview')
     expect(params.image).toEqual({ imageBytes: 'aW1nMQ==', mimeType: 'image/jpeg' })
     // Claude's constrained motion design drives the animation, not the dramatic caption
     expect(params.prompt).toContain('the door swings shut')
@@ -66,7 +68,8 @@ describe('generateFilm', () => {
     expect(params.config).toMatchObject({
       durationSeconds: 8, resolution: '720p', aspectRatio: '16:9',
     })
-    expect(params.config.negativePrompt).toContain('structures materializing')
+    // lite rejects negativePrompt with a 400 — it must be omitted there
+    expect(params.config.negativePrompt).toBeUndefined()
     expect(ai.files.download).toHaveBeenCalledOnce()
     expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
     expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })
@@ -119,11 +122,11 @@ describe('generateFilm', () => {
     ).rejects.toThrow('operation failed upstream')
   })
 
-  it('falls back to the lite model when the fast model hits its quota', async () => {
+  it('falls back to the fast model when the lite model hits its quota', async () => {
     const ai = fakeAi()
     const original = ai.models.generateVideos.getMockImplementation()
     ai.models.generateVideos = vi.fn(async (params) => {
-      if (params.model === 'veo-3.1-fast-generate-preview') {
+      if (params.model === 'veo-3.1-lite-generate-preview') {
         throw new Error('{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}')
       }
       return original(params)
@@ -133,10 +136,10 @@ describe('generateFilm', () => {
       scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
     })
     expect(ai.models.generateVideos).toHaveBeenCalledTimes(2)
-    const liteParams = ai.models.generateVideos.mock.calls[1][0]
-    expect(liteParams.model).toBe('veo-3.1-lite-generate-preview')
-    // lite rejects negativePrompt with a 400 — it must be omitted there
-    expect(liteParams.config.negativePrompt).toBeUndefined()
+    const fastParams = ai.models.generateVideos.mock.calls[1][0]
+    expect(fastParams.model).toBe('veo-3.1-fast-generate-preview')
+    // fast supports negativePrompt — the hallucination blocklist rides along
+    expect(fastParams.config.negativePrompt).toContain('structures materializing')
     expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
     expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })
   })

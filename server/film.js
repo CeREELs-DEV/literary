@@ -80,15 +80,16 @@ export async function generateFilm({
       },
     })
 
+  // Lite is the primary model (its quota pool is the one we actually have);
+  // quotas are per-model, so fast serves as the backup pool.
   let operation
   try {
-    operation = await request('veo-3.1-fast-generate-preview')
+    operation = await request('veo-3.1-lite-generate-preview')
   } catch (err) {
     if (!isQuotaError(err)) throw err
-    // Quotas are per-model — the lite pool may still be open when fast is spent.
-    console.warn('fast model quota exhausted, retrying with lite:', err?.message ?? err)
-    emit({ type: 'status', stage: 'animating', label: 'Retrying with a lighter film model...' })
-    operation = await request('veo-3.1-lite-generate-preview')
+    console.warn('lite model quota exhausted, retrying with fast:', err?.message ?? err)
+    emit({ type: 'status', stage: 'animating', label: 'Retrying with another film model...' })
+    operation = await request('veo-3.1-fast-generate-preview')
   }
   operation = await awaitOperation(ai, operation, sleep)
 

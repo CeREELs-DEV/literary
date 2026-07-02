@@ -19,7 +19,7 @@
         </div>
       </section>
       <section id="experience-screen" class="screen hidden">
-        <div id="stage">
+        <div id="stage" class="hidden">
           <div id="media-frame">
             <div id="clip-layer"></div>
             <div id="image-layer"></div>
@@ -31,22 +31,28 @@
           </div>
         </div>
         <p id="experience-status" class="upload-status" role="status"></p>
-        <button id="watch-film" type="button" class="replay-clip hidden">
-          🎬 Watch the three imaginings
+        <div id="book" class="hidden">
+          <h2 id="book-title"></h2>
+          <div id="book-pages"></div>
+        </div>
+        <div id="imagine-panel" class="hidden">
+          <p id="selected-passage"></p>
+          <div id="era-chips">
+            <button type="button" class="era-chip">Joseon Korea</button>
+            <button type="button" class="era-chip">Medieval Europe</button>
+            <button type="button" class="era-chip">1990s city streets</button>
+            <button type="button" class="era-chip">A far-future space colony</button>
+          </div>
+          <input id="era-input" type="text"
+            placeholder="e.g. I want to imagine this in 1800s Joseon Korea" />
+          <button id="imagine-btn" type="button">✨ Imagine</button>
+          <p id="imagine-status" class="upload-status" role="status"></p>
+        </div>
+        <div id="remix-gallery"></div>
+        <button id="play-reading" type="button" class="replay-clip hidden">
+          ▶ Play the reading experience
         </button>
       </section>
-    </div>
-    <div id="cinema" class="hidden">
-      <video id="film-video" playsinline></video>
-      <img id="film-image" class="hidden" alt="An imagining of the key scene" />
-      <p id="imagining-label"></p>
-      <div id="film-subtitle-bar"><p id="film-subtitle"></p></div>
-      <div id="question-card" class="hidden">
-        <h2>How did YOU imagine it?</h2>
-        <p>Close your eyes and picture your own version of this moment.</p>
-        <button id="cinema-replay" type="button">↺ Watch the imaginings again</button>
-      </div>
-      <button id="cinema-close" type="button" aria-label="Close">✕</button>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

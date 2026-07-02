@@ -1,7 +1,7 @@
 // src/upload.js
 
 // Read an NDJSON experience stream, dispatching callbacks as artifacts arrive.
-// Resolves with { scene, images, speech, imaginingImages, imaginingFilms }.
+// Resolves with { scene, images, speech }.
 export async function consumeExperienceStream(
   response,
   {
@@ -9,8 +9,6 @@ export async function consumeExperienceStream(
     onScene = () => {},
     onImage = () => {},
     onSpeech = () => {},
-    onImaginingImage = () => {},
-    onImaginingFilm = () => {},
   } = {},
 ) {
   if (!response.ok) {
@@ -23,8 +21,6 @@ export async function consumeExperienceStream(
     scene: null,
     images: {},
     speech: {},
-    imaginingImages: {},
-    imaginingFilms: {},
   }
 
   const handleLine = (line) => {
@@ -40,12 +36,6 @@ export async function consumeExperienceStream(
     } else if (event.type === 'speech') {
       summary.speech[event.index] = event.urls
       onSpeech(event.index, event.urls)
-    } else if (event.type === 'imagining-image') {
-      summary.imaginingImages[event.index] = event.src
-      onImaginingImage(event.index, event.src)
-    } else if (event.type === 'imagining-film') {
-      summary.imaginingFilms[event.index] = event.url
-      onImaginingFilm(event.index, event.url)
     } else if (event.type === 'error') throw new Error(event.message)
   }
 

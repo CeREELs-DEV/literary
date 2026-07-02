@@ -3,7 +3,7 @@ import { validateScene } from './model/scene.js'
 import { createTimelineEngine } from './timeline/engine.js'
 import { sampleScene } from './scenes/sample.js'
 import { requestExperience } from './upload.js'
-import { createCinema } from './cinema.js'
+import { requestReimagine } from './remix.js'
 
 const startScreen = document.getElementById('start-screen')
 const experienceScreen = document.getElementById('experience-screen')
@@ -13,7 +13,18 @@ const photoInput = document.getElementById('book-photo')
 const uploadStatus = document.getElementById('upload-status')
 const artifactStrip = document.getElementById('artifact-strip')
 const experienceStatus = document.getElementById('experience-status')
-const watchFilmBtn = document.getElementById('watch-film')
+
+const book = document.getElementById('book')
+const bookTitle = document.getElementById('book-title')
+const bookPages = document.getElementById('book-pages')
+const imaginePanel = document.getElementById('imagine-panel')
+const selectedPassage = document.getElementById('selected-passage')
+const eraChips = document.querySelectorAll('.era-chip')
+const eraInput = document.getElementById('era-input')
+const imagineBtn = document.getElementById('imagine-btn')
+const imagineStatus = document.getElementById('imagine-status')
+const remixGallery = document.getElementById('remix-gallery')
+const playReadingBtn = document.getElementById('play-reading')
 
 // The start screen hides once playback begins — mirror status to both screens.
 function setStatus(label) {
@@ -37,20 +48,6 @@ function stopBgm() {
   bgm = null
 }
 
-const cinema = createCinema(
-  {
-    root: document.getElementById('cinema'),
-    video: document.getElementById('film-video'),
-    image: document.getElementById('film-image'),
-    subtitle: document.getElementById('film-subtitle'),
-    label: document.getElementById('imagining-label'),
-    questionCard: document.getElementById('question-card'),
-    closeBtn: document.getElementById('cinema-close'),
-    replayBtn: document.getElementById('cinema-replay'),
-  },
-  { onClose: () => stopBgm() },
-)
-
 function showExperienceScreen() {
   startScreen.classList.add('hidden')
   experienceScreen.classList.remove('hidden')
@@ -64,6 +61,7 @@ async function playScene(
   currentEngine?.stop()
   const scene = validateScene(rawScene)
   showExperienceScreen()
+  stage.classList.remove('hidden')
   if (withBgm) startBgm()
 
   const beats = scene.beats.map((beat, i) => {
@@ -85,70 +83,107 @@ startBtn?.addEventListener('click', () => {
   playScene(sampleScene).catch((err) => console.error(err))
 })
 
+// Render the scene as an e-book page with clickable passages.
+function renderBook(scene) {
+  bookTitle.textContent = scene.title
+  bookPages.innerHTML = ''
+  scene.beats.forEach((beat, index) => {
+    const span = document.createElement('span')
+    span.className = 'passage'
+    span.dataset.index = String(index)
+    span.textContent = beat.text + ' '
+    span.addEventListener('click', () => selectPassage(span, beat))
+    bookPages.appendChild(span)
+  })
+  book.classList.remove('hidden')
+}
+
+let selectedBeat = null
+
+function selectPassage(span, beat) {
+  bookPages.querySelectorAll('.passage.selected').forEach((el) => el.classList.remove('selected'))
+  span.classList.add('selected')
+  selectedBeat = beat
+  selectedPassage.textContent = beat.text
+  imaginePanel.classList.remove('hidden')
+}
+
+eraChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    eraInput.value = chip.textContent
+  })
+})
+
+imagineBtn?.addEventListener('click', async () => {
+  const wish = eraInput.value.trim()
+  if (!selectedBeat || !wish) return
+  imagineBtn.disabled = true
+  imagineStatus.textContent = 'Imagining...'
+  if (!bgm) startBgm(0.2)
+  try {
+    const result = await requestReimagine({
+      text: selectedBeat.text,
+      sceneTitle: currentScene?.title ?? '',
+      wish,
+    })
+    const card = document.createElement('div')
+    card.className = 'remix-card'
+    const frame = document.createElement('div')
+    frame.className = 'frame'
+    const img = document.createElement('img')
+    img.src = result.src
+    img.alt = result.label
+    frame.appendChild(img)
+    const label = document.createElement('p')
+    label.className = 'remix-label'
+    const firstWords = selectedBeat.text.split(' ').slice(0, 6).join(' ')
+    label.textContent = `${result.label} · ${firstWords}`
+    card.appendChild(frame)
+    card.appendChild(label)
+    remixGallery.appendChild(card)
+    imagineStatus.textContent = ''
+  } catch (err) {
+    imagineStatus.textContent = err.message
+  } finally {
+    imagineBtn.disabled = false
+  }
+})
+
+let currentScene = null
+
 photoInput?.addEventListener('change', async () => {
   const file = photoInput.files?.[0]
   if (!file) return
   currentEngine?.stop()
   stopBgm()
   photoInput.disabled = true
-  watchFilmBtn.classList.add('hidden')
+  playReadingBtn.classList.add('hidden')
   artifactStrip.innerHTML = ''
 
   let scene = null
   const images = {}
   const speech = {}
-  const imaginingImages = {}
-  const imaginingFilms = {}
-  let playbackStarted = false
 
   const startPlayback = () => {
-    if (playbackStarted || !scene) return
-    playbackStarted = true
-    // keep the current status visible — film progress continues underneath
     playScene(scene, { images, speech, withBgm: true }).catch((err) => {
       setStatus(err.message)
     })
-  }
-
-  // The cinema plays every imagining that has at least an illustration;
-  // films slot in for the ones that finished.
-  const openCinema = () => {
-    currentEngine?.stop() // stop the reading-mode playback and its voices
-    startBgm(0.12) // music under the films' native audio
-    const keyText = scene?.beats?.[scene.keyBeatIndex]?.text ?? ''
-    const playlist = (scene?.imaginings ?? [])
-      .map((imagining, k) => ({
-        title: imagining.title,
-        filmUrl: imaginingFilms[k] ?? null,
-        imageSrc: imaginingImages[k] ?? null,
-        text: keyText,
-      }))
-      .filter((item) => item.filmUrl || item.imageSrc)
-    cinema.open({ playlist })
-  }
-
-  const maybeShowWatch = () => {
-    const hasAnything =
-      Object.keys(imaginingFilms).length > 0 || Object.keys(imaginingImages).length > 0
-    if (!hasAnything) return
-    watchFilmBtn.classList.remove('hidden')
-    watchFilmBtn.onclick = openCinema
   }
 
   try {
     const summary = await requestExperience(file, {
       onStatus: (label, stageName) => {
         setStatus(label)
-        // Images and voices are done once filming starts — begin the experience now.
-        if (stageName === 'animating') startPlayback()
         if (stageName === 'done') {
-          startPlayback() // covers the no-visuals path
-          maybeShowWatch() // even film-less imaginings are worth watching
+          playReadingBtn.classList.remove('hidden')
         }
       },
       onScene: (s) => {
         scene = s
+        currentScene = s
         setStatus(`"${s.title}" — designing the experience...`)
+        renderBook(s)
+        showExperienceScreen()
       },
       onImage: (index, src) => {
         images[index] = src
@@ -160,21 +195,16 @@ photoInput?.addEventListener('change', async () => {
       onSpeech: (index, urls) => {
         speech[index] = urls
       },
-      onImaginingImage: (index, src) => {
-        imaginingImages[index] = src
-      },
-      onImaginingFilm: (index, url) => {
-        imaginingFilms[index] = url
-        maybeShowWatch()
-      },
     })
-    // Stream finished — make sure playback happened even if no status fired.
+    // Stream finished — make sure the reading button is visible even if no status fired.
     scene = summary.scene
-    startPlayback()
-    maybeShowWatch()
+    currentScene = summary.scene
+    playReadingBtn.classList.remove('hidden')
   } catch (err) {
     setStatus(err.message)
   } finally {
     photoInput.disabled = false
   }
+
+  playReadingBtn.onclick = startPlayback
 })

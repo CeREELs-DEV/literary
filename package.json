@@ -7,7 +7,8 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "server": "node --env-file-if-exists=.env server/index.js"
+    "server": "node --env-file-if-exists=.env server/index.js",
+    "make-samples": "node --env-file=.env scripts/make-samples.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",

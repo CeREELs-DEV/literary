@@ -1,14 +1,11 @@
 // src/main.js
-import { validateScene } from './model/scene.js'
-import { createTimelineEngine } from './timeline/engine.js'
-import { sampleScene } from './scenes/sample.js'
 import { requestExperience } from './upload.js'
 import { requestReimagine } from './remix.js'
+import { loadSampleBook, manifestToScene, renderOriginalCards } from './samples.js'
 
 const startScreen = document.getElementById('start-screen')
 const experienceScreen = document.getElementById('experience-screen')
 const startBtn = document.getElementById('start-sample')
-const stage = document.getElementById('stage')
 const photoInput = document.getElementById('book-photo')
 const uploadStatus = document.getElementById('upload-status')
 const artifactStrip = document.getElementById('artifact-strip')
@@ -32,7 +29,6 @@ function setStatus(label) {
 }
 
 let bgm = null
-let currentEngine = null
 
 function startBgm(volume = 0.25) {
   stopBgm()
@@ -52,34 +48,23 @@ function showExperienceScreen() {
   experienceScreen.classList.remove('hidden')
 }
 
-// Play a scene with per-beat media: images become backgrounds, speech syncs beats.
-async function playScene(
-  rawScene,
-  { images = {}, speech = {}, withBgm = false } = {},
-) {
-  currentEngine?.stop()
-  const scene = validateScene(rawScene)
-  showExperienceScreen()
-  stage.classList.remove('hidden')
-  if (withBgm) startBgm()
-
-  const beats = scene.beats.map((beat, i) => {
-    const media = images[i] ? [{ type: 'image', src: images[i] }] : []
-    const audioUrls = speech[i]
-    return { ...beat, effects: [...media, ...beat.effects], ...(audioUrls ? { audioUrls } : {}) }
-  })
-
-  const engine = createTimelineEngine({ stage })
-  currentEngine = engine
-  try {
-    await engine.play({ ...scene, beats })
-  } finally {
-    stopBgm()
+// Open the pre-generated sample book: the e-book text plus its canonical
+// "original" cards (stills, moving loops, dialogue voices), all served from
+// public/samples/ so the demo start needs no live generation.
+startBtn?.addEventListener('click', async () => {
+  setStatus('Opening the sample book...')
+  const manifest = await loadSampleBook()
+  if (!manifest) {
+    setStatus('Samples are not built yet — run `npm run make-samples` first.')
+    return
   }
-}
-
-startBtn?.addEventListener('click', () => {
-  playScene(sampleScene).catch((err) => console.error(err))
+  currentScene = manifestToScene(manifest)
+  renderBook(currentScene)
+  showExperienceScreen()
+  remixGallery.innerHTML = ''
+  renderOriginalCards(manifest, remixGallery)
+  setStatus('')
+  if (!bgm) startBgm(0.2)
 })
 
 // Render the scene as an e-book page with clickable passages.
@@ -201,7 +186,6 @@ let currentScene = null
 photoInput?.addEventListener('change', async () => {
   const file = photoInput.files?.[0]
   if (!file) return
-  currentEngine?.stop()
   stopBgm()
   photoInput.disabled = true
   artifactStrip.innerHTML = ''

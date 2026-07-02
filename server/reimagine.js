@@ -5,6 +5,7 @@ import { defaultGenAi } from './genai.js'
 import { GENERATED_DIR } from './paths.js'
 import { loadReferenceImages, sniffImageMime, PRO_MODEL, LITE_MODEL } from './images.js'
 import { clampText } from './story.js'
+import { BOOK_CONTEXT } from './book.js'
 
 const MAX_REFERENCES = 8
 const POLL_INTERVAL_MS = 10_000
@@ -131,6 +132,7 @@ export async function reimaginePassage({
   sceneTitle = '',
   wish,
   bookText = '',
+  bookContext = BOOK_CONTEXT,
   emit,
   client = new Anthropic(),
   ai = defaultGenAi(),
@@ -152,6 +154,9 @@ export async function reimaginePassage({
         role: 'user',
         content:
           `Story title: "${sceneTitle}"\n` +
+          (bookContext
+            ? `Book bible (canon characters, setting, visual identity): "${clampText(bookContext)}"\n`
+            : '') +
           (bookText ? `Full book text (for story context): "${clampText(bookText)}"\n` : '') +
           `The selected passage to reimagine: "${text}"\n` +
           `The child's wish: "${wish}"`,
@@ -175,6 +180,9 @@ export async function reimaginePassage({
   const prompt =
     `The attached reference images show the characters and art style of a children's ` +
     `story. ` +
+    (bookContext
+      ? `Canon (characters and world): "${clampText(bookContext, 900)}". `
+      : '') +
     (bookText
       ? `The full story, so the moment fits its context: "${clampText(bookText, 1200)}". `
       : '') +

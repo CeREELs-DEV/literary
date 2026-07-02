@@ -92,6 +92,27 @@ describe('reimaginePassage', () => {
     expect(clipPrompt).toContain('The wind blew fiercely.')
   })
 
+  it('injects the book bible into the design and still prompts by default', async () => {
+    const client = fakeClient()
+    const ai = fakeAi()
+    await reimaginePassage({ ...base, emit: vi.fn(), client, ai, references })
+    const userContent = client.messages.stream.mock.calls[0][0].messages[0].content
+    expect(userContent).toContain('Midnight Gulch') // from the default BOOK_CONTEXT
+    const stillPrompt = ai.interactions.create.mock.calls[0][0].input.find(
+      (p) => p.type === 'text',
+    ).text
+    expect(stillPrompt).toContain('Midnight Gulch')
+  })
+
+  it('accepts a custom book bible', async () => {
+    const client = fakeClient()
+    await reimaginePassage({
+      ...base, bookContext: 'CUSTOM BIBLE FACTS', emit: vi.fn(), client, ai: fakeAi(), references,
+    })
+    const userContent = client.messages.stream.mock.calls[0][0].messages[0].content
+    expect(userContent).toContain('CUSTOM BIBLE FACTS')
+  })
+
   it('works without bookText (older callers)', async () => {
     const emit = vi.fn()
     await reimaginePassage({

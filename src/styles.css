@@ -71,3 +71,6 @@ button { font-size: 20px; padding: 14px 28px; border: none; border-radius: 12px;
 .remix-label { padding: 10px 12px; font-size: 14px; color: #ffd479; }
 @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.14) translate(-2%, -1%); } }
 #stage.hidden { display: none; }
+
+.remix-card.original .remix-label { color: #9ad0ff; }
+.remix-card.has-audio { cursor: pointer; }

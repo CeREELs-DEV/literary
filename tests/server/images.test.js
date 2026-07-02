@@ -99,3 +99,37 @@ describe('reference cap', () => {
     expect(parts.length).toBeLessThanOrEqual(8)
   })
 })
+
+describe('key beat model selection', () => {
+  const keyScene = { ...scene, keyBeatIndex: 1 }
+
+  it('uses Nano Banana Pro for the key beat and Lite for the rest', async () => {
+    const ai = fakeAi()
+    await generateBeatImages({ scene: keyScene, references, emit: vi.fn(), ai })
+    const models = ai.interactions.create.mock.calls.map((c) => c[0].model).sort()
+    expect(models).toEqual(['gemini-3-pro-image', 'gemini-3.1-flash-lite-image'])
+  })
+
+  it('falls back to Lite when the Pro call fails, keeping the key beat illustrated', async () => {
+    const ai = {
+      interactions: {
+        create: vi.fn(async (params) => {
+          if (params.model === 'gemini-3-pro-image') throw new Error('pro down')
+          return { output_image: { data: 'aW1n' } }
+        }),
+      },
+    }
+    const emit = vi.fn()
+    const images = await generateBeatImages({ scene: keyScene, references, emit, ai })
+    expect(images).toHaveLength(2)
+    expect(emit.mock.calls.filter((c) => c[0].type === 'image')).toHaveLength(2)
+    // the key beat's retry went to Lite
+    const keyCalls = ai.interactions.create.mock.calls
+      .map((c) => c[0])
+      .filter((p) => p.input.some((part) => part.text?.includes('door slammed')))
+    expect(keyCalls.map((p) => p.model)).toEqual([
+      'gemini-3-pro-image',
+      'gemini-3.1-flash-lite-image',
+    ])
+  })
+})

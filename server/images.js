@@ -42,16 +42,21 @@ function beatPrompt(scene, beat) {
   )
 }
 
-// Generate one illustration per beat (Nano Banana 2 Lite), emitting each as it completes.
+const LITE_MODEL = 'gemini-3.1-flash-lite-image'
+const PRO_MODEL = 'gemini-3-pro-image' // Nano Banana Pro — key scene only
+
+// Generate one illustration per beat, emitting each as it completes.
+// The key beat (the one that will be filmed) uses Nano Banana Pro for a
+// higher-fidelity first frame; all other beats use the fast Lite model.
 export async function generateBeatImages({ scene, references, emit, ai }) {
   const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
     type: 'image',
     mime_type: ref.mimeType,
     data: ref.data,
   }))
-  const generateOne = async (beat, index) => {
+  const generateOne = async (beat, index, model) => {
     const interaction = await ai.interactions.create({
-      model: 'gemini-3.1-flash-lite-image',
+      model,
       input: [{ type: 'text', text: beatPrompt(scene, beat) }, ...referenceParts],
       response_format: { type: 'image', aspect_ratio: '16:9' },
     })
@@ -66,12 +71,15 @@ export async function generateBeatImages({ scene, references, emit, ai }) {
 
   const results = await Promise.allSettled(
     scene.beats.map(async (beat, index) => {
-      // Retry once: a single transient failure shouldn't drop a beat's illustration.
+      const isKeyBeat = index === scene.keyBeatIndex
+      // Retry once: a single transient failure shouldn't drop a beat's
+      // illustration. The key beat retries on Lite so a Pro-side failure
+      // still leaves the film with a usable frame.
       let data
       try {
-        data = await generateOne(beat, index)
+        data = await generateOne(beat, index, isKeyBeat ? PRO_MODEL : LITE_MODEL)
       } catch {
-        data = await generateOne(beat, index)
+        data = await generateOne(beat, index, LITE_MODEL)
       }
       const src = `data:${sniffImageMime(data)};base64,${data}`
       emit({ type: 'image', index, src })

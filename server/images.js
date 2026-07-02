@@ -1,6 +1,7 @@
 // server/images.js
 import fs from 'node:fs'
 import path from 'node:path'
+import { passageText } from './story.js'
 
 const MIME_BY_EXT = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg' }
 
@@ -36,7 +37,8 @@ export function sniffImageMime(base64) {
 function beatPrompt(scene, beat) {
   return (
     `The attached reference images show the characters and art style of a children's story ` +
-    `titled "${scene.title}". Illustrate this moment in EXACTLY that art style, palette, and ` +
+    `titled "${scene.title}". The full passage, so the moment fits its story: ` +
+    `"${passageText(scene)}". Illustrate this moment in EXACTLY that art style, palette, and ` +
     `linework, reusing those characters where they fit: ${beat.amplifiedCaption}. ` +
     `Wide cinematic composition. No text or letters in the image.`
   )

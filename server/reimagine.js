@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { defaultGenAi } from './genai.js'
 import { GENERATED_DIR } from './paths.js'
 import { loadReferenceImages, sniffImageMime, PRO_MODEL, LITE_MODEL } from './images.js'
+import { clampText } from './story.js'
 
 const MAX_REFERENCES = 8
 const POLL_INTERVAL_MS = 10_000
@@ -69,9 +70,12 @@ async function awaitOperation(ai, operation, sleep) {
 
 // Animate the reimagined still into a short GIF-like loop clip.
 // Lite is the primary model (its quota pool is the one we actually have).
-async function animateStill({ ai, text, design, src, saveDir, sleep }) {
+async function animateStill({ ai, text, bookText, design, src, saveDir, sleep }) {
+  const storyContext = bookText
+    ? `The full story, so the motion fits its context: "${clampText(bookText, 600)}". `
+    : ''
   const prompt =
-    `This is one moment from a children's story: "${text}". Bring this exact ` +
+    `${storyContext}This is one moment from a children's story: "${text}". Bring this exact ` +
     `illustration alive like an animated GIF. The illustration is the first frame and ` +
     `its art style is the law: preserve the characters, linework, color palette, and ` +
     `composition; do not restyle, redraw, or add realism. KEEP THE CAMERA STILL — no ` +
@@ -126,6 +130,7 @@ export async function reimaginePassage({
   text,
   sceneTitle = '',
   wish,
+  bookText = '',
   emit,
   client = new Anthropic(),
   ai = defaultGenAi(),
@@ -147,7 +152,8 @@ export async function reimaginePassage({
         role: 'user',
         content:
           `Story title: "${sceneTitle}"\n` +
-          `Passage: "${text}"\n` +
+          (bookText ? `Full book text (for story context): "${clampText(bookText)}"\n` : '') +
+          `The selected passage to reimagine: "${text}"\n` +
           `The child's wish: "${wish}"`,
       },
     ],
@@ -168,7 +174,11 @@ export async function reimaginePassage({
   }))
   const prompt =
     `The attached reference images show the characters and art style of a children's ` +
-    `story. Reimagine this story moment: "${text}" — transported to ${design.label}. ` +
+    `story. ` +
+    (bookText
+      ? `The full story, so the moment fits its context: "${clampText(bookText, 1200)}". `
+      : '') +
+    `Reimagine this story moment: "${text}" — transported to ${design.label}. ` +
     `${design.illustrationPrompt} Keep EXACTLY the reference art style, palette, and ` +
     `linework; adapt only the costumes, architecture, props, and landscape to the ` +
     `period. Wide cinematic composition. No text or letters in the image.`
@@ -193,7 +203,7 @@ export async function reimaginePassage({
 
   // 3) Veo brings the still to life — a true moving loop.
   try {
-    const clipUrl = await animateStill({ ai, text, design, src, saveDir, sleep })
+    const clipUrl = await animateStill({ ai, text, bookText, design, src, saveDir, sleep })
     emit({ type: 'clip', url: clipUrl })
   } catch (err) {
     console.error('remix clip failed:', err?.message ?? err)

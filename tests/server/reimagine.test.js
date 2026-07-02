@@ -56,6 +56,8 @@ const base = {
   text: 'The door slammed shut.',
   sceneTitle: 'A Windy Day',
   wish: '1800년대 조선시대',
+  bookText:
+    'The wind blew fiercely. The door slammed shut. And then, everything fell silent.',
   saveDir: '/tmp/generated',
   sleep: async () => {},
 }
@@ -72,6 +74,30 @@ describe('reimaginePassage', () => {
     const userContent = params.messages[0].content
     expect(userContent).toContain('The door slammed shut.')
     expect(userContent).toContain('1800년대 조선시대')
+  })
+
+  it('gives every generation step the full book text as story context', async () => {
+    const client = fakeClient()
+    const ai = fakeAi()
+    await reimaginePassage({ ...base, emit: vi.fn(), client, ai, references })
+    // Claude sees the whole book, not just the selected passage
+    const userContent = client.messages.stream.mock.calls[0][0].messages[0].content
+    expect(userContent).toContain('The wind blew fiercely.')
+    // ...and so do the still and the clip prompts
+    const stillPrompt = ai.interactions.create.mock.calls[0][0].input.find(
+      (p) => p.type === 'text',
+    ).text
+    expect(stillPrompt).toContain('The wind blew fiercely.')
+    const clipPrompt = ai.models.generateVideos.mock.calls[0][0].prompt
+    expect(clipPrompt).toContain('The wind blew fiercely.')
+  })
+
+  it('works without bookText (older callers)', async () => {
+    const emit = vi.fn()
+    await reimaginePassage({
+      ...base, bookText: undefined, emit, client: fakeClient(), ai: fakeAi(), references,
+    })
+    expect(emit.mock.calls.map((c) => c[0].type)).toContain('image')
   })
 
   it('emits the still (Pro-rendered, JPEG-sniffed) then the animated clip', async () => {

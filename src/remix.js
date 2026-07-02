@@ -4,14 +4,14 @@
 // then the animated loop when Veo finishes. Resolves with a summary at stream
 // end; rejects on HTTP failure or an in-band error event.
 export async function requestReimagine(
-  { text, sceneTitle, wish },
+  { text, sceneTitle, wish, bookText = '' },
   { onImage = () => {}, onClip = () => {} } = {},
   fetchImpl = fetch,
 ) {
   const response = await fetchImpl('/api/reimagine', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, sceneTitle, wish }),
+    body: JSON.stringify({ text, sceneTitle, wish, bookText }),
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))

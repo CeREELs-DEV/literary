@@ -29,7 +29,12 @@ describe('requestReimagine', () => {
     const onImage = vi.fn()
     const onClip = vi.fn()
     const summary = await requestReimagine(
-      { text: 'The door slammed shut.', sceneTitle: 'A Windy Day', wish: '조선시대' },
+      {
+        text: 'The door slammed shut.',
+        sceneTitle: 'A Windy Day',
+        wish: '조선시대',
+        bookText: 'The wind blew. The door slammed shut.',
+      },
       { onImage, onClip },
       fetchImpl,
     )
@@ -40,6 +45,7 @@ describe('requestReimagine', () => {
         text: 'The door slammed shut.',
         sceneTitle: 'A Windy Day',
         wish: '조선시대',
+        bookText: 'The wind blew. The door slammed shut.',
       }),
     })
     expect(onImage).toHaveBeenCalledWith('1800s Joseon Korea', 'data:image/jpeg;base64,abc')

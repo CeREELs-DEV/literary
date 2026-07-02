@@ -125,7 +125,13 @@ imagineBtn?.addEventListener('click', () => {
   let frame = null
 
   requestReimagine(
-    { text: beat.text, sceneTitle: currentScene?.title ?? '', wish },
+    {
+      text: beat.text,
+      sceneTitle: currentScene?.title ?? '',
+      wish,
+      // The whole page, so the remix knows the story around the selection.
+      bookText: currentScene?.beats?.map((b) => b.text).join(' ') ?? '',
+    },
     {
       onImage: (label, src) => {
         card = document.createElement('div')

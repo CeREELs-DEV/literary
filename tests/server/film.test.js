@@ -133,7 +133,10 @@ describe('generateFilm', () => {
       scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
     })
     expect(ai.models.generateVideos).toHaveBeenCalledTimes(2)
-    expect(ai.models.generateVideos.mock.calls[1][0].model).toBe('veo-3.1-lite-generate-preview')
+    const liteParams = ai.models.generateVideos.mock.calls[1][0]
+    expect(liteParams.model).toBe('veo-3.1-lite-generate-preview')
+    // lite rejects negativePrompt with a 400 — it must be omitted there
+    expect(liteParams.config.negativePrompt).toBeUndefined()
     expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
     expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })
   })

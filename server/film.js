@@ -68,10 +68,15 @@ export async function generateFilm({
         durationSeconds: 8,
         resolution: '720p',
         aspectRatio: '16:9',
-        negativePrompt:
-          'new objects appearing, structures materializing, walls forming, morphing, ' +
-          'warping, extra characters, scene change, style change, photorealism, ' +
-          'distortion, glitches, text',
+        // The lite model rejects negativePrompt (400) — fast only.
+        ...(model === 'veo-3.1-fast-generate-preview'
+          ? {
+              negativePrompt:
+                'new objects appearing, structures materializing, walls forming, morphing, ' +
+                'warping, extra characters, scene change, style change, photorealism, ' +
+                'distortion, glitches, text',
+            }
+          : {}),
       },
     })
 

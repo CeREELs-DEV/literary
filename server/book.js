@@ -5,6 +5,39 @@
 // at docs/book/a-snicker-of-magic-guide.md; keep this compact (prompt budget).
 export const BOOK_TITLE = 'A Snicker of Magic'
 
+// Veo's safety filter blocks prompts containing person-like proper names
+// ("real people's names or likenesses"). For VIDEO prompts only, character
+// names are replaced with these visual descriptors (longest match first).
+export const CHARACTER_DESCRIPTORS = [
+  ['Felicity Juniper Pickle', 'the brown-haired girl'],
+  ['Jonah Pickett', 'the boy in the electric wheelchair'],
+  ['Day Grissom', 'the bearded bus driver'],
+  ['Oliver Weatherly', 'the elderly man'],
+  ['Stone Weatherly', 'the guitar-playing brother'],
+  ['Berry Weatherly', 'the banjo-playing brother'],
+  ['Frannie Jo', 'the little sister'],
+  ['Aunt Cleo', 'the aunt'],
+  ['the Beedle', 'the secret helper'],
+  ['Felicity', 'the brown-haired girl'],
+  ['Jonah', 'the boy in the wheelchair'],
+  ['Grissom', 'the bus driver'],
+  ['Beedle', 'the secret helper'],
+  ['Holly', 'the mother'],
+  ['Mama', 'the mother'],
+  ['Cleo', 'the aunt'],
+  ['Boone', 'the uncle'],
+  ['Biscuit', 'the dog'],
+]
+
+// Strip character names from text bound for a video prompt.
+export function stripCharacterNames(text) {
+  let out = text
+  for (const [name, descriptor] of CHARACTER_DESCRIPTORS) {
+    out = out.split(name).join(descriptor)
+  }
+  return out
+}
+
 export const BOOK_CONTEXT =
   `"A Snicker of Magic" by Natalie Lloyd — a warm magical-realism children's novel set in ` +
   `Midnight Gulch, Tennessee: a small Appalachian town once famous for magic, where only ` +

@@ -5,7 +5,7 @@ import { defaultGenAi } from './genai.js'
 import { GENERATED_DIR } from './paths.js'
 import { loadReferenceImages, sniffImageMime, PRO_MODEL, LITE_MODEL } from './images.js'
 import { clampText } from './story.js'
-import { BOOK_CONTEXT } from './book.js'
+import { BOOK_CONTEXT, stripCharacterNames } from './book.js'
 
 const MAX_REFERENCES = 8
 const POLL_INTERVAL_MS = 10_000
@@ -49,6 +49,8 @@ Rules:
   (a character fleeing moves AWAY from the threat). Use only elements already visible;
   never invent new objects, structures, or characters.
 - The label is a short English name of the era/setting.
+- In motionPrompt, NEVER use character names — refer to characters only by their
+  appearance ("the girl", "the boy in the wheelchair", "the bus driver").
 - ALL output must be in English, whatever language the wish is written in.`
 
 const NEGATIVE_PROMPT =
@@ -87,11 +89,16 @@ export async function animateStill({
   saveDir,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
+  // Veo's filter blocks person-like proper names — every text reaching the
+  // video prompt is name-stripped (visual descriptors instead).
+  const safeText = stripCharacterNames(text)
+  const safeMotion = stripCharacterNames(design.motionPrompt)
   const storyContext = bookText
-    ? `The full story, so the motion fits its context: "${clampText(bookText, 600)}". `
+    ? `The full story, so the motion fits its context: ` +
+      `"${stripCharacterNames(clampText(bookText, 600))}". `
     : ''
   const prompt =
-    `${storyContext}This is one moment from a children's story: "${text}". Bring this exact ` +
+    `${storyContext}This is one moment from a children's story: "${safeText}". Bring this exact ` +
     `illustration alive like an animated GIF. The illustration is the first frame and ` +
     `its art style is the law: preserve the characters, linework, color palette, and ` +
     `composition; do not restyle, redraw, or add realism. KEEP THE CAMERA STILL — no ` +
@@ -99,7 +106,7 @@ export async function animateStill({
     `visibly move (blink, breathe, turn, gesture) and ambient elements keep moving. ` +
     `Nothing new may enter the frame: no new objects, walls, structures, or characters ` +
     `may appear, form, or morph. The motion follows the story's spatial and emotional ` +
-    `logic exactly: ${design.motionPrompt}`
+    `logic exactly: ${safeMotion}`
   const request = (model) =>
     ai.models.generateVideos({
       model,

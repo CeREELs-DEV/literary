@@ -175,6 +175,29 @@ describe('reimaginePassage', () => {
     expect(emit.mock.calls.map((c) => c[0].type)).toContain('clip')
   })
 
+  it('strips character names from the video prompt (Veo blocks person names)', async () => {
+    const ai = fakeAi()
+    await reimaginePassage({
+      ...base,
+      text: '"Hop on," Jonah Pickett said. Day Grissom hollered back.',
+      bookText: 'Felicity watched as Jonah Pickett rolled to the bus.',
+      emit: vi.fn(),
+      client: fakeClient({ motionPrompt: 'Jonah waves while Felicity steps closer' }),
+      ai, references,
+    })
+    const veoPrompt = ai.models.generateVideos.mock.calls[0][0].prompt
+    expect(veoPrompt).not.toContain('Jonah')
+    expect(veoPrompt).not.toContain('Felicity')
+    expect(veoPrompt).not.toContain('Grissom')
+    expect(veoPrompt).toContain('the boy in the electric wheelchair')
+    expect(veoPrompt).toContain('the brown-haired girl')
+    // the STILL prompt keeps names (image model doesn't block them)
+    const stillPrompt = ai.interactions.create.mock.calls[0][0].input.find(
+      (p) => p.type === 'text',
+    ).text
+    expect(stillPrompt).toContain('Jonah Pickett')
+  })
+
   it('passes sister cards as extra style references for cut-to-cut consistency', async () => {
     const ai = fakeAi()
     await reimaginePassage({

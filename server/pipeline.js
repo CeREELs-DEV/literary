@@ -1,16 +1,10 @@
 // server/pipeline.js
 import Anthropic from '@anthropic-ai/sdk'
-import { GoogleGenAI } from '@google/genai'
 import { SCENE_SCHEMA, SYSTEM_PROMPT, USER_INSTRUCTION } from './scene-schema.js'
-import { loadReferenceImages, generateBeatImages, generateImaginingImages } from './images.js'
-import { generateImaginingFilms } from './film.js'
+import { loadReferenceImages, generateBeatImages } from './images.js'
 import { loadVoiceConfig, generateBeatSpeech } from './speech.js'
 import { GENERATED_DIR } from './paths.js'
-
-function defaultGenAi() {
-  if (!process.env.GEMINI_API_KEY) return null
-  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
-}
+import { defaultGenAi } from './genai.js'
 
 export async function runExperiencePipeline({
   imageBase64,
@@ -21,7 +15,6 @@ export async function runExperiencePipeline({
   references = loadReferenceImages(),
   voiceConfig = loadVoiceConfig(),
   saveDir = GENERATED_DIR,
-  sleep,
   fetchImpl,
 }) {
   emit({ type: 'status', stage: 'reading', label: 'Reading the page...' })
@@ -72,7 +65,7 @@ export async function runExperiencePipeline({
   }
 
   emit({ type: 'status', stage: 'drawing', label: 'Illustrating and voicing the scenes...' })
-  const [, , imaginingImages] = await Promise.all([
+  await Promise.all([
     canDraw
       ? generateBeatImages({ scene, references, emit, ai: genAi })
       : Promise.resolve([]),
@@ -82,29 +75,9 @@ export async function runExperiencePipeline({
           ...(fetchImpl ? { fetchImpl } : {}),
         })
       : Promise.resolve([]),
-    canDraw
-      ? generateImaginingImages({ scene, references, emit, ai: genAi })
-      : Promise.resolve([]),
   ])
 
-  // The frontend starts the image+voice experience on the first 'animating'
-  // status; the Rashomon films keep generating in the background.
-  if (imaginingImages.length > 0) {
-    const films = await generateImaginingFilms({
-      scene, imaginingImages, emit, ai: genAi, saveDir,
-      ...(sleep ? { sleep } : {}),
-    })
-    if (films.length === 0) {
-      // Per-imagining failures are logged inside; the illustrations stand in.
-      emit({
-        type: 'status',
-        stage: 'animating',
-        label: 'Films unavailable — the illustrations will stand in.',
-      })
-    }
-  } else {
-    emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })
-  }
+  emit({ type: 'status', stage: 'animating', label: 'Bringing the pages to life...' })
 
   emit({ type: 'status', stage: 'done', label: 'Experience complete!' })
 }

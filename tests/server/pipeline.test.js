@@ -5,20 +5,10 @@ import { runExperiencePipeline } from '../../server/pipeline.js'
 const validScene = {
   id: 'windy-door',
   title: 'A Windy Day',
-  keyBeatIndex: 0,
-  imaginings: [
-    {
-      title: 'Through her eyes',
-      perspective: 'from the girl inside',
-      illustrationPrompt: 'close-up, dim light',
-      motionPrompt: 'the door swings shut',
-    },
-  ],
   beats: [
     {
       text: 'The door slammed shut.',
       amplifiedCaption: 'The whole house shuddered',
-      motionPrompt: 'the door swings shut, dust drifts',
       duration: 3000,
       narration: 'The door slammed shut.',
       effects: [{ type: 'shake', intensity: 'high', duration: 600 }],
@@ -130,36 +120,19 @@ describe('runExperiencePipeline — Phase B visuals', () => {
     expect(emit.mock.calls.at(-1)[0]).toMatchObject({ type: 'status', stage: 'done' })
   })
 
-  it('runs drawing then animating stages and emits beat images, imagining images, and films', async () => {
+  it('runs drawing then animating stages and emits beat images', async () => {
     const emit = vi.fn()
     await runExperiencePipeline({
       ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
-      saveDir: '/tmp/generated', sleep: async () => {},
+      saveDir: '/tmp/generated',
     })
     const events = emit.mock.calls.map((c) => c[0])
     const stages = events.filter((e) => e.type === 'status').map((e) => e.stage)
-    // filming emits its own per-imagining 'animating' labels — compare deduped order
     expect([...new Set(stages)]).toEqual(['reading', 'designing', 'drawing', 'animating', 'done'])
     expect(events.filter((e) => e.type === 'image')).toHaveLength(1) // validScene has 1 beat
-    expect(events.filter((e) => e.type === 'imagining-image')).toHaveLength(1)
-    expect(events.filter((e) => e.type === 'imagining-film')).toHaveLength(1)
     // scene must arrive BEFORE drawing starts (frontend shows artifacts progressively)
     expect(events.findIndex((e) => e.type === 'scene'))
       .toBeLessThan(events.findIndex((e) => e.type === 'status' && e.stage === 'drawing'))
-  })
-
-  it('still reaches done when film generation fails', async () => {
-    const genAi = fakeGenAi()
-    genAi.models.generateVideos = vi.fn(async () => { throw new Error('veo down') })
-    const emit = vi.fn()
-    await runExperiencePipeline({
-      ...base, emit, client: fakeClient(), genAi, references,
-      saveDir: '/tmp/generated', sleep: async () => {},
-    })
-    const events = emit.mock.calls.map((c) => c[0])
-    expect(events.filter((e) => e.type === 'imagining-film')).toHaveLength(0)
-    expect(events.filter((e) => e.type === 'error')).toHaveLength(0)
-    expect(events.at(-1)).toMatchObject({ type: 'status', stage: 'done' })
   })
 })
 
@@ -178,12 +151,12 @@ describe('runExperiencePipeline — Phase C speech and the film', () => {
     await runExperiencePipeline({
       ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
       voiceConfig, fetchImpl: fakeFetch(),
-      saveDir: '/tmp/generated', sleep: async () => {},
+      saveDir: '/tmp/generated',
     })
     const types = emit.mock.calls.map((c) => c[0].type)
     expect(types).toContain('speech')
     expect(types).toContain('image')
-    expect(types).toContain('imagining-film')
+    expect(types).not.toContain('imagining-film')
   })
 
   it('generates speech even when visuals are unavailable', async () => {
@@ -202,7 +175,7 @@ describe('runExperiencePipeline — Phase C speech and the film', () => {
     const emit = vi.fn()
     await runExperiencePipeline({
       ...base, emit, client: fakeClient(), genAi: fakeGenAi(), references,
-      voiceConfig: null, saveDir: '/tmp/generated', sleep: async () => {},
+      voiceConfig: null, saveDir: '/tmp/generated',
     })
     const types = emit.mock.calls.map((c) => c[0].type)
     expect(types).not.toContain('speech')

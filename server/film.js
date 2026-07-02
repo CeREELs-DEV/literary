@@ -18,6 +18,11 @@ export function pickKeyBeat(scene, images) {
   return [...images].sort((a, b) => a.index - b.index)[0].index
 }
 
+function isQuotaError(err) {
+  const msg = String(err?.message ?? err)
+  return msg.includes('RESOURCE_EXHAUSTED') || msg.includes('429')
+}
+
 async function awaitOperation(ai, operation, sleep) {
   while (!operation.done) {
     await sleep(POLL_INTERVAL_MS)
@@ -43,18 +48,30 @@ export async function generateFilm({
 
   emit({ type: 'status', stage: 'animating', label: 'Filming the key scene...' })
 
-  let operation = await ai.models.generateVideos({
-    model: 'veo-3.1-fast-generate-preview',
-    prompt:
-      `A key moment from an animated children's storybook film titled "${scene.title}": ` +
-      `${beat.amplifiedCaption}. Cinematic 2D storybook animation, gentle camera movement, ` +
-      `matching the illustration's art style.`,
-    image: {
-      imageBytes: image.src.slice(image.src.indexOf(',') + 1),
-      mimeType: image.src.slice(5, image.src.indexOf(';')),
-    },
-    config: { durationSeconds: 8, resolution: '720p', aspectRatio: '16:9' },
-  })
+  const request = (model) =>
+    ai.models.generateVideos({
+      model,
+      prompt:
+        `A key moment from an animated children's storybook film titled "${scene.title}": ` +
+        `${beat.amplifiedCaption}. Cinematic 2D storybook animation, gentle camera movement, ` +
+        `matching the illustration's art style.`,
+      image: {
+        imageBytes: image.src.slice(image.src.indexOf(',') + 1),
+        mimeType: image.src.slice(5, image.src.indexOf(';')),
+      },
+      config: { durationSeconds: 8, resolution: '720p', aspectRatio: '16:9' },
+    })
+
+  let operation
+  try {
+    operation = await request('veo-3.1-fast-generate-preview')
+  } catch (err) {
+    if (!isQuotaError(err)) throw err
+    // Quotas are per-model — the lite pool may still be open when fast is spent.
+    console.warn('fast model quota exhausted, retrying with lite:', err?.message ?? err)
+    emit({ type: 'status', stage: 'animating', label: 'Retrying with a lighter film model...' })
+    operation = await request('veo-3.1-lite-generate-preview')
+  }
   operation = await awaitOperation(ai, operation, sleep)
 
   const video = operation.response?.generatedVideos?.[0]?.video

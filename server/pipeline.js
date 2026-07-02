@@ -93,8 +93,12 @@ export async function runExperiencePipeline({
         ...(sleep ? { sleep } : {}),
       })
     } catch (err) {
-      console.error('film generation failed:', err?.message ?? err)
-      emit({ type: 'status', stage: 'animating', label: 'Film unavailable this time.' })
+      const msg = String(err?.message ?? err)
+      console.error('film generation failed:', msg)
+      const label = /RESOURCE_EXHAUSTED|429/.test(msg)
+        ? 'Film quota exhausted — try again in a few minutes.'
+        : 'Film unavailable this time.'
+      emit({ type: 'status', stage: 'animating', label })
     }
   } else {
     emit({ type: 'status', stage: 'animating', label: 'Breathing motion into the scenes...' })

@@ -108,10 +108,40 @@ describe('generateFilm', () => {
     const ai = fakeAi()
     ai.models.generateVideos = vi.fn(async () => ({
       done: true,
-      error: { message: 'quota exceeded' },
+      error: { message: 'operation failed upstream' },
     }))
     await expect(
       generateFilm({ scene, images, emit: vi.fn(), ai, saveDir: '/tmp/generated' }),
-    ).rejects.toThrow('quota exceeded')
+    ).rejects.toThrow('operation failed upstream')
+  })
+
+  it('falls back to the lite model when the fast model hits its quota', async () => {
+    const ai = fakeAi()
+    const original = ai.models.generateVideos.getMockImplementation()
+    ai.models.generateVideos = vi.fn(async (params) => {
+      if (params.model === 'veo-3.1-fast-generate-preview') {
+        throw new Error('{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}')
+      }
+      return original(params)
+    })
+    const emit = vi.fn()
+    const url = await generateFilm({
+      scene, images, emit, ai, saveDir: '/tmp/generated', sleep: async () => {},
+    })
+    expect(ai.models.generateVideos).toHaveBeenCalledTimes(2)
+    expect(ai.models.generateVideos.mock.calls[1][0].model).toBe('veo-3.1-lite-generate-preview')
+    expect(url).toMatch(/^\/api\/media\/film-.+\.mp4$/)
+    expect(emit).toHaveBeenCalledWith({ type: 'film', url, index: 1 })
+  })
+
+  it('does not fall back on non-quota errors', async () => {
+    const ai = fakeAi()
+    ai.models.generateVideos = vi.fn(async () => {
+      throw new Error('{"error":{"code":400,"status":"INVALID_ARGUMENT"}}')
+    })
+    await expect(
+      generateFilm({ scene, images, emit: vi.fn(), ai, saveDir: '/tmp/generated' }),
+    ).rejects.toThrow('INVALID_ARGUMENT')
+    expect(ai.models.generateVideos).toHaveBeenCalledTimes(1)
   })
 })

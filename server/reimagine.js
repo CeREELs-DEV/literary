@@ -69,9 +69,24 @@ async function awaitOperation(ai, operation, sleep) {
   return operation
 }
 
+// Quota fallback chain: quotas are per-model, so when one pool is spent the
+// next may still be open. Standard first (best quality + the emptiest pool).
+const VIDEO_MODELS = [
+  'veo-3.1-generate-preview',
+  'veo-3.1-fast-generate-preview',
+  'veo-3.1-lite-generate-preview',
+]
+
 // Animate the reimagined still into a short GIF-like loop clip.
-// Lite is the primary model (its quota pool is the one we actually have).
-async function animateStill({ ai, text, bookText, design, src, saveDir, sleep }) {
+export async function animateStill({
+  ai,
+  text,
+  bookText,
+  design,
+  src,
+  saveDir,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
   const storyContext = bookText
     ? `The full story, so the motion fits its context: "${clampText(bookText, 600)}". `
     : ''
@@ -97,26 +112,36 @@ async function animateStill({ ai, text, bookText, design, src, saveDir, sleep })
         durationSeconds: 4, // GIF-length loop — roughly halves the wait vs 8s
         resolution: '720p',
         aspectRatio: '16:9',
-        // The lite model rejects negativePrompt (400) — fast only.
-        ...(model === 'veo-3.1-fast-generate-preview'
+        // The lite model rejects negativePrompt (400).
+        ...(model !== 'veo-3.1-lite-generate-preview'
           ? { negativePrompt: NEGATIVE_PROMPT }
           : {}),
       },
     })
 
-  let operation
-  try {
-    operation = await request('veo-3.1-lite-generate-preview')
-  } catch (err) {
-    if (!isQuotaError(err)) throw err
-    console.warn('lite model quota exhausted, retrying with fast:', err?.message ?? err)
-    operation = await request('veo-3.1-fast-generate-preview')
+  let operation = null
+  for (const [i, model] of VIDEO_MODELS.entries()) {
+    try {
+      operation = await request(model)
+      break
+    } catch (err) {
+      const last = i === VIDEO_MODELS.length - 1
+      if (!isQuotaError(err) || last) throw err
+      console.warn(`${model} quota exhausted, trying ${VIDEO_MODELS[i + 1]}`)
+    }
   }
   operation = await awaitOperation(ai, operation, sleep)
 
   const video = operation.response?.generatedVideos?.[0]?.video
   if (!video) {
-    throw new Error(operation.error?.message ?? 'Veo operation returned no video')
+    // Surface the real reason (often content filtering) instead of a shrug.
+    const filtered = operation.response?.raiMediaFilteredReasons
+    throw new Error(
+      operation.error?.message ??
+        (filtered?.length
+          ? `Veo filtered the video: ${JSON.stringify(filtered)}`
+          : 'Veo operation returned no video'),
+    )
   }
 
   const filename = `remix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`
@@ -124,25 +149,15 @@ async function animateStill({ ai, text, bookText, design, src, saveDir, sleep })
   return `/api/media/${filename}`
 }
 
-// Turn a selected passage + the child's free-text wish into a period-adapted
-// remix card, streamed progressively: design -> still image -> animated loop.
-// The clip is an upgrade — its failure never sinks the card.
-export async function reimaginePassage({
+// Claude structures the wish into a grounded, English period + motion design.
+export async function designReimagine({
   text,
   sceneTitle = '',
   wish,
   bookText = '',
   bookContext = BOOK_CONTEXT,
-  emit,
   client = new Anthropic(),
-  ai = defaultGenAi(),
-  references = loadReferenceImages(),
-  saveDir = GENERATED_DIR,
-  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
-  if (!ai) throw new Error('Image generation is unavailable (GEMINI_API_KEY missing).')
-
-  // 1) Claude structures the wish into a grounded, English period + motion design.
   const stream = client.messages.stream({
     model: 'claude-opus-4-8',
     max_tokens: 2000,
@@ -169,10 +184,39 @@ export async function reimaginePassage({
   }
   const textBlock = message.content.find((b) => b.type === 'text')
   if (!textBlock) throw new Error('No design in model response.')
-  const design = JSON.parse(textBlock.text)
+  return JSON.parse(textBlock.text)
+}
+
+// Turn a selected passage + the child's free-text wish into a period-adapted
+// remix card, streamed progressively: design -> still image -> animated loop.
+// The clip is an upgrade — its failure never sinks the card.
+// extraReferences: recently generated sister cards, passed along so the art
+// style stays consistent from cut to cut.
+export async function reimaginePassage({
+  text,
+  sceneTitle = '',
+  wish,
+  bookText = '',
+  bookContext = BOOK_CONTEXT,
+  extraReferences = [],
+  emit,
+  client = new Anthropic(),
+  ai = defaultGenAi(),
+  references = loadReferenceImages(),
+  saveDir = GENERATED_DIR,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  if (!ai) throw new Error('Image generation is unavailable (GEMINI_API_KEY missing).')
+
+  // 1) Claude structures the wish into a grounded, English period + motion design.
+  const design = await designReimagine({ text, sceneTitle, wish, bookText, bookContext, client })
 
   // 2) Nano Banana renders the still — reference art style kept, world changed.
-  const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
+  // Style refs first, then up to 3 sister cards for cut-to-cut consistency.
+  const referenceParts = [
+    ...references.slice(0, MAX_REFERENCES),
+    ...extraReferences.slice(-3),
+  ].map((ref) => ({
     type: 'image',
     mime_type: ref.mimeType,
     data: ref.data,
@@ -180,6 +224,11 @@ export async function reimaginePassage({
   const prompt =
     `The attached reference images show the characters and art style of a children's ` +
     `story. ` +
+    (extraReferences.length
+      ? `The last ${Math.min(extraReferences.length, 3)} attached image(s) are neighbouring ` +
+        `scenes from the same book — match their exact rendering style, character ` +
+        `designs, palette, and level of detail so the cuts feel like one book. `
+      : '') +
     (bookContext
       ? `Canon (characters and world): "${clampText(bookContext, 900)}". `
       : '') +

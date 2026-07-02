@@ -26,7 +26,7 @@ function fakeClient({
   }
 }
 
-function fakeAi({ failOn = null, veoFail = null } = {}) {
+function fakeAi({ failOn = null, veoFail = null, veoQuotaModels = [] } = {}) {
   let gen = 0
   return {
     interactions: {
@@ -38,7 +38,7 @@ function fakeAi({ failOn = null, veoFail = null } = {}) {
     models: {
       generateVideos: vi.fn(async (params) => {
         if (veoFail === 'always') throw new Error('veo down')
-        if (veoFail === 'quota' && params.model === 'veo-3.1-lite-generate-preview') {
+        if (veoQuotaModels.includes(params.model)) {
           throw new Error('{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}')
         }
         return {
@@ -141,15 +141,15 @@ describe('reimaginePassage', () => {
     expect(events[1].url).toMatch(/^\/api\/media\/remix-.+\.mp4$/)
   })
 
-  it('animates with the lite model using the motion choreography and closed-frame rules', async () => {
+  it('animates with the standard model using the motion choreography and closed-frame rules', async () => {
     const ai = fakeAi()
     await reimaginePassage({ ...base, emit: vi.fn(), client: fakeClient(), ai, references })
     const veoParams = ai.models.generateVideos.mock.calls[0][0]
-    expect(veoParams.model).toBe('veo-3.1-lite-generate-preview')
+    expect(veoParams.model).toBe('veo-3.1-generate-preview') // best quality, emptiest pool
     expect(veoParams.config).toMatchObject({
       durationSeconds: 4, resolution: '720p', aspectRatio: '16:9', // GIF-length loop
     })
-    expect(veoParams.config.negativePrompt).toBeUndefined() // lite rejects it
+    expect(veoParams.config.negativePrompt).toContain('structures materializing')
     expect(veoParams.prompt).toContain('lantern light flickers')
     expect(veoParams.prompt).toContain('Nothing new may enter the frame')
     // real GIF feel: the scene moves, not the camera
@@ -158,14 +158,35 @@ describe('reimaginePassage', () => {
     expect(veoParams.image.mimeType).toBe('image/jpeg')
   })
 
-  it('falls back to the fast model (with negativePrompt) on lite quota errors', async () => {
+  it('walks the quota fallback chain: standard -> fast -> lite (no negativePrompt on lite)', async () => {
     const emit = vi.fn()
-    const ai = fakeAi({ veoFail: 'quota' })
+    const ai = fakeAi({
+      veoQuotaModels: ['veo-3.1-generate-preview', 'veo-3.1-fast-generate-preview'],
+    })
     await reimaginePassage({ ...base, emit, client: fakeClient(), ai, references })
-    const fastParams = ai.models.generateVideos.mock.calls[1][0]
-    expect(fastParams.model).toBe('veo-3.1-fast-generate-preview')
-    expect(fastParams.config.negativePrompt).toContain('structures materializing')
+    const models = ai.models.generateVideos.mock.calls.map((c) => c[0].model)
+    expect(models).toEqual([
+      'veo-3.1-generate-preview',
+      'veo-3.1-fast-generate-preview',
+      'veo-3.1-lite-generate-preview',
+    ])
+    const liteParams = ai.models.generateVideos.mock.calls[2][0]
+    expect(liteParams.config.negativePrompt).toBeUndefined() // lite rejects it
     expect(emit.mock.calls.map((c) => c[0].type)).toContain('clip')
+  })
+
+  it('passes sister cards as extra style references for cut-to-cut consistency', async () => {
+    const ai = fakeAi()
+    await reimaginePassage({
+      ...base,
+      extraReferences: [{ data: 'c2lzdGVy', mimeType: 'image/png' }],
+      emit: vi.fn(), client: fakeClient(), ai, references,
+    })
+    const params = ai.interactions.create.mock.calls[0][0]
+    const imageParts = params.input.filter((p) => p.type === 'image')
+    expect(imageParts.at(-1)).toEqual({ type: 'image', mime_type: 'image/png', data: 'c2lzdGVy' })
+    const promptText = params.input.find((p) => p.type === 'text').text
+    expect(promptText).toContain('neighbouring scenes from the same book')
   })
 
   it('keeps the still card when the clip fails (non-fatal)', async () => {

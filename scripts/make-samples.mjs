@@ -14,7 +14,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
-import { reimaginePassage } from '../server/reimagine.js'
+import { reimaginePassage, designReimagine, animateStill } from '../server/reimagine.js'
+import { defaultGenAi } from '../server/genai.js'
 import { loadVoiceConfig, generateBeatSpeech } from '../server/speech.js'
 import { BOOK_TITLE } from '../server/book.js'
 
@@ -141,6 +142,9 @@ async function main() {
     )
     const bookText = scene.beats.map((b) => b.text).join(' ')
     const page = { photo, sceneTitle: scene.title, beats: [] }
+    // Rolling window of freshly generated cards — passed as extra references
+    // so the art style stays consistent from cut to cut.
+    const sisterCards = []
 
     for (const [i, beat] of scene.beats.entries()) {
       console.log(`  [${i + 1}/${scene.beats.length}] "${beat.text.slice(0, 50)}..."`)
@@ -151,10 +155,15 @@ async function main() {
           sceneTitle: scene.title,
           wish: CANON_WISH,
           bookText,
+          extraReferences: sisterCards.slice(-3),
           saveDir: OUT_DIR, // clips download straight into public/samples/
           emit: (event) => {
             if (event.type === 'image') {
               card.still = saveDataUrl(event.src, `still-${path.parse(photo).name}-${i}`)
+              sisterCards.push({
+                data: event.src.slice(event.src.indexOf(',') + 1),
+                mimeType: event.src.slice(5, event.src.indexOf(';')),
+              })
             } else if (event.type === 'clip') {
               card.clip = toSamplesUrl(event.url)
             }
@@ -188,7 +197,46 @@ async function main() {
   console.log(`done — manifest at ${MANIFEST_PATH}`)
 }
 
-main().catch((err) => {
+// --retry-clips: regenerate ONLY the missing loops, keeping the existing
+// stills untouched (Claude redesigns the motion; Veo animates the saved still).
+async function retryClips() {
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'))
+  const client = new Anthropic()
+  const ai = defaultGenAi()
+  if (!ai) throw new Error('GEMINI_API_KEY missing')
+
+  for (const page of manifest.pages) {
+    const bookText = page.beats.map((b) => b.text).join(' ')
+    for (const beat of page.beats) {
+      if (beat.clip || !beat.still) continue
+      console.log(`retrying loop: "${beat.text.slice(0, 55)}..."`)
+      try {
+        const design = await designReimagine({
+          text: beat.text,
+          sceneTitle: page.sceneTitle,
+          wish: CANON_WISH,
+          bookText,
+          client,
+        })
+        const stillPath = path.join('public', beat.still.replace(/^\//, ''))
+        const mime = beat.still.endsWith('.png') ? 'image/png' : 'image/jpeg'
+        const src = `data:${mime};base64,${fs.readFileSync(stillPath).toString('base64')}`
+        const url = await animateStill({
+          ai, text: beat.text, bookText, design, src, saveDir: OUT_DIR,
+        })
+        beat.clip = toSamplesUrl(url)
+        fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2))
+        console.log(`  ✓ ${beat.clip}`)
+      } catch (err) {
+        console.error('  still failed:', err?.message ?? err)
+      }
+    }
+  }
+  console.log('retry pass done')
+}
+
+const run = process.argv.includes('--retry-clips') ? retryClips : main
+run().catch((err) => {
   console.error(err)
   process.exit(1)
 })

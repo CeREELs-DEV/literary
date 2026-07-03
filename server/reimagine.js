@@ -8,7 +8,7 @@ import { clampText } from './story.js'
 import { BOOK_CONTEXT, stripCharacterNames } from './book.js'
 import { COMMON_STYLE } from './style.js'
 
-const MAX_REFERENCES = 8
+const MAX_REFERENCES = 3 // small budget — the style is also locked in words
 const POLL_INTERVAL_MS = 10_000
 
 export const REIMAGINE_SCHEMA = {
@@ -213,29 +213,30 @@ export const RESTAGE_SCHEMA = {
     videoPrompt: {
       type: 'string',
       description:
-        'the canonical staging prompt rewritten for the wished era/setting — same ' +
-        'scene, same characters, same camera and mood, but period-accurate world',
+        'the canonical GIF-loop prompt rewritten for the wished era/setting — same ' +
+        'visual idea, same characters, same fixed camera and loop motion, but a ' +
+        'period-accurate world',
     },
   },
 }
 
-export const RESTAGE_SYSTEM = `You help a child reimagine a moment of an animated storybook
-in a different time and place. You are given the CANONICAL STAGING — the exact video prompt
-that produced the original clip of this moment — plus the passage it depicts and the child's
-wish (which may be written in any language).
+export const RESTAGE_SYSTEM = `You help a child reimagine one card of an animated storybook
+in a different time and place. You are given the CANONICAL STAGING — the exact short-loop
+(GIF) prompt that produced the original card of this moment — plus the passage it depicts
+and the child's wish (which may be written in any language).
 
 Rewrite the staging prompt for the wished era/setting. Rules:
-- Keep the staging intact: the same characters, the same actions, the same camera
-  movement, the same shot structure, the same mood and audio texture, the same
-  "8-second video, 16:9." opening.
-- Change ONLY the world: clothing, architecture, objects, materials, landscape,
-  ambient sounds — all period-accurate and concrete for the wished era/place
-  (an 1800s Joseon village has hanok roofs, hanbok, paper lanterns — not neon signs).
-- If a spoken word appears in quotes, keep it (or localize it naturally to the era's
-  language) — do not add new dialogue.
+- Keep the staging intact: the same single visual idea, the same characters, the same
+  small looping movements, the same FIXED camera, the same mood, the same
+  "4-second seamless loop, 16:9" opening.
+- Change ONLY the world: clothing, architecture, objects, materials, landscape —
+  all period-accurate and concrete for the wished era/place (an 1800s Joseon village
+  has hanok roofs, hanbok, low wooden tables — not neon signs).
+- Never add floating letters, magical words, runes, readable text, heavy magic
+  effects, glowing-monster eyes, or horror imagery.
 - Never use character names; refer to characters by appearance only.
-- No readable on-screen text. ALL output must be in English, whatever language the
-  wish is written in. The label is a short English name of the era/setting.`
+- ALL output must be in English, whatever language the wish is written in. The label
+  is a short English name of the era/setting.`
 
 // Rewrite the canonical staging prompt into the child's wished era.
 export async function designRestaging({
@@ -309,8 +310,8 @@ export async function reimaginePassage({
       data: ref.data,
     }))
     const stillPrompt =
-      `${COMMON_STYLE}\n\nPaint the OPENING FRAME (the very first frame) of this shot: ` +
-      `${design.videoPrompt}\nWide cinematic composition. No text or letters in the image.`
+      `${COMMON_STYLE}\n\nPaint the OPENING FRAME (the very first frame) of this loop: ` +
+      `${design.videoPrompt}\nNo text or letters in the image.`
     const generate = async (model) => {
       const interaction = await ai.interactions.create({
         model,
@@ -332,11 +333,12 @@ export async function reimaginePassage({
 
     try {
       const prompt =
-        `The attached illustration is the first frame of this shot — its art style is ` +
-        `the law: preserve the characters, linework, color palette, and composition; ` +
-        `do not restyle, redraw, or add realism. Play the shot exactly as staged: ` +
-        `${stripCharacterNames(design.videoPrompt)}`
-      const clipUrl = await renderVeoClip({ ai, prompt, src, saveDir, sleep, durationSeconds: 8 })
+        `The attached illustration is the first frame of this short seamless loop — ` +
+        `its art style is the law: preserve the characters, linework, color palette, ` +
+        `and composition; do not restyle, redraw, or add realism. Keep the camera ` +
+        `fixed and the movements small, like an animated GIF. Play the loop exactly ` +
+        `as staged: ${stripCharacterNames(design.videoPrompt)}`
+      const clipUrl = await renderVeoClip({ ai, prompt, src, saveDir, sleep, durationSeconds: 4 })
       emit({ type: 'clip', url: clipUrl })
     } catch (err) {
       console.error('remix clip failed:', err?.message ?? err)

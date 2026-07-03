@@ -245,11 +245,11 @@ describe('reimaginePassage', () => {
 
 describe('reimaginePassage with canonical staging (sample-book passages)', () => {
   const staging =
-    '8-second video, 16:9. The girl steps closer to the clean lunch table...'
+    '4-second seamless loop, 16:9, fixed close-up. A red pen twirls, then stops dead...'
 
   function restagingClient({
     label = '1800s Joseon Korea',
-    videoPrompt = '8-second video, 16:9. The girl in hanbok steps closer to the low wooden table...',
+    videoPrompt = '4-second seamless loop, 16:9, fixed close-up. The girl in hanbok watches a red brush handle stop...',
   } = {}) {
     return {
       messages: {
@@ -278,16 +278,17 @@ describe('reimaginePassage with canonical staging (sample-book passages)', () =>
     // Nano Banana paints the opening frame: shared style block + refs.
     const create = ai.interactions.create.mock.calls[0][0]
     expect(create.model).toBe('gemini-3-pro-image')
-    expect(create.input[0].text).toContain('Use the 8 provided reference images')
+    expect(create.input[0].text).toContain('STYLE LOCK')
+    expect(create.input[0].text).toContain('3 attached reference images')
     expect(create.input[0].text).toContain('OPENING FRAME')
     expect(create.input[0].text).toContain('girl in hanbok')
     expect(create.input.filter((p) => p.type === 'image')).toHaveLength(references.length)
     expect(create.response_format).toMatchObject({ type: 'image' })
 
-    // Veo plays the restaged shot from that frame, sample-length (8s).
+    // Veo plays the restaged loop from that frame, GIF-length (4s).
     const veoParams = ai.models.generateVideos.mock.calls[0][0]
     expect(veoParams.model).toBe('veo-3.1-generate-preview')
-    expect(veoParams.config.durationSeconds).toBe(8)
+    expect(veoParams.config.durationSeconds).toBe(4)
     expect(veoParams.prompt).toContain('girl in hanbok')
     expect(veoParams.prompt).toContain('first frame')
 

@@ -1,151 +1,193 @@
-// src/main.js
-import { requestReimagine } from './remix.js'
-import { loadSampleBook, manifestToScene, versionsByIndex } from './samples.js'
-import { createPassageViewer } from './viewer.js'
+// src/main.js — Literary Image Lab
+//
+// The lab walks a student through reading, not generating:
+// Anchor (pick a phrase) -> Device (name the craft) -> Lens (choose a way to
+// imagine) -> Hypothesis (literal / metaphorical / abstract) -> Prompt
+// (their interpretation, written down) -> Defend (say why).
+import { PASSAGE } from './lab-data.js'
+import {
+  MISSIONS, DEVICES, LENSES, HYPOTHESES,
+  findMission, findDevice, findLens,
+  defaultSelection, buildPrompt, reflectionFor,
+} from './lab.js'
 
-const startScreen = document.getElementById('start-screen')
-const experienceScreen = document.getElementById('experience-screen')
-const startBtn = document.getElementById('start-sample')
-const uploadStatus = document.getElementById('upload-status')
-const experienceStatus = document.getElementById('experience-status')
+const missionStrip = document.getElementById('mission-strip')
+const passageBook = document.getElementById('passage-book')
+const passageText = document.getElementById('passage-text')
 
-const book = document.getElementById('book')
-const bookTitle = document.getElementById('book-title')
-const bookPages = document.getElementById('book-pages')
-const imaginePanel = document.getElementById('imagine-panel')
-const eraInput = document.getElementById('era-input')
-const imagineBtn = document.getElementById('imagine-btn')
-const imagineStatus = document.getElementById('imagine-status')
+const workbench = document.getElementById('workbench')
+const workbenchEmpty = document.getElementById('workbench-empty')
+const anchorPhrase = document.getElementById('anchor-phrase')
+const deviceChips = document.getElementById('device-chips')
+const deviceHint = document.getElementById('device-hint')
+const lensChips = document.getElementById('lens-chips')
+const lensQuestion = document.getElementById('lens-question')
+const hypothesisTabs = document.getElementById('hypothesis-tabs')
+const hypothesisBlurb = document.getElementById('hypothesis-blurb')
 
-const viewer = createPassageViewer({
-  root: document.getElementById('passage-viewer'),
-  tabs: document.getElementById('version-tabs'),
-  card: document.getElementById('viewer-card'),
-})
+const output = document.getElementById('output')
+const outputEmpty = document.getElementById('output-empty')
+const promptBox = document.getElementById('prompt-box')
+const copyBtn = document.getElementById('copy-btn')
+const illustrateBtn = document.getElementById('illustrate-btn')
+const illustrateStatus = document.getElementById('illustrate-status')
+const illustration = document.getElementById('illustration')
+const reflectionQuestion = document.getElementById('reflection-question')
+const defendBox = document.getElementById('defend-box')
 
-// The start screen hides once playback begins — mirror status to both screens.
-function setStatus(label) {
-  uploadStatus.textContent = label
-  experienceStatus.textContent = label
-}
+let selection = null // { mission, device, lens, hypothesis }
+const defendNotes = new Map() // mission id -> student's defense text
 
-let bgm = null
+// --- rendering -------------------------------------------------------------
 
-function startBgm(volume = 0.25) {
-  stopBgm()
-  bgm = new Audio(encodeURI('/audio/gomtang s3.mp3'))
-  bgm.loop = true
-  bgm.volume = volume
-  bgm.play?.().catch(() => {}) // silently skip if the asset is absent
-}
-
-function stopBgm() {
-  bgm?.pause()
-  bgm = null
-}
-
-function showExperienceScreen() {
-  startScreen.classList.add('hidden')
-  experienceScreen.classList.remove('hidden')
-}
-
-// Open the pre-generated sample book: the e-book text plus its canonical
-// "original" cards (stills, moving loops, dialogue voices), all served from
-// public/samples/ so the demo start needs no live generation.
-startBtn?.addEventListener('click', async () => {
-  setStatus('Opening the sample book...')
-  const manifest = await loadSampleBook()
-  if (!manifest) {
-    setStatus('Samples are not built yet — run `npm run make-samples` first.')
-    return
+function renderMissionStrip() {
+  missionStrip.innerHTML = ''
+  for (const mission of MISSIONS) {
+    const card = document.createElement('button')
+    card.type = 'button'
+    card.className = `mission-card${selection?.mission === mission.id ? ' active' : ''}`
+    card.innerHTML =
+      `<strong>${mission.title}</strong>` +
+      `<span class="mission-phrase">${mission.phrase}</span>` +
+      `<span class="mission-question">${mission.question}</span>`
+    card.addEventListener('click', () => selectMission(mission.id))
+    missionStrip.appendChild(card)
   }
-  currentScene = manifestToScene(manifest)
-  renderBook(currentScene)
-  showExperienceScreen()
-  // Seed each passage's version tabs — the viewer opens on passage click.
-  for (const [index, versions] of versionsByIndex(manifest)) {
-    viewer.setVersions(index, versions)
-  }
-  setStatus('Tap a highlighted sentence to see its scene.')
-  if (!bgm) startBgm(0.2)
-})
-
-// Render the scene as an e-book page with clickable passages.
-function renderBook(scene) {
-  bookTitle.textContent = scene.title
-  bookPages.innerHTML = ''
-  scene.beats.forEach((beat, index) => {
-    const span = document.createElement('span')
-    span.className = 'passage'
-    span.dataset.index = String(index)
-    span.textContent = beat.text + ' '
-    span.addEventListener('click', () => selectPassage(span, beat, index))
-    bookPages.appendChild(span)
-  })
-  book.classList.remove('hidden')
 }
 
-let selectedBeat = null
-let selectedIndex = null
-
-function selectPassage(span, beat, index) {
-  bookPages.querySelectorAll('.passage.selected').forEach((el) => el.classList.remove('selected'))
-  span.classList.add('selected')
-  selectedBeat = beat
-  selectedIndex = index
-  viewer.show(index) // this passage's scene: Original tab (loop + voices) first
-  imaginePanel.classList.remove('hidden')
-}
-
-imagineBtn?.addEventListener('click', () => {
-  const wish = eraInput.value.trim()
-  if (!selectedBeat || !wish || selectedIndex == null) return
-  imagineBtn.disabled = true
-  imagineStatus.textContent = 'Imagining...'
-  if (!bgm) startBgm(0.2)
-
-  const beat = selectedBeat
-  const index = selectedIndex
-  let tabId = null
-
-  // The transform appears as a new tab on this passage and is selected; the
-  // child can fire the next imagining while this one comes alive.
-  const ensureTab = (label, still = null) => {
-    if (tabId == null) {
-      tabId = viewer.addTransform(index, { label, still, clip: null })
-      imagineStatus.textContent = ''
-      imagineBtn.disabled = false
+function renderPassage() {
+  passageBook.textContent = `${PASSAGE.title} — ${PASSAGE.sceneTitle}`
+  passageText.innerHTML = ''
+  for (const segment of PASSAGE.segments) {
+    if (segment.mission) {
+      const span = document.createElement('span')
+      span.className =
+        `anchor${selection?.mission === segment.mission ? ' selected' : ''}`
+      span.textContent = segment.text
+      span.addEventListener('click', () => selectMission(segment.mission))
+      passageText.appendChild(span)
+    } else {
+      passageText.appendChild(document.createTextNode(segment.text))
     }
-    return tabId
   }
+}
 
-  requestReimagine(
-    {
-      text: beat.text,
-      sceneTitle: currentScene?.title ?? '',
-      wish,
-      // The whole page, so the remix knows the story around the selection.
-      bookText: currentScene?.beats?.map((b) => b.text).join(' ') ?? '',
-      // Sample passages carry their canonical staging prompt — the transform
-      // then keeps the same scene composition as the sample clips.
-      staging: beat.staging ?? null,
-    },
-    {
-      onDesign: (label) => {
-        ensureTab(label)
-      },
-      onImage: (label, src) => {
-        ensureTab(label, src)
-        viewer.updateTransform(index, tabId, { still: src })
-      },
-      onClip: (url) => {
-        if (tabId != null) viewer.updateTransform(index, tabId, { clip: url })
-      },
-    },
-  ).catch((err) => {
-    imagineStatus.textContent = err.message
-    imagineBtn.disabled = false
-  })
+function chip(label, active, suggested, onClick) {
+  const btn = document.createElement('button')
+  btn.type = 'button'
+  btn.className = `chip${active ? ' active' : ''}${suggested ? ' suggested' : ''}`
+  btn.textContent = suggested && !active ? `${label} ✦` : label
+  btn.addEventListener('click', onClick)
+  return btn
+}
+
+function renderWorkbench() {
+  const mission = findMission(selection?.mission)
+  workbenchEmpty.classList.toggle('hidden', !!mission)
+  workbench.classList.toggle('hidden', !mission)
+  output.classList.toggle('hidden', !mission)
+  outputEmpty.classList.toggle('hidden', !!mission)
+  if (!mission) return
+
+  anchorPhrase.textContent = `“${mission.phrase}”`
+
+  deviceChips.innerHTML = ''
+  for (const device of DEVICES) {
+    deviceChips.appendChild(
+      chip(device.label, selection.device === device.id, mission.device === device.id, () => {
+        selection.device = device.id
+        update()
+      }),
+    )
+  }
+  deviceHint.textContent = findDevice(selection.device)?.hint ?? ''
+
+  lensChips.innerHTML = ''
+  for (const lens of LENSES) {
+    lensChips.appendChild(
+      chip(lens.label, selection.lens === lens.id, mission.lenses.includes(lens.id), () => {
+        selection.lens = lens.id
+        update()
+      }),
+    )
+  }
+  lensQuestion.textContent = findLens(selection.lens)?.question ?? ''
+
+  hypothesisTabs.innerHTML = ''
+  for (const hypothesis of HYPOTHESES) {
+    hypothesisTabs.appendChild(
+      chip(hypothesis.label, selection.hypothesis === hypothesis.id, false, () => {
+        selection.hypothesis = hypothesis.id
+        update()
+      }),
+    )
+  }
+  hypothesisBlurb.textContent =
+    HYPOTHESES.find((h) => h.id === selection.hypothesis)?.blurb ?? ''
+}
+
+function renderOutput() {
+  if (!selection) return
+  promptBox.value = buildPrompt(selection)
+  const reflection = reflectionFor(selection.mission)
+  reflectionQuestion.textContent = reflection?.question ?? ''
+  defendBox.value = defendNotes.get(selection.mission) ?? ''
+  illustration.innerHTML = ''
+  illustrateStatus.textContent = ''
+}
+
+function update() {
+  renderMissionStrip()
+  renderPassage()
+  renderWorkbench()
+  renderOutput()
+}
+
+function selectMission(missionId) {
+  if (selection?.mission !== missionId) selection = defaultSelection(missionId)
+  update()
+}
+
+// --- actions ---------------------------------------------------------------
+
+copyBtn?.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(promptBox.value)
+    illustrateStatus.textContent = 'Prompt copied.'
+  } catch {
+    promptBox.select()
+    document.execCommand?.('copy')
+  }
 })
 
-let currentScene = null
+defendBox?.addEventListener('input', () => {
+  if (selection) defendNotes.set(selection.mission, defendBox.value)
+})
+
+illustrateBtn?.addEventListener('click', async () => {
+  if (!selection) return
+  illustrateBtn.disabled = true
+  illustrateStatus.textContent = 'Painting one possible interpretation...'
+  try {
+    const res = await fetch('/api/illustrate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: promptBox.value }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw new Error(body?.error ?? `Illustration failed (${res.status})`)
+    illustration.innerHTML = ''
+    const img = document.createElement('img')
+    img.src = body.src
+    img.alt = 'One possible interpretation'
+    illustration.appendChild(img)
+    illustrateStatus.textContent =
+      'One possible interpretation — not the answer. Would you paint it differently?'
+  } catch (err) {
+    illustrateStatus.textContent = err.message
+  } finally {
+    illustrateBtn.disabled = false
+  }
+})
+
+update()

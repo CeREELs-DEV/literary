@@ -3,9 +3,14 @@ import express from 'express'
 import fs from 'node:fs'
 import { runExperiencePipeline } from './pipeline.js'
 import { reimaginePassage } from './reimagine.js'
+import { illustratePrompt } from './illustrate.js'
 import { GENERATED_DIR } from './paths.js'
 
-export function createApp({ pipeline = runExperiencePipeline, reimagine = reimaginePassage } = {}) {
+export function createApp({
+  pipeline = runExperiencePipeline,
+  reimagine = reimaginePassage,
+  illustrate = illustratePrompt,
+} = {}) {
   const app = express()
   app.use(express.json({ limit: '20mb' })) // base64 book photos
   fs.mkdirSync(GENERATED_DIR, { recursive: true })
@@ -36,6 +41,22 @@ export function createApp({ pipeline = runExperiencePipeline, reimagine = reimag
       emit({ type: 'error', message: err?.message ?? 'pipeline failed' })
     } finally {
       res.end()
+    }
+  })
+
+  // Literary Image Lab: render a student's interpretation prompt as one
+  // possible illustration (a hypothesis, not an answer).
+  app.post('/api/illustrate', async (req, res) => {
+    const { prompt } = req.body ?? {}
+    if (!prompt) {
+      res.status(400).json({ error: 'prompt is required' })
+      return
+    }
+    try {
+      const src = await illustrate({ prompt })
+      res.json({ src })
+    } catch (err) {
+      res.status(500).json({ error: err?.message ?? 'illustration failed' })
     }
   })
 

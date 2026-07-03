@@ -15,16 +15,18 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
 import { generateOmniClip } from '../server/omni.js'
+import { mp4ToGif } from '../server/gif.js'
 import { defaultGenAi } from '../server/genai.js'
 import { loadReferenceImages } from '../server/images.js'
 import { loadVoiceConfig, generateBeatSpeech } from '../server/speech.js'
 import { BOOK_TITLE } from '../server/book.js'
-import { COMMON_STYLE, VERSIONS } from './sample-prompts.mjs'
+import { COMMON_STYLE, VERSIONS, CAPTIONS } from './sample-prompts.mjs'
 
 const EXCERPT_PATH = 'scripts/sample-pages/excerpt.txt'
 const OUT_DIR = 'public/samples'
 const MANIFEST_PATH = path.join(OUT_DIR, 'manifest.json')
-const MAX_REFERENCES = 8
+const MAX_REFERENCES = 3 // small budget — the style is also locked in words
+const LOOP_DURATION = '4s' // short GIF-like loop
 const BEAT_COUNT = VERSIONS[0].prompts.length
 
 // Script-local schema: verbatim beats plus dialogue-aware speech segments.
@@ -136,12 +138,13 @@ async function main() {
     page = {
       source: 'excerpt',
       sceneTitle: scene.title,
-      // staging: the canonical (Original) video prompt for this moment — live
-      // wish-transforms reuse it so they keep the same scene composition.
+      // staging: the canonical (Original) loop prompt for this moment — live
+      // wish-transforms reuse it so they keep the same idea and composition.
       beats: scene.beats.map((b, i) => ({
         text: b.text,
         speech: b.speech,
         staging: VERSIONS[0].prompts[i],
+        caption: CAPTIONS[i] ?? null,
         versions: [],
       })),
     }
@@ -162,14 +165,23 @@ async function main() {
       }
       console.log(`[beat ${i + 1}/${page.beats.length}] ${version.label}...`)
       try {
-        const clipFile = await generateOmniClip({
+        let clipFile = await generateOmniClip({
           ai,
           prompt: `${COMMON_STYLE}\n\n${version.prompts[i]}`,
           references,
-          duration: '8s',
+          duration: LOOP_DURATION,
           saveDir: OUT_DIR,
           basename: `clip-${version.id}-${i}`,
         })
+        // The card is a real animated GIF; the mp4 is only an intermediate.
+        try {
+          const gifFile = clipFile.replace(/\.mp4$/, '.gif')
+          await mp4ToGif(path.join(OUT_DIR, clipFile), path.join(OUT_DIR, gifFile))
+          fs.unlinkSync(path.join(OUT_DIR, clipFile))
+          clipFile = gifFile
+        } catch (err) {
+          console.warn('  gif conversion failed (keeping mp4):', err?.message ?? err)
+        }
 
         let audio = []
         const speech = speechForVersion(beat.speech, version)

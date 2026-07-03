@@ -3,44 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Literary Imagination Demo</title>
+    <title>Literary Image Lab</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
-      <section id="start-screen" class="screen">
-        <h1>Literary Imagination Demo</h1>
-        <button id="start-sample" type="button">📖 Open the sample book</button>
-        <p id="upload-status" class="upload-status" role="status"></p>
-      </section>
-      <section id="experience-screen" class="screen hidden">
-        <div id="stage" class="hidden">
-          <div id="media-frame">
-            <div id="clip-layer"></div>
-            <div id="image-layer"></div>
-            <div id="flash-layer"></div>
+      <header id="lab-header">
+        <h1>Literary Image Lab</h1>
+        <p class="tagline">Read closely. Find the strange. Imagine it your own way.</p>
+      </header>
+
+      <div id="mission-strip"></div>
+
+      <main id="lab">
+        <section id="passage-pane" class="pane">
+          <h2 class="pane-title">Passage</h2>
+          <h3 id="passage-book"></h3>
+          <p id="passage-text"></p>
+          <p class="pane-hint">Tap a highlighted phrase — or pick a mission card above.</p>
+        </section>
+
+        <section id="workbench-pane" class="pane">
+          <h2 class="pane-title">Your reading</h2>
+          <div id="workbench-empty">Pick a phrase to begin.</div>
+          <div id="workbench" class="hidden">
+            <div class="step">
+              <h4>1 · Anchor</h4>
+              <p id="anchor-phrase"></p>
+            </div>
+            <div class="step">
+              <h4>2 · Literary device</h4>
+              <div id="device-chips" class="chips"></div>
+              <p id="device-hint" class="hint"></p>
+            </div>
+            <div class="step">
+              <h4>3 · Imagination lens</h4>
+              <p class="hint">You don't have to "see" it — imagine through rules, sound, or feeling.</p>
+              <div id="lens-chips" class="chips"></div>
+              <p id="lens-question" class="hint"></p>
+            </div>
+            <div class="step">
+              <h4>4 · Image hypothesis</h4>
+              <div id="hypothesis-tabs" class="chips"></div>
+              <p id="hypothesis-blurb" class="hint"></p>
+            </div>
           </div>
-          <div id="text-layer">
-            <p id="beat-text"></p>
-            <p id="beat-caption"></p>
+        </section>
+
+        <section id="output-pane" class="pane">
+          <h2 class="pane-title">Your image idea</h2>
+          <div id="output-empty">Your prompt will appear here.</div>
+          <div id="output" class="hidden">
+            <div class="step">
+              <h4>5 · Your prompt <span class="badge">a hypothesis, not the answer</span></h4>
+              <textarea id="prompt-box" rows="7" readonly></textarea>
+              <div class="row">
+                <button id="copy-btn" type="button">Copy</button>
+                <button id="illustrate-btn" type="button">🎨 Test your hypothesis</button>
+              </div>
+              <p id="illustrate-status" class="hint" role="status"></p>
+              <div id="illustration"></div>
+            </div>
+            <div class="step">
+              <h4>6 · Defend your image</h4>
+              <p id="reflection-question" class="reflection"></p>
+              <textarea id="defend-box" rows="3"
+                placeholder="Why did you see it this way? What in the sentence made you choose this image?"></textarea>
+            </div>
           </div>
-        </div>
-        <p id="experience-status" class="upload-status" role="status"></p>
-        <div id="book" class="hidden">
-          <h2 id="book-title"></h2>
-          <div id="book-pages"></div>
-        </div>
-        <div id="passage-viewer" class="hidden">
-          <div id="version-tabs"></div>
-          <div id="viewer-card" class="remix-card"></div>
-        </div>
-        <div id="imagine-panel" class="hidden">
-          <input id="era-input" type="text"
-            placeholder="e.g. I want to imagine this in 1800s Joseon Korea" />
-          <button id="imagine-btn" type="button">✨ Imagine</button>
-          <p id="imagine-status" class="upload-status" role="status"></p>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

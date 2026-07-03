@@ -13,21 +13,27 @@
 // liquid from eyes.
 
 // Shared style contract for all videos — the attached reference images
-// are the law, and the law is repeated in words.
+// are the law, and the law is repeated in words that MATCH them (an earlier
+// draft said "soft storybook watercolor" and the model followed the words
+// instead of the images).
 export const CURATED_STYLE =
-  `STYLE LOCK. The attached reference images define the ONLY allowed art ` +
-  `style: flat hand-drawn 2D storybook animation, clean uniform line weight, ` +
-  `simple flat color fills, soft warm muted palette, gentle paper-like ` +
-  `texture, warm magical-realism tone. Every video must look drawn by the ` +
-  `same hand as the reference images — same character proportions, same face ` +
-  `designs, same rendering technique. No 3D, no photorealism, no painterly ` +
-  `rendering, no style drift. Characters always have simple, correct ` +
-  `anatomy — exactly two arms and two hands each; no extra limbs, no merged ` +
-  `or morphing body parts. Nothing may pop into existence mid-shot: no new ` +
-  `objects, terrain, or characters appearing. Keep the camera work simple ` +
-  `and gentle. No floating letters, no readable text, no runes, no glowing ` +
-  `words. No horror, no grotesque imagery, no insects, no liquid coming from ` +
-  `eyes. No subtitles, no logos, no watermark.`
+  `STYLE LOCK. Copy the art style of the attached reference images EXACTLY — ` +
+  `they are the only style authority. Their actual style: a quirky ` +
+  `hand-drawn indie cartoon (webtoon / zine feel) — bold, wobbly black ` +
+  `marker outlines with uneven, imperfect hand-drawn line weight; completely ` +
+  `FLAT solid color fills with no gradients, no painterly shading, no soft ` +
+  `lighting; simple doodle-like characters with round faces, dot eyes or big ` +
+  `sleepy oval eyes, zigzag hair silhouettes, thin limbs with small nub ` +
+  `hands and feet; flat, naive-perspective backgrounds built from bold solid ` +
+  `color planes; characters keep a white sticker-like cut-out outline, as if ` +
+  `paper cutouts were pasted onto the scene. Do NOT drift toward anime, ` +
+  `Disney, watercolor, pastel storybook, 3D, or realism. Characters always ` +
+  `have simple, correct anatomy — exactly two arms and two hands each; no ` +
+  `extra limbs, no merged or morphing body parts. Nothing may pop into ` +
+  `existence mid-shot: no new objects, terrain, or characters appearing. ` +
+  `Keep the camera work simple and gentle. No floating letters, no readable ` +
+  `text, no runes, no glowing words. No horror, no grotesque imagery, no ` +
+  `insects, no liquid coming from eyes. No subtitles, no logos, no watermark.`
 
 // One world, nine films — the place and the two children must be identical
 // everywhere; only the scene beat and the point of view change.

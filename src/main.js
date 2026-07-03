@@ -1,5 +1,4 @@
 // src/main.js
-import { requestExperience } from './upload.js'
 import { requestReimagine } from './remix.js'
 import { loadSampleBook, manifestToScene, versionsByIndex } from './samples.js'
 import { createPassageViewer } from './viewer.js'
@@ -7,9 +6,7 @@ import { createPassageViewer } from './viewer.js'
 const startScreen = document.getElementById('start-screen')
 const experienceScreen = document.getElementById('experience-screen')
 const startBtn = document.getElementById('start-sample')
-const photoInput = document.getElementById('book-photo')
 const uploadStatus = document.getElementById('upload-status')
-const artifactStrip = document.getElementById('artifact-strip')
 const experienceStatus = document.getElementById('experience-status')
 
 const book = document.getElementById('book')
@@ -152,30 +149,3 @@ imagineBtn?.addEventListener('click', () => {
 })
 
 let currentScene = null
-
-photoInput?.addEventListener('change', async () => {
-  const file = photoInput.files?.[0]
-  if (!file) return
-  stopBgm()
-  photoInput.disabled = true
-  artifactStrip.innerHTML = ''
-
-  try {
-    const summary = await requestExperience(file, {
-      onStatus: (label) => {
-        setStatus(label)
-      },
-      onScene: (s) => {
-        currentScene = s
-        setStatus('')
-        renderBook(s)
-        showExperienceScreen()
-      },
-    })
-    currentScene = summary.scene
-  } catch (err) {
-    setStatus(err.message)
-  } finally {
-    photoInput.disabled = false
-  }
-})

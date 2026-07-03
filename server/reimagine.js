@@ -7,7 +7,6 @@ import { loadReferenceImages, sniffImageMime, PRO_MODEL, LITE_MODEL } from './im
 import { clampText } from './story.js'
 import { BOOK_CONTEXT, stripCharacterNames } from './book.js'
 import { COMMON_STYLE } from './style.js'
-import { generateOmniClip } from './omni.js'
 
 const MAX_REFERENCES = 8
 const POLL_INTERVAL_MS = 10_000
@@ -81,34 +80,8 @@ const VIDEO_MODELS = [
   'veo-3.1-lite-generate-preview',
 ]
 
-// Animate the reimagined still into a short GIF-like loop clip.
-export async function animateStill({
-  ai,
-  text,
-  bookText,
-  design,
-  src,
-  saveDir,
-  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-}) {
-  // Veo's filter blocks person-like proper names — every text reaching the
-  // video prompt is name-stripped (visual descriptors instead).
-  const safeText = stripCharacterNames(text)
-  const safeMotion = stripCharacterNames(design.motionPrompt)
-  const storyContext = bookText
-    ? `The full story, so the motion fits its context: ` +
-      `"${stripCharacterNames(clampText(bookText, 600))}". `
-    : ''
-  const prompt =
-    `${storyContext}This is one moment from a children's story: "${safeText}". Bring this exact ` +
-    `illustration alive like an animated GIF. The illustration is the first frame and ` +
-    `its art style is the law: preserve the characters, linework, color palette, and ` +
-    `composition; do not restyle, redraw, or add realism. KEEP THE CAMERA STILL — no ` +
-    `zooming or panning; the life must come from the scene itself: the characters ` +
-    `visibly move (blink, breathe, turn, gesture) and ambient elements keep moving. ` +
-    `Nothing new may enter the frame: no new objects, walls, structures, or characters ` +
-    `may appear, form, or morph. The motion follows the story's spatial and emotional ` +
-    `logic exactly: ${safeMotion}`
+// Run a Veo image-to-video generation (quota-chained) and save the mp4.
+async function renderVeoClip({ ai, prompt, src, saveDir, sleep, durationSeconds = 4 }) {
   const request = (model) =>
     ai.models.generateVideos({
       model,
@@ -118,7 +91,7 @@ export async function animateStill({
         mimeType: src.slice(5, src.indexOf(';')),
       },
       config: {
-        durationSeconds: 4, // GIF-length loop — roughly halves the wait vs 8s
+        durationSeconds,
         resolution: '720p',
         aspectRatio: '16:9',
         // The lite model rejects negativePrompt (400).
@@ -156,6 +129,38 @@ export async function animateStill({
   const filename = `remix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp4`
   await ai.files.download({ file: video, downloadPath: path.join(saveDir, filename) })
   return `/api/media/${filename}`
+}
+
+// Animate the reimagined still into a short GIF-like loop clip.
+export async function animateStill({
+  ai,
+  text,
+  bookText,
+  design,
+  src,
+  saveDir,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  // Veo's filter blocks person-like proper names — every text reaching the
+  // video prompt is name-stripped (visual descriptors instead).
+  const safeText = stripCharacterNames(text)
+  const safeMotion = stripCharacterNames(design.motionPrompt)
+  const storyContext = bookText
+    ? `The full story, so the motion fits its context: ` +
+      `"${stripCharacterNames(clampText(bookText, 600))}". `
+    : ''
+  const prompt =
+    `${storyContext}This is one moment from a children's story: "${safeText}". Bring this exact ` +
+    `illustration alive like an animated GIF. The illustration is the first frame and ` +
+    `its art style is the law: preserve the characters, linework, color palette, and ` +
+    `composition; do not restyle, redraw, or add realism. KEEP THE CAMERA STILL — no ` +
+    `zooming or panning; the life must come from the scene itself: the characters ` +
+    `visibly move (blink, breathe, turn, gesture) and ambient elements keep moving. ` +
+    `Nothing new may enter the frame: no new objects, walls, structures, or characters ` +
+    `may appear, form, or morph. The motion follows the story's spatial and emotional ` +
+    `logic exactly: ${safeMotion}`
+  // 4s GIF-length loop — roughly halves the wait vs 8s.
+  return renderVeoClip({ ai, prompt, src, saveDir, sleep, durationSeconds: 4 })
 }
 
 // Claude structures the wish into a grounded, English period + motion design.
@@ -291,21 +296,52 @@ export async function reimaginePassage({
   if (!ai) throw new Error('Image generation is unavailable (GEMINI_API_KEY missing).')
 
   // Sample-book passages carry their canonical staging prompt — the transform
-  // is then the SAME pipeline that made the sample clips: restage the prompt
-  // for the wished era and render it with Omni Flash + the style references.
+  // keeps the sample's scene composition: Claude restages the prompt for the
+  // wished era, Nano Banana paints its first frame (style refs attached), and
+  // Veo brings that frame to life for the full 8 seconds.
   if (staging) {
     const design = await designRestaging({ staging, text, wish, bookContext, client })
     emit({ type: 'design', label: design.label })
-    const filename = await generateOmniClip({
-      ai,
-      prompt: `${COMMON_STYLE}\n\n${design.videoPrompt}`,
-      references: references.slice(0, MAX_REFERENCES),
-      duration: '8s',
-      saveDir,
-      basename: `remix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      sleep,
-    })
-    emit({ type: 'clip', url: `/api/media/${filename}` })
+
+    const referenceParts = references.slice(0, MAX_REFERENCES).map((ref) => ({
+      type: 'image',
+      mime_type: ref.mimeType,
+      data: ref.data,
+    }))
+    const stillPrompt =
+      `${COMMON_STYLE}\n\nPaint the OPENING FRAME (the very first frame) of this shot: ` +
+      `${design.videoPrompt}\nWide cinematic composition. No text or letters in the image.`
+    const generate = async (model) => {
+      const interaction = await ai.interactions.create({
+        model,
+        input: [{ type: 'text', text: stillPrompt }, ...referenceParts],
+        response_format: { type: 'image', aspect_ratio: '16:9' },
+      })
+      const data = interaction?.output_image?.data
+      if (!data) throw new Error('no image data in response')
+      return data
+    }
+    let data
+    try {
+      data = await generate(PRO_MODEL)
+    } catch {
+      data = await generate(LITE_MODEL)
+    }
+    const src = `data:${sniffImageMime(data)};base64,${data}`
+    emit({ type: 'image', label: design.label, src })
+
+    try {
+      const prompt =
+        `The attached illustration is the first frame of this shot — its art style is ` +
+        `the law: preserve the characters, linework, color palette, and composition; ` +
+        `do not restyle, redraw, or add realism. Play the shot exactly as staged: ` +
+        `${stripCharacterNames(design.videoPrompt)}`
+      const clipUrl = await renderVeoClip({ ai, prompt, src, saveDir, sleep, durationSeconds: 8 })
+      emit({ type: 'clip', url: clipUrl })
+    } catch (err) {
+      console.error('remix clip failed:', err?.message ?? err)
+      // Non-fatal: the card stays a still.
+    }
     return
   }
 

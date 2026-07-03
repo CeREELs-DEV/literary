@@ -263,53 +263,56 @@ describe('reimaginePassage with canonical staging (sample-book passages)', () =>
     }
   }
 
-  function omniAi() {
-    return {
-      interactions: {
-        create: vi.fn(async () => ({
-          id: 'int-9',
-          status: 'completed',
-          output_video: { data: Buffer.from('mp4').toString('base64') },
-        })),
-        get: vi.fn(),
-      },
-    }
-  }
-
-  it('restages the canonical prompt for the wish and renders it with Omni Flash', async () => {
+  it('restages the canonical prompt, paints its first frame, and animates it with Veo', async () => {
     const emit = vi.fn()
     const client = restagingClient()
-    const ai = omniAi()
-    const os = await import('node:os')
-    const fs = await import('node:fs')
-    const path = await import('node:path')
-    const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'restage-'))
+    const ai = fakeAi()
+    await reimaginePassage({ ...base, staging, emit, client, ai, references })
+
+    // Claude sees the staging prompt, the passage, and the wish.
+    const params = client.messages.stream.mock.calls[0][0]
+    expect(params.output_config.format.schema.required).toContain('videoPrompt')
+    expect(params.messages[0].content).toContain(staging)
+    expect(params.messages[0].content).toContain('1800년대 조선시대')
+
+    // Nano Banana paints the opening frame: shared style block + refs.
+    const create = ai.interactions.create.mock.calls[0][0]
+    expect(create.model).toBe('gemini-3-pro-image')
+    expect(create.input[0].text).toContain('Use the 8 provided reference images')
+    expect(create.input[0].text).toContain('OPENING FRAME')
+    expect(create.input[0].text).toContain('girl in hanbok')
+    expect(create.input.filter((p) => p.type === 'image')).toHaveLength(references.length)
+    expect(create.response_format).toMatchObject({ type: 'image' })
+
+    // Veo plays the restaged shot from that frame, sample-length (8s).
+    const veoParams = ai.models.generateVideos.mock.calls[0][0]
+    expect(veoParams.model).toBe('veo-3.1-generate-preview')
+    expect(veoParams.config.durationSeconds).toBe(8)
+    expect(veoParams.prompt).toContain('girl in hanbok')
+    expect(veoParams.prompt).toContain('first frame')
+
+    // Streamed as design label, then the still, then the clip.
+    const events = emit.mock.calls.map((c) => c[0])
+    expect(events[0]).toEqual({ type: 'design', label: '1800s Joseon Korea' })
+    expect(events[1].type).toBe('image')
+    expect(events[1].src.startsWith('data:image/jpeg;base64,')).toBe(true)
+    expect(events[2].type).toBe('clip')
+    expect(events[2].url).toMatch(/^\/api\/media\/remix-.+\.mp4$/)
+  })
+
+  it('keeps the restaged still when the clip fails (non-fatal)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
-      await reimaginePassage({ ...base, staging, emit, client, ai, references, saveDir })
-
-      // Claude sees the staging prompt, the passage, and the wish.
-      const params = client.messages.stream.mock.calls[0][0]
-      expect(params.output_config.format.schema.required).toContain('videoPrompt')
-      expect(params.messages[0].content).toContain(staging)
-      expect(params.messages[0].content).toContain('1800년대 조선시대')
-
-      // Omni Flash gets the shared style block + the restaged prompt + refs.
-      const create = ai.interactions.create.mock.calls[0][0]
-      expect(create.model).toBe('gemini-omni-flash-preview')
-      expect(create.input[0].text).toContain('Use the 8 provided reference images')
-      expect(create.input[0].text).toContain('girl in hanbok')
-      expect(create.input.filter((p) => p.type === 'image')).toHaveLength(references.length)
-      expect(create.response_format).toMatchObject({ type: 'video', duration: '8s' })
-
-      // Streamed as design label first, then the finished clip.
-      const events = emit.mock.calls.map((c) => c[0])
-      expect(events[0]).toEqual({ type: 'design', label: '1800s Joseon Korea' })
-      expect(events[1].type).toBe('clip')
-      expect(events[1].url).toMatch(/^\/api\/media\/remix-.+\.mp4$/)
-      // No still image pipeline in this path.
-      expect(events.map((e) => e.type)).not.toContain('image')
+      const emit = vi.fn()
+      await reimaginePassage({
+        ...base, staging, emit, client: restagingClient(),
+        ai: fakeAi({ veoFail: 'always' }), references,
+      })
+      const types = emit.mock.calls.map((c) => c[0].type)
+      expect(types).toContain('image')
+      expect(types).not.toContain('clip')
     } finally {
-      fs.rmSync(saveDir, { recursive: true, force: true })
+      errorSpy.mockRestore()
     }
   })
 })

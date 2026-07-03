@@ -16,8 +16,6 @@ const book = document.getElementById('book')
 const bookTitle = document.getElementById('book-title')
 const bookPages = document.getElementById('book-pages')
 const imaginePanel = document.getElementById('imagine-panel')
-const selectedPassage = document.getElementById('selected-passage')
-const eraChips = document.querySelectorAll('.era-chip')
 const eraInput = document.getElementById('era-input')
 const imagineBtn = document.getElementById('imagine-btn')
 const imagineStatus = document.getElementById('imagine-status')
@@ -98,16 +96,9 @@ function selectPassage(span, beat, index) {
   span.classList.add('selected')
   selectedBeat = beat
   selectedIndex = index
-  selectedPassage.textContent = beat.text
   viewer.show(index) // this passage's scene: Original tab (loop + voices) first
   imaginePanel.classList.remove('hidden')
 }
-
-eraChips.forEach((chip) => {
-  chip.addEventListener('click', () => {
-    eraInput.value = chip.textContent
-  })
-})
 
 imagineBtn?.addEventListener('click', () => {
   const wish = eraInput.value.trim()

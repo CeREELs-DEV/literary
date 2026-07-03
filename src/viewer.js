@@ -58,10 +58,9 @@ export function createPassageViewer(
     if (version.clip) {
       const video = document.createElement('video')
       video.src = version.clip
-      // The clips carry their own ambience (Omni Flash); keep it under the
-      // voices and bgm. Transform clips (Veo) are silent, so this is safe.
-      video.muted = false
-      video.volume = 0.35
+      // Omni clips bake in their own speech — mute them so the ElevenLabs
+      // narration/dialogue overlay is the only voice heard.
+      video.muted = true
       video.loop = true
       video.autoplay = true
       video.playsInline = true

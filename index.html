@@ -3,95 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Literary Image Lab</title>
+    <title>Imagination Player</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
       <header id="lab-header">
-        <h1>Literary Image Lab</h1>
-        <button id="hints-toggle" type="button" aria-pressed="true">Hints: on</button>
+        <h1>Curated Imagination Player</h1>
       </header>
 
-      <!-- Reading Mode: the text is the whole screen. No literary terms,
-           no panels — at most a one-line question when a mark is tapped. -->
+      <!-- Reading first: the passage, undisturbed. No prompts, no generation,
+           no literary terms — just the text and, at its end, one button. -->
       <main id="reader">
         <article id="passage-page">
           <h3 id="passage-book"></h3>
           <p id="passage-text"></p>
         </article>
 
-        <!-- Notice: appears at the end of the passage, after reading. -->
-        <section id="notice">
-          <h4>Done reading? Three phrases worth imagining —</h4>
-          <div id="notice-chips"></div>
-          <p class="hint">...or tap any underlined phrase above. No rush — reading comes first.</p>
-        </section>
+        <div id="after-passage">
+          <button id="open-player-btn" type="button">✨ See the imagined scenes</button>
+          <p class="hint">Three short films — the same paragraph, three different eyes.</p>
+        </div>
       </main>
 
-      <div id="hint-pop" class="hidden" role="tooltip"></div>
-      <button id="imagine-fab" type="button">✨ Imagine</button>
-
-      <!-- Lab Mode: a bottom sheet, opened only after reading. Steps reveal
-           one at a time; "Maybe later" always available. -->
-      <div id="lab-overlay" class="hidden">
-        <div id="lab-sheet" role="dialog" aria-modal="true">
+      <!-- Imagination Player: pre-produced videos only. Students watch,
+           observe, and compare; nothing here generates anything. -->
+      <div id="player-overlay" class="hidden">
+        <div id="player-sheet" role="dialog" aria-modal="true">
           <header id="sheet-header">
-            <h2 id="sheet-title">Imagine one phrase</h2>
-            <button id="later-btn" type="button">Maybe later</button>
+            <h2>The same paragraph, three ways</h2>
+            <button id="close-player-btn" type="button">Back to reading</button>
           </header>
 
-          <section id="step-choose" class="sheet-step">
-            <h4>Choose one phrase to go deep on</h4>
-            <div id="choose-cards"></div>
+          <div id="viewpoint-tabs"></div>
+
+          <section id="scene-card">
+            <div id="scene-media"></div>
+            <p id="scene-interpretation"></p>
+            <div id="scene-anchors"></div>
+            <div id="scene-questions"></div>
           </section>
 
-          <section id="step-imagine" class="sheet-step hidden">
-            <p id="imagine-anchor" class="anchor-echo"></p>
-            <p id="imagine-question" class="big-question"></p>
-            <textarea id="imagine-box" rows="3"
-              placeholder="Your first thought — a sentence is enough."></textarea>
-            <div class="row">
-              <button id="to-create-btn" type="button" class="primary">Turn it into an image idea →</button>
-            </div>
-          </section>
-
-          <section id="step-create" class="sheet-step hidden">
-            <div class="step">
-              <h4>How are you imagining it?</h4>
-              <p class="hint">You don't have to "see" it — imagine through rules, sound, or feeling.</p>
-              <div id="lens-chips" class="chips"></div>
-            </div>
-            <div class="step">
-              <h4>What is the writer doing here?</h4>
-              <div id="device-chips" class="chips"></div>
-              <p id="device-hint" class="hint"></p>
-            </div>
-            <div class="step">
-              <h4>Same sentence, three honest pictures</h4>
-              <div id="hypothesis-tabs" class="chips"></div>
-            </div>
-            <div class="step">
-              <h4>Your prompt <span class="badge">a hypothesis, not the answer</span></h4>
-              <textarea id="prompt-box" rows="6" readonly></textarea>
-              <div class="row">
-                <button id="copy-btn" type="button">Copy</button>
-                <button id="illustrate-btn" type="button">🎨 Test your hypothesis</button>
-                <button id="to-reflect-btn" type="button" class="quiet">Skip to reflect →</button>
-              </div>
-              <p id="illustrate-status" class="hint" role="status"></p>
-              <div id="illustration"></div>
-            </div>
-          </section>
-
-          <section id="step-reflect" class="sheet-step hidden">
-            <h4>Defend your image</h4>
-            <p class="hint">Why did you see it this way? What in the sentence made you choose this image?</p>
-            <textarea id="defend-box" rows="3"
-              placeholder="Because the sentence says..."></textarea>
-            <div class="row">
-              <button id="done-btn" type="button" class="primary">Done — back to reading</button>
-            </div>
+          <section id="compare-block">
+            <h4>Now compare the three</h4>
+            <ol id="compare-questions"></ol>
           </section>
         </div>
       </div>

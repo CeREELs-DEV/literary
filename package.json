@@ -9,7 +9,7 @@
     "test:watch": "vitest",
     "server": "node --env-file-if-exists=.env server/index.js",
     "make-samples": "node --env-file=.env scripts/make-samples.mjs",
-    "make-lab-thumbs": "node --env-file=.env scripts/make-lab-thumbs.mjs"
+    "make-curated-videos": "node --env-file=.env scripts/make-curated-videos.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",

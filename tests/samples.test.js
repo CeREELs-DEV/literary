@@ -11,6 +11,7 @@ const manifest = {
       beats: [
         {
           text: '"Pumpernickel?" I whispered.',
+          staging: '8-second video, 16:9. The girl...',
           versions: [
             { id: 'original', label: 'Original', clip: '/samples/clip-original-1.mp4', audio: ['/samples/speech-1.mp3'] },
             { id: 'joseon', label: 'Joseon Korea', clip: '/samples/clip-joseon-1.mp4', audio: ['/samples/speech-2.mp3'] },
@@ -42,8 +43,8 @@ describe('manifestToScene', () => {
     const scene = manifestToScene(manifest)
     expect(scene.title).toBe('A Snicker of Magic')
     expect(scene.beats).toEqual([
-      { text: '"Pumpernickel?" I whispered.' },
-      { text: 'The boy glanced up then.' },
+      { text: '"Pumpernickel?" I whispered.', staging: '8-second video, 16:9. The girl...' },
+      { text: 'The boy glanced up then.', staging: null },
     ])
   })
 })

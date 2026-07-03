@@ -134,7 +134,14 @@ async function main() {
     page = {
       source: 'excerpt',
       sceneTitle: scene.title,
-      beats: scene.beats.map((b) => ({ text: b.text, speech: b.speech, versions: [] })),
+      // staging: the canonical (Original) video prompt for this moment — live
+      // wish-transforms reuse it so they keep the same scene composition.
+      beats: scene.beats.map((b, i) => ({
+        text: b.text,
+        speech: b.speech,
+        staging: VERSIONS[0].prompts[i],
+        versions: [],
+      })),
     }
     manifest.pages.push(page)
     fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2))

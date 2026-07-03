@@ -1,17 +1,18 @@
 // src/remix.js
 
-// POST a passage + wish; the server streams NDJSON: the still image first,
-// then the animated loop when Veo finishes. Resolves with a summary at stream
-// end; rejects on HTTP failure or an in-band error event.
+// POST a passage + wish; the server streams NDJSON. Sample-book passages
+// (with staging) stream a design label then the finished clip; upload-flow
+// passages stream a still image first, then the loop. Resolves with a summary
+// at stream end; rejects on HTTP failure or an in-band error event.
 export async function requestReimagine(
-  { text, sceneTitle, wish, bookText = '' },
-  { onImage = () => {}, onClip = () => {} } = {},
+  { text, sceneTitle, wish, bookText = '', staging = null },
+  { onDesign = () => {}, onImage = () => {}, onClip = () => {} } = {},
   fetchImpl = fetch,
 ) {
   const response = await fetchImpl('/api/reimagine', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, sceneTitle, wish, bookText }),
+    body: JSON.stringify({ text, sceneTitle, wish, bookText, staging }),
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
@@ -26,7 +27,10 @@ export async function requestReimagine(
   const handleLine = (line) => {
     if (!line.trim()) return
     const event = JSON.parse(line)
-    if (event.type === 'image') {
+    if (event.type === 'design') {
+      summary.label = event.label
+      onDesign(event.label)
+    } else if (event.type === 'image') {
       summary.label = event.label
       summary.src = event.src
       onImage(event.label, event.src)
@@ -48,6 +52,6 @@ export async function requestReimagine(
   }
   if (buffer.trim()) handleLine(buffer)
 
-  if (!summary.src) throw new Error('Stream ended with no image.')
+  if (!summary.src && !summary.clipUrl) throw new Error('Stream ended with nothing generated.')
   return summary
 }

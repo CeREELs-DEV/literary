@@ -17,7 +17,9 @@ export function manifestToScene(manifest) {
   return {
     id: 'sample-book',
     title: manifest.title,
-    beats: manifest.pages.flatMap((page) => page.beats.map((b) => ({ text: b.text }))),
+    beats: manifest.pages.flatMap((page) =>
+      page.beats.map((b) => ({ text: b.text, staging: b.staging ?? null })),
+    ),
   }
 }
 

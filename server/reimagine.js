@@ -6,6 +6,8 @@ import { GENERATED_DIR } from './paths.js'
 import { loadReferenceImages, sniffImageMime, PRO_MODEL, LITE_MODEL } from './images.js'
 import { clampText } from './story.js'
 import { BOOK_CONTEXT, stripCharacterNames } from './book.js'
+import { COMMON_STYLE } from './style.js'
+import { generateOmniClip } from './omni.js'
 
 const MAX_REFERENCES = 8
 const POLL_INTERVAL_MS = 10_000
@@ -194,6 +196,78 @@ export async function designReimagine({
   return JSON.parse(textBlock.text)
 }
 
+export const RESTAGE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['label', 'videoPrompt'],
+  properties: {
+    label: {
+      type: 'string',
+      description: 'short English label of the era/setting, e.g. "1800s Joseon Korea"',
+    },
+    videoPrompt: {
+      type: 'string',
+      description:
+        'the canonical staging prompt rewritten for the wished era/setting — same ' +
+        'scene, same characters, same camera and mood, but period-accurate world',
+    },
+  },
+}
+
+export const RESTAGE_SYSTEM = `You help a child reimagine a moment of an animated storybook
+in a different time and place. You are given the CANONICAL STAGING — the exact video prompt
+that produced the original clip of this moment — plus the passage it depicts and the child's
+wish (which may be written in any language).
+
+Rewrite the staging prompt for the wished era/setting. Rules:
+- Keep the staging intact: the same characters, the same actions, the same camera
+  movement, the same shot structure, the same mood and audio texture, the same
+  "8-second video, 16:9." opening.
+- Change ONLY the world: clothing, architecture, objects, materials, landscape,
+  ambient sounds — all period-accurate and concrete for the wished era/place
+  (an 1800s Joseon village has hanok roofs, hanbok, paper lanterns — not neon signs).
+- If a spoken word appears in quotes, keep it (or localize it naturally to the era's
+  language) — do not add new dialogue.
+- Never use character names; refer to characters by appearance only.
+- No readable on-screen text. ALL output must be in English, whatever language the
+  wish is written in. The label is a short English name of the era/setting.`
+
+// Rewrite the canonical staging prompt into the child's wished era.
+export async function designRestaging({
+  staging,
+  text,
+  wish,
+  bookContext = BOOK_CONTEXT,
+  client = new Anthropic(),
+}) {
+  const stream = client.messages.stream({
+    model: 'claude-opus-4-8',
+    max_tokens: 2000,
+    thinking: { type: 'adaptive' },
+    output_config: { format: { type: 'json_schema', schema: RESTAGE_SCHEMA } },
+    system: RESTAGE_SYSTEM,
+    messages: [
+      {
+        role: 'user',
+        content:
+          (bookContext
+            ? `Book bible (canon characters, setting, visual identity): "${clampText(bookContext)}"\n`
+            : '') +
+          `The passage this moment depicts: "${text}"\n` +
+          `CANONICAL STAGING (the original clip's prompt): "${staging}"\n` +
+          `The child's wish: "${wish}"`,
+      },
+    ],
+  })
+  const message = await stream.finalMessage()
+  if (message.stop_reason === 'refusal') {
+    throw new Error('Could not reimagine this passage.')
+  }
+  const textBlock = message.content.find((b) => b.type === 'text')
+  if (!textBlock) throw new Error('No design in model response.')
+  return JSON.parse(textBlock.text)
+}
+
 // Turn a selected passage + the child's free-text wish into a period-adapted
 // remix card, streamed progressively: design -> still image -> animated loop.
 // The clip is an upgrade — its failure never sinks the card.
@@ -205,6 +279,7 @@ export async function reimaginePassage({
   wish,
   bookText = '',
   bookContext = BOOK_CONTEXT,
+  staging = null,
   extraReferences = [],
   emit,
   client = new Anthropic(),
@@ -214,6 +289,25 @@ export async function reimaginePassage({
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
   if (!ai) throw new Error('Image generation is unavailable (GEMINI_API_KEY missing).')
+
+  // Sample-book passages carry their canonical staging prompt — the transform
+  // is then the SAME pipeline that made the sample clips: restage the prompt
+  // for the wished era and render it with Omni Flash + the style references.
+  if (staging) {
+    const design = await designRestaging({ staging, text, wish, bookContext, client })
+    emit({ type: 'design', label: design.label })
+    const filename = await generateOmniClip({
+      ai,
+      prompt: `${COMMON_STYLE}\n\n${design.videoPrompt}`,
+      references: references.slice(0, MAX_REFERENCES),
+      duration: '8s',
+      saveDir,
+      basename: `remix-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      sleep,
+    })
+    emit({ type: 'clip', url: `/api/media/${filename}` })
+    return
+  }
 
   // 1) Claude structures the wish into a grounded, English period + motion design.
   const design = await designReimagine({ text, sceneTitle, wish, bookText, bookContext, client })

@@ -46,6 +46,7 @@ describe('requestReimagine', () => {
         sceneTitle: 'A Windy Day',
         wish: '조선시대',
         bookText: 'The wind blew. The door slammed shut.',
+        staging: null,
       }),
     })
     expect(onImage).toHaveBeenCalledWith('1800s Joseon Korea', 'data:image/jpeg;base64,abc')
@@ -54,6 +55,29 @@ describe('requestReimagine', () => {
       label: '1800s Joseon Korea',
       src: 'data:image/jpeg;base64,abc',
       clipUrl: '/api/media/remix-1.mp4',
+    })
+  })
+
+  it('sends the staging prompt and handles the design -> clip stream', async () => {
+    const events = [
+      { type: 'design', label: 'Deep Sea Kingdom' },
+      { type: 'clip', url: '/api/media/remix-2.mp4' },
+    ]
+    const fetchImpl = vi.fn(async () => ndjsonResponse(events))
+    const onDesign = vi.fn()
+    const onClip = vi.fn()
+    const summary = await requestReimagine(
+      { text: '"Pumpernickel?" I whispered.', sceneTitle: 't', wish: '바닷속', staging: '8-second video...' },
+      { onDesign, onClip },
+      fetchImpl,
+    )
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).staging).toBe('8-second video...')
+    expect(onDesign).toHaveBeenCalledWith('Deep Sea Kingdom')
+    expect(onClip).toHaveBeenCalledWith('/api/media/remix-2.mp4')
+    expect(summary).toEqual({
+      label: 'Deep Sea Kingdom',
+      src: null,
+      clipUrl: '/api/media/remix-2.mp4',
     })
   })
 

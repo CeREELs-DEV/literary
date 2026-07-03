@@ -40,7 +40,7 @@ export function createApp({ pipeline = runExperiencePipeline, reimagine = reimag
   })
 
   app.post('/api/reimagine', async (req, res) => {
-    const { text, sceneTitle, wish, bookText } = req.body ?? {}
+    const { text, sceneTitle, wish, bookText, staging } = req.body ?? {}
     if (!text || !wish) {
       res.status(400).json({ error: 'text and wish are required' })
       return
@@ -55,7 +55,7 @@ export function createApp({ pipeline = runExperiencePipeline, reimagine = reimag
     }
 
     try {
-      await reimagine({ text, sceneTitle, wish, bookText, emit })
+      await reimagine({ text, sceneTitle, wish, bookText, staging, emit })
     } catch (err) {
       emit({ type: 'error', message: err?.message ?? 'reimagine failed' })
     } finally {

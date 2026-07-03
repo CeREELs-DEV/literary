@@ -120,6 +120,17 @@ imagineBtn?.addEventListener('click', () => {
   const index = selectedIndex
   let tabId = null
 
+  // The transform appears as a new tab on this passage and is selected; the
+  // child can fire the next imagining while this one comes alive.
+  const ensureTab = (label, still = null) => {
+    if (tabId == null) {
+      tabId = viewer.addTransform(index, { label, still, clip: null })
+      imagineStatus.textContent = ''
+      imagineBtn.disabled = false
+    }
+    return tabId
+  }
+
   requestReimagine(
     {
       text: beat.text,
@@ -127,14 +138,17 @@ imagineBtn?.addEventListener('click', () => {
       wish,
       // The whole page, so the remix knows the story around the selection.
       bookText: currentScene?.beats?.map((b) => b.text).join(' ') ?? '',
+      // Sample passages carry their canonical staging prompt — the transform
+      // then keeps the same scene composition as the sample clips.
+      staging: beat.staging ?? null,
     },
     {
+      onDesign: (label) => {
+        ensureTab(label)
+      },
       onImage: (label, src) => {
-        // The transform appears as a new tab on this passage and is selected.
-        tabId = viewer.addTransform(index, { label, still: src, clip: null })
-        // The child can fire the next imagining while this one comes alive.
-        imagineStatus.textContent = ''
-        imagineBtn.disabled = false
+        ensureTab(label, src)
+        viewer.updateTransform(index, tabId, { still: src })
       },
       onClip: (url) => {
         if (tabId != null) viewer.updateTransform(index, tabId, { clip: url })

@@ -242,3 +242,74 @@ describe('reimaginePassage', () => {
     ).rejects.toThrow(/unavailable/i)
   })
 })
+
+describe('reimaginePassage with canonical staging (sample-book passages)', () => {
+  const staging =
+    '8-second video, 16:9. The girl steps closer to the clean lunch table...'
+
+  function restagingClient({
+    label = '1800s Joseon Korea',
+    videoPrompt = '8-second video, 16:9. The girl in hanbok steps closer to the low wooden table...',
+  } = {}) {
+    return {
+      messages: {
+        stream: vi.fn(() => ({
+          finalMessage: async () => ({
+            stop_reason: 'end_turn',
+            content: [{ type: 'text', text: JSON.stringify({ label, videoPrompt }) }],
+          }),
+        })),
+      },
+    }
+  }
+
+  function omniAi() {
+    return {
+      interactions: {
+        create: vi.fn(async () => ({
+          id: 'int-9',
+          status: 'completed',
+          output_video: { data: Buffer.from('mp4').toString('base64') },
+        })),
+        get: vi.fn(),
+      },
+    }
+  }
+
+  it('restages the canonical prompt for the wish and renders it with Omni Flash', async () => {
+    const emit = vi.fn()
+    const client = restagingClient()
+    const ai = omniAi()
+    const os = await import('node:os')
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+    const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'restage-'))
+    try {
+      await reimaginePassage({ ...base, staging, emit, client, ai, references, saveDir })
+
+      // Claude sees the staging prompt, the passage, and the wish.
+      const params = client.messages.stream.mock.calls[0][0]
+      expect(params.output_config.format.schema.required).toContain('videoPrompt')
+      expect(params.messages[0].content).toContain(staging)
+      expect(params.messages[0].content).toContain('1800년대 조선시대')
+
+      // Omni Flash gets the shared style block + the restaged prompt + refs.
+      const create = ai.interactions.create.mock.calls[0][0]
+      expect(create.model).toBe('gemini-omni-flash-preview')
+      expect(create.input[0].text).toContain('Use the 8 provided reference images')
+      expect(create.input[0].text).toContain('girl in hanbok')
+      expect(create.input.filter((p) => p.type === 'image')).toHaveLength(references.length)
+      expect(create.response_format).toMatchObject({ type: 'video', duration: '8s' })
+
+      // Streamed as design label first, then the finished clip.
+      const events = emit.mock.calls.map((c) => c[0])
+      expect(events[0]).toEqual({ type: 'design', label: '1800s Joseon Korea' })
+      expect(events[1].type).toBe('clip')
+      expect(events[1].url).toMatch(/^\/api\/media\/remix-.+\.mp4$/)
+      // No still image pipeline in this path.
+      expect(events.map((e) => e.type)).not.toContain('image')
+    } finally {
+      fs.rmSync(saveDir, { recursive: true, force: true })
+    }
+  })
+})

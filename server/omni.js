@@ -14,6 +14,7 @@ export async function generateOmniClip({
   ai,
   prompt,
   references = [],
+  videoReferences = [], // previously produced clips, for cross-shot continuity
   duration = '8s',
   saveDir,
   basename,
@@ -29,6 +30,11 @@ export async function generateOmniClip({
       { type: 'text', text: prompt },
       ...references.map((ref) => ({
         type: 'image',
+        mime_type: ref.mimeType,
+        data: ref.data,
+      })),
+      ...videoReferences.map((ref) => ({
+        type: 'video',
         mime_type: ref.mimeType,
         data: ref.data,
       })),

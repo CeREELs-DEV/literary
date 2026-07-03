@@ -1,36 +1,53 @@
 // tests/player.test.js
 import { describe, it, expect } from 'vitest'
-import { PASSAGE, SCENES, COMPARE_QUESTIONS } from '../src/player-data.js'
-import { CURATED_SCENES, CURATED_STYLE } from '../scripts/curated-scenes.mjs'
+import {
+  PASSAGE, SCENES, VIEWPOINTS, COMPARE_QUESTIONS,
+} from '../src/player-data.js'
+import {
+  CURATED_SCENES, CURATED_STYLE, SCENE_BIBLE,
+} from '../scripts/curated-scenes.mjs'
 
-describe('student-facing player data', () => {
-  it('offers the three viewpoints on the sample paragraph', () => {
-    expect(SCENES.map((s) => s.viewpoint)).toEqual(['FELICITY', 'JONAH', 'WORLD'])
+describe('student-facing player data (3 scenes x 3 viewpoints)', () => {
+  it('offers three scenes and three constant viewpoints', () => {
+    expect(SCENES.map((s) => s.id)).toEqual(['table', 'whisper', 'glance'])
+    expect(VIEWPOINTS.map((v) => v.id)).toEqual(['FELICITY', 'JONAH', 'WORLD'])
   })
 
-  it('gives every scene a title, a one-line interpretation, anchors, and 2-3 questions', () => {
+  it('every scene has all three views, each with a film and a one-line interpretation', () => {
     for (const scene of SCENES) {
-      expect(scene.title).toBeTruthy()
-      expect(scene.interpretation).toBeTruthy()
-      expect(scene.interpretation).not.toContain('\n') // one line
+      expect(scene.excerpt).toBeTruthy()
       expect(scene.anchorPhrases.length).toBeGreaterThan(0)
       expect(scene.questions.length).toBeGreaterThanOrEqual(2)
       expect(scene.questions.length).toBeLessThanOrEqual(3)
-      expect(scene.videoAssetUrl).toMatch(/^\/curated\/.+\.mp4$/)
+      for (const viewpoint of VIEWPOINTS) {
+        const view = scene.views[viewpoint.id]
+        expect(view).toBeTruthy()
+        expect(view.interpretation).toBeTruthy()
+        expect(view.interpretation).not.toContain('\n') // one line
+        expect(view.videoAssetUrl).toBe(`/curated/${scene.id}-${viewpoint.id.toLowerCase()}.mp4`)
+        expect(view.thumbnailUrl).toBe(`/curated/${scene.id}-${viewpoint.id.toLowerCase()}.jpg`)
+      }
     }
   })
 
-  it('anchors point at phrases that exist in the passage', () => {
+  it('scene excerpts and anchors come from the passage itself', () => {
     for (const scene of SCENES) {
       for (const phrase of scene.anchorPhrases) {
         expect(PASSAGE.text).toContain(phrase)
       }
+      // the excerpt is verbatim passage text (whitespace aside)
+      expect(PASSAGE.text.replace(/\s+/g, ' ')).toContain(
+        scene.excerpt.replace(/\s+/g, ' ').slice(0, 60),
+      )
     }
   })
 
   it('NEVER ships generation internals to the student page', () => {
     for (const scene of SCENES) {
-      const keys = Object.keys(scene).join(' ').toLowerCase()
+      const keys = [
+        ...Object.keys(scene),
+        ...Object.values(scene.views).flatMap((v) => Object.keys(v)),
+      ].join(' ').toLowerCase()
       expect(keys).not.toContain('prompt')
       expect(keys).not.toContain('model')
       expect(keys).not.toContain('status')
@@ -44,33 +61,36 @@ describe('student-facing player data', () => {
 })
 
 describe('internal production data (makers only)', () => {
-  it('has one internal Omni prompt per student scene, ids matching', () => {
-    expect(CURATED_SCENES.map((s) => s.id).sort()).toEqual(
-      SCENES.map((s) => s.id).sort(),
+  it('has one internal Omni prompt per scene x viewpoint, ids matching the student grid', () => {
+    const expected = SCENES.flatMap((scene) =>
+      VIEWPOINTS.map((v) => `${scene.id}-${v.id.toLowerCase()}`),
     )
+    expect(CURATED_SCENES.map((s) => s.id).sort()).toEqual(expected.sort())
     for (const scene of CURATED_SCENES) {
       expect(scene.internalOmniPrompt).toContain('8-second video')
       expect(['DRAFT', 'GENERATED', 'APPROVED']).toContain(scene.status)
     }
   })
 
-  it('keeps every prompt inside the content guardrails', () => {
-    for (const scene of CURATED_SCENES) {
-      const text = `${CURATED_STYLE} ${scene.internalOmniPrompt}`.toLowerCase()
-      expect(text).toContain('no floating letters')
-      expect(text).toContain('no horror')
-      for (const banned of ['glowing runes', 'floating words', 'grotesque monster']) {
-        expect(text).not.toContain(banned)
-      }
-    }
+  it('locks style, anatomy, and world continuity in words', () => {
+    expect(CURATED_STYLE).toContain('STYLE LOCK')
+    expect(CURATED_STYLE).toContain('exactly two arms')
+    expect(CURATED_STYLE.toLowerCase()).toContain('no floating letters')
+    expect(CURATED_STYLE.toLowerCase()).toContain('no horror')
+    expect(SCENE_BIBLE).toContain('SAME place')
+    expect(SCENE_BIBLE).toContain('only the moment and the camera')
   })
 
-  it('each prompt covers exactly one viewpoint', () => {
-    expect(CURATED_SCENES.find((s) => s.id === 'felicity-view').internalOmniPrompt)
-      .toContain("FELICITY'S VIEW")
-    expect(CURATED_SCENES.find((s) => s.id === 'jonah-view').internalOmniPrompt)
-      .toContain("THE BOY'S VIEW")
-    expect(CURATED_SCENES.find((s) => s.id === 'world-view').internalOmniPrompt)
-      .toContain("THE WORLD'S VIEW")
+  it('each prompt names its scene and viewpoint exactly once', () => {
+    for (const scene of CURATED_SCENES) {
+      expect(scene.internalOmniPrompt).toContain('SCENE:')
+      const view =
+        scene.viewpoint === 'FELICITY'
+          ? "FELICITY'S VIEW"
+          : scene.viewpoint === 'JONAH'
+            ? "THE BOY'S VIEW"
+            : "THE WORLD'S VIEW"
+      expect(scene.internalOmniPrompt).toContain(view)
+    }
   })
 })

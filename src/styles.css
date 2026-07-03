@@ -53,8 +53,13 @@ button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 #close-player-btn { background: none; border: 1px solid #34344a; color: #9c9cae; font-size: 13px; padding: 6px 12px; }
 #close-player-btn:hover { border-color: #5a5a78; }
 
-/* Viewpoint tabs */
-#viewpoint-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+/* Viewpoint tabs, in labeled groups */
+#viewpoint-tabs { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.tab-group-label {
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #8f8fa3; margin-top: 4px;
+}
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .viewpoint-tab {
   --accent: #ffd479;
   flex: 1; min-width: 150px; display: flex; align-items: center; gap: 8px;

@@ -15,6 +15,21 @@ describe('lab data', () => {
     expect(anchored.sort()).toEqual(MISSIONS.map((m) => m.id).sort())
   })
 
+  it('recommends exactly three phrases for the after-reading notice', () => {
+    expect(MISSIONS.filter((m) => m.recommended)).toHaveLength(3)
+  })
+
+  it('gives every mission a term-free micro hint that asks, never answers', () => {
+    for (const mission of MISSIONS) {
+      expect(mission.hint).toBeTruthy()
+      expect(mission.hint.endsWith('?')).toBe(true) // a question, not an answer
+      for (const device of DEVICES) {
+        // Reading Mode never shows literary terms.
+        expect(mission.hint.toLowerCase()).not.toContain(device.label.toLowerCase())
+      }
+    }
+  })
+
   it('gives every mission a question, a mood, and all three hypotheses', () => {
     for (const mission of MISSIONS) {
       expect(mission.question).toBeTruthy()

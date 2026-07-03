@@ -10,69 +10,91 @@
     <div id="app">
       <header id="lab-header">
         <h1>Literary Image Lab</h1>
-        <p class="tagline">Read closely. Find the strange. Imagine it your own way.</p>
+        <button id="hints-toggle" type="button" aria-pressed="true">Hints: on</button>
       </header>
 
-      <div id="mission-strip"></div>
-
-      <main id="lab">
-        <section id="passage-pane" class="pane">
-          <h2 class="pane-title">Passage</h2>
+      <!-- Reading Mode: the text is the whole screen. No literary terms,
+           no panels — at most a one-line question when a mark is tapped. -->
+      <main id="reader">
+        <article id="passage-page">
           <h3 id="passage-book"></h3>
           <p id="passage-text"></p>
-          <p class="pane-hint">Tap a highlighted phrase — or pick a mission card above.</p>
-        </section>
+        </article>
 
-        <section id="workbench-pane" class="pane">
-          <h2 class="pane-title">Your reading</h2>
-          <div id="workbench-empty">Pick a phrase to begin.</div>
-          <div id="workbench" class="hidden">
+        <!-- Notice: appears at the end of the passage, after reading. -->
+        <section id="notice">
+          <h4>Done reading? Three phrases worth imagining —</h4>
+          <div id="notice-chips"></div>
+          <p class="hint">...or tap any underlined phrase above. No rush — reading comes first.</p>
+        </section>
+      </main>
+
+      <div id="hint-pop" class="hidden" role="tooltip"></div>
+      <button id="imagine-fab" type="button">✨ Imagine</button>
+
+      <!-- Lab Mode: a bottom sheet, opened only after reading. Steps reveal
+           one at a time; "Maybe later" always available. -->
+      <div id="lab-overlay" class="hidden">
+        <div id="lab-sheet" role="dialog" aria-modal="true">
+          <header id="sheet-header">
+            <h2 id="sheet-title">Imagine one phrase</h2>
+            <button id="later-btn" type="button">Maybe later</button>
+          </header>
+
+          <section id="step-choose" class="sheet-step">
+            <h4>Choose one phrase to go deep on</h4>
+            <div id="choose-cards"></div>
+          </section>
+
+          <section id="step-imagine" class="sheet-step hidden">
+            <p id="imagine-anchor" class="anchor-echo"></p>
+            <p id="imagine-question" class="big-question"></p>
+            <textarea id="imagine-box" rows="3"
+              placeholder="Your first thought — a sentence is enough."></textarea>
+            <div class="row">
+              <button id="to-create-btn" type="button" class="primary">Turn it into an image idea →</button>
+            </div>
+          </section>
+
+          <section id="step-create" class="sheet-step hidden">
             <div class="step">
-              <h4>1 · Anchor</h4>
-              <p id="anchor-phrase"></p>
+              <h4>How are you imagining it?</h4>
+              <p class="hint">You don't have to "see" it — imagine through rules, sound, or feeling.</p>
+              <div id="lens-chips" class="chips"></div>
             </div>
             <div class="step">
-              <h4>2 · Literary device</h4>
+              <h4>What is the writer doing here?</h4>
               <div id="device-chips" class="chips"></div>
               <p id="device-hint" class="hint"></p>
             </div>
             <div class="step">
-              <h4>3 · Imagination lens</h4>
-              <p class="hint">You don't have to "see" it — imagine through rules, sound, or feeling.</p>
-              <div id="lens-chips" class="chips"></div>
-              <p id="lens-question" class="hint"></p>
-            </div>
-            <div class="step">
-              <h4>4 · Image hypothesis</h4>
+              <h4>Same sentence, three honest pictures</h4>
               <div id="hypothesis-tabs" class="chips"></div>
-              <p id="hypothesis-blurb" class="hint"></p>
             </div>
-          </div>
-        </section>
-
-        <section id="output-pane" class="pane">
-          <h2 class="pane-title">Your image idea</h2>
-          <div id="output-empty">Your prompt will appear here.</div>
-          <div id="output" class="hidden">
             <div class="step">
-              <h4>5 · Your prompt <span class="badge">a hypothesis, not the answer</span></h4>
-              <textarea id="prompt-box" rows="7" readonly></textarea>
+              <h4>Your prompt <span class="badge">a hypothesis, not the answer</span></h4>
+              <textarea id="prompt-box" rows="6" readonly></textarea>
               <div class="row">
                 <button id="copy-btn" type="button">Copy</button>
                 <button id="illustrate-btn" type="button">🎨 Test your hypothesis</button>
+                <button id="to-reflect-btn" type="button" class="quiet">Skip to reflect →</button>
               </div>
               <p id="illustrate-status" class="hint" role="status"></p>
               <div id="illustration"></div>
             </div>
-            <div class="step">
-              <h4>6 · Defend your image</h4>
-              <p id="reflection-question" class="reflection"></p>
-              <textarea id="defend-box" rows="3"
-                placeholder="Why did you see it this way? What in the sentence made you choose this image?"></textarea>
+          </section>
+
+          <section id="step-reflect" class="sheet-step hidden">
+            <h4>Defend your image</h4>
+            <p class="hint">Why did you see it this way? What in the sentence made you choose this image?</p>
+            <textarea id="defend-box" rows="3"
+              placeholder="Because the sentence says..."></textarea>
+            <div class="row">
+              <button id="done-btn" type="button" class="primary">Done — back to reading</button>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

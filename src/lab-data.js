@@ -71,6 +71,8 @@ export const CONSTRAINTS =
 export const MISSIONS = [
   {
     id: 'exception',
+    hint: 'What makes this table feel chosen?',
+    recommended: true,
     icon: '🐦',
     color: '#7ec8e3',
     title: 'The Exception',
@@ -95,6 +97,7 @@ export const MISSIONS = [
   },
   {
     id: 'too-normal',
+    hint: 'Why might normal feel strange here?',
     icon: '😐',
     color: '#c9c9d4',
     title: 'Too Normal',
@@ -117,6 +120,8 @@ export const MISSIONS = [
   },
   {
     id: 'red-pen',
+    hint: 'What could the red pen be besides a pen?',
+    recommended: true,
     icon: '🖊️',
     color: '#e36a6a',
     title: 'The Red Pen',
@@ -138,6 +143,7 @@ export const MISSIONS = [
   },
   {
     id: 'crooked-crown',
+    hint: 'What changes when messy hair becomes a crown?',
     icon: '👑',
     color: '#ffd479',
     title: 'The Crooked Crown',
@@ -159,6 +165,7 @@ export const MISSIONS = [
   },
   {
     id: 'wrong-key',
+    hint: 'How can a silly word open a serious moment?',
     icon: '🍞',
     color: '#d8a06a',
     title: 'The Wrong Key',
@@ -181,6 +188,8 @@ export const MISSIONS = [
   },
   {
     id: 'green-signal',
+    hint: 'What if green is not just a color?',
+    recommended: true,
     icon: '💚',
     color: '#7ecf9a',
     title: 'The Green Signal',

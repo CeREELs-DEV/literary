@@ -1,4 +1,4 @@
-/* Literary Image Lab */
+/* Literary Image Lab — reading first */
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -9,82 +9,117 @@ body {
 }
 button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 .hidden { display: none !important; }
+.hint { color: #9c9cae; font-size: 13px; margin: 6px 0 0; }
 
-#app { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
+#app { max-width: 860px; margin: 0 auto; padding: 16px 24px 90px; }
 
-#lab-header { text-align: center; margin-bottom: 18px; }
-#lab-header h1 { margin: 0; font-size: 30px; }
-#lab-header .tagline { margin: 6px 0 0; color: #b9b9c8; font-size: 15px; }
+#lab-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+#lab-header h1 { margin: 0; font-size: 20px; color: #b9b9c8; font-weight: normal; }
+#hints-toggle { background: #1e1e29; border: 1px solid #2e2e3d; font-size: 12px; padding: 6px 12px; color: #9c9cae; }
+#hints-toggle:hover { border-color: #5a5a78; }
 
-/* Mission cards */
-#mission-strip {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px; margin-bottom: 18px;
+/* Reading Mode — the paper page is the screen */
+#passage-page {
+  background: #f6efe0; border: 1px solid #d8cbae; border-radius: 14px;
+  color: #2a2417; padding: 34px 40px 38px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
+#passage-book { margin: 0 0 16px; font-size: 15px; color: #6b5c39; font-style: italic; }
+#passage-text { font-size: 19px; line-height: 2.1; white-space: pre-line; margin: 0; }
+#passage-text::first-letter { font-size: 230%; line-height: 1; padding-right: 2px; }
+
+/* Marks are whispers, not highlights */
+.anchor { border-bottom: 1px dotted #b9922f; cursor: pointer; }
+.anchor:hover { background: rgba(226, 178, 68, 0.18); border-radius: 3px; }
+body.hints-off .anchor { border-bottom: none; cursor: text; }
+body.hints-off .anchor:hover { background: none; }
+
+/* Micro hint — one line, one question */
+#hint-pop {
+  position: absolute; z-index: 30; max-width: 320px;
+  background: #241f12; color: #f0e6ce; border: 1px solid #b9922f;
+  border-radius: 10px; padding: 10px 12px; font-size: 14px; font-style: italic;
+  display: flex; flex-direction: column; gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+#hint-pop button {
+  align-self: flex-end; background: #b9922f; color: #1c160a;
+  font-size: 12px; font-style: normal; padding: 5px 10px;
+}
+
+/* Notice — appears after the text, not beside it */
+#notice { margin-top: 26px; }
+#notice h4 { margin: 0 0 10px; font-size: 15px; color: #d9d9e4; font-weight: normal; }
+#notice-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.notice-chip {
+  --accent: #ffd479;
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
+  background: #1e1e29; border: 1px solid #2e2e3d; border-left: 3px solid var(--accent);
+  padding: 12px 14px; font-size: 13px;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.notice-chip:hover { transform: translateY(-2px); border-color: #5a5a78; border-left-color: var(--accent); }
+.notice-chip em { color: var(--accent); font-size: 14px; }
+.notice-chip span { color: #9c9cae; font-style: italic; }
+
+/* Floating Imagine button */
+#imagine-fab {
+  position: fixed; right: 26px; bottom: 26px; z-index: 20;
+  background: #ffd479; color: #14141c; font-size: 15px; font-family: inherit;
+  padding: 13px 20px; border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 120ms ease;
+}
+#imagine-fab:hover { transform: translateY(-2px); }
+body.sheet-open #imagine-fab { display: none; }
+
+/* Lab Mode — bottom sheet */
+#lab-overlay {
+  position: fixed; inset: 0; z-index: 40; background: rgba(10, 10, 16, 0.6);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+#lab-sheet {
+  width: min(760px, 100vw); max-height: 86vh; overflow-y: auto;
+  background: #1a1a24; border: 1px solid #2a2a38; border-bottom: none;
+  border-radius: 18px 18px 0 0; padding: 18px 24px 30px;
+  animation: sheet-up 220ms ease;
+}
+@keyframes sheet-up { from { transform: translateY(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+#sheet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+#sheet-header h2 { margin: 0; font-size: 18px; }
+#later-btn { background: none; border: 1px solid #34344a; color: #9c9cae; font-size: 13px; padding: 6px 12px; }
+#later-btn:hover { border-color: #5a5a78; }
+
+.sheet-step { display: flex; flex-direction: column; gap: 8px; }
+.sheet-step h4 { margin: 10px 0 4px; font-size: 14px; color: #e8e8f0; }
+.step { margin-bottom: 6px; }
+
+/* Choose */
+#choose-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
 .mission-card {
   --accent: #ffd479;
   display: flex; flex-direction: column; gap: 4px; text-align: left;
   padding: 0 0 12px; background: #1e1e29; border: 1px solid #2e2e3d;
   border-top: 3px solid var(--accent);
   font-size: 13px; overflow: hidden;
+  transition: transform 120ms ease, border-color 120ms ease;
 }
 .mission-card:hover { border-color: #5a5a78; border-top-color: var(--accent); transform: translateY(-2px); }
-.mission-card { transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
-.mission-card.active { background: #262633; box-shadow: 0 0 0 2px var(--accent); }
-.mission-thumb {
-  width: 100%; aspect-ratio: 16 / 7; object-fit: cover; display: block;
-  margin-bottom: 8px; opacity: 0.9;
-}
-.mission-card.active .mission-thumb { opacity: 1; }
+.mission-thumb { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; display: block; margin-bottom: 8px; }
 .mission-card strong { font-size: 14px; padding: 0 12px; }
 .mission-phrase { color: var(--accent); font-style: italic; padding: 0 12px; }
-.mission-question { color: #9c9cae; font-size: 12px; padding: 0 12px; }
+.mission-question { color: #9c9cae; font-size: 12px; padding: 0 12px; font-style: italic; }
 
-/* Three panes */
-#lab { display: grid; grid-template-columns: 1.1fr 1fr 1.2fr; gap: 16px; }
-@media (max-width: 980px) { #lab { grid-template-columns: 1fr; } }
-.pane {
-  background: #1a1a24; border: 1px solid #2a2a38; border-radius: 14px;
-  padding: 16px 18px;
-}
-.pane-title {
-  margin: 0 0 12px; font-size: 13px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: #8f8fa3;
-}
-.pane-hint, .hint { color: #9c9cae; font-size: 13px; margin: 6px 0 0; }
+/* Imagine */
+.anchor-echo { margin: 0; font-size: 20px; font-style: italic; color: #ffd479; }
+.big-question { margin: 2px 0 6px; font-size: 17px; color: #e8e8f0; }
 
-/* Passage — a paper page inside the dark lab */
-#passage-pane { background: #f6efe0; border-color: #d8cbae; color: #2a2417; }
-#passage-pane .pane-title { color: #8a7a58; }
-#passage-pane .pane-hint { color: #8a7a58; }
-#passage-book { margin: 0 0 10px; font-size: 15px; color: #6b5c39; font-style: italic; }
-#passage-text {
-  font-size: 17.5px; line-height: 2.0; white-space: pre-line; margin: 0;
-}
-#passage-text::first-letter { font-size: 220%; line-height: 1; padding-right: 2px; }
-.anchor {
-  background: rgba(226, 178, 68, 0.25); border-bottom: 2px dashed #b9922f;
-  padding: 1px 3px; border-radius: 4px; cursor: pointer;
-  transition: background 120ms ease;
-}
-.anchor:hover { background: rgba(226, 178, 68, 0.5); }
-.anchor.selected { background: #e2b244; color: #1c160a; border-bottom-style: solid; }
-
-/* Workbench */
-.step { margin-bottom: 18px; }
-.step h4 { margin: 0 0 8px; font-size: 14px; color: #e8e8f0; }
-#anchor-phrase { margin: 0; font-size: 19px; font-style: italic; color: #ffd479; }
+/* Create */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip {
-  font-size: 13px; padding: 6px 12px; background: #262633;
-  border: 1px solid #34344a;
-}
+.chip { font-size: 13px; padding: 6px 12px; background: #262633; border: 1px solid #34344a; }
 .chip:hover { border-color: #5a5a78; }
 .chip.suggested { border-style: dashed; border-color: #6f6f52; }
 .chip.active { background: #ffd479; color: #14141c; border-color: #ffd479; }
-#workbench-empty, #output-empty { color: #7c7c90; font-size: 15px; padding: 30px 0; text-align: center; }
-
-/* Hypothesis image tiles — same sentence, three honest pictures */
 .hypo-tile {
   display: flex; flex-direction: column; gap: 6px; width: calc(33.4% - 5px);
   min-width: 110px; padding: 0 0 8px; background: #262633;
@@ -98,21 +133,22 @@ button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 .hypo-tile strong { display: block; font-size: 12px; color: #f5f5f5; }
 .hypo-tile.active strong { color: #ffd479; }
 
-/* Output */
+/* Output & shared */
 .badge {
   font-size: 11px; font-weight: normal; color: #14141c; background: #ffd479;
   border-radius: 999px; padding: 2px 9px; margin-left: 6px; vertical-align: middle;
 }
-#prompt-box, #defend-box {
+#prompt-box, #defend-box, #imagine-box {
   width: 100%; font-size: 14px; line-height: 1.6; color: #f5f5f5;
   background: #14141c; border: 1px solid #34344a; border-radius: 10px;
   padding: 10px 12px; resize: vertical; font-family: inherit;
 }
-#defend-box { font-style: italic; }
-.row { display: flex; gap: 8px; margin-top: 8px; }
+#defend-box, #imagine-box { font-style: italic; }
+.row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .row button { padding: 9px 16px; background: #2d2d3a; font-size: 14px; }
+.row button.primary { background: #ffd479; color: #14141c; }
+.row button.quiet { background: none; border: 1px solid #34344a; color: #9c9cae; }
 #illustrate-btn { background: #3d5a3d; }
 #illustrate-btn:disabled { opacity: 0.6; cursor: wait; }
 #illustration { margin-top: 10px; }
 #illustration img { width: 100%; border-radius: 10px; display: block; }
-.reflection { margin: 0 0 8px; color: #ffd479; font-size: 15px; font-style: italic; }

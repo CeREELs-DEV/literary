@@ -19,41 +19,31 @@
               "id": "original",
               "label": "Original",
               "clip": "/samples/clip-original-0.mp4",
-              "audio": [
-                "/samples/speech-1783042770501-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "joseon",
               "label": "Joseon Korea",
               "clip": "/samples/clip-joseon-0.mp4",
-              "audio": [
-                "/samples/speech-1783042770501-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "medieval",
               "label": "Medieval Europe",
               "clip": "/samples/clip-medieval-0.mp4",
-              "audio": [
-                "/samples/speech-1783042770501-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "k90s",
               "label": "1990s Korea",
               "clip": "/samples/clip-k90s-0.mp4",
-              "audio": [
-                "/samples/speech-1783042770501-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "space",
               "label": "Space Colony",
               "clip": "/samples/clip-space-0.mp4",
-              "audio": [
-                "/samples/speech-1783042770501-0-0.mp3"
-              ]
+              "audio": []
             }
           ],
           "staging": "8-second video, 16:9. A quiet school courtyard in a small Southern town. Several outdoor lunch tables are messy with bird droppings, but one table is strangely clean. A shy girl notices it and stops. At the clean table, a slim blond boy reads a folded newspaper and casually twirls a red pen. Camera starts wide, then slowly pushes in from the girl's point of view. Mood: curious, ordinary but slightly uncanny. Audio: distant schoolyard ambience, paper rustle, soft pen tapping."
@@ -78,8 +68,7 @@
               "label": "Original",
               "clip": "/samples/clip-original-1.mp4",
               "audio": [
-                "/samples/speech-1783043086365-0-0.mp3",
-                "/samples/speech-1783043086760-0-1.mp3"
+                "/samples/speech-1783043086365-0-0.mp3"
               ]
             },
             {
@@ -87,8 +76,7 @@
               "label": "Joseon Korea",
               "clip": "/samples/clip-joseon-1.mp4",
               "audio": [
-                "/samples/speech-1783043145620-0-0.mp3",
-                "/samples/speech-1783043146154-0-1.mp3"
+                "/samples/speech-1783043145620-0-0.mp3"
               ]
             },
             {
@@ -96,8 +84,7 @@
               "label": "Medieval Europe",
               "clip": "/samples/clip-medieval-1.mp4",
               "audio": [
-                "/samples/speech-1783043086365-0-0.mp3",
-                "/samples/speech-1783043086760-0-1.mp3"
+                "/samples/speech-1783043086365-0-0.mp3"
               ]
             },
             {
@@ -105,8 +92,7 @@
               "label": "1990s Korea",
               "clip": "/samples/clip-k90s-1.mp4",
               "audio": [
-                "/samples/speech-1783043261896-0-0.mp3",
-                "/samples/speech-1783043262399-0-1.mp3"
+                "/samples/speech-1783043261896-0-0.mp3"
               ]
             },
             {
@@ -114,8 +100,7 @@
               "label": "Space Colony",
               "clip": "/samples/clip-space-1.mp4",
               "audio": [
-                "/samples/speech-1783043086365-0-0.mp3",
-                "/samples/speech-1783043086760-0-1.mp3"
+                "/samples/speech-1783043086365-0-0.mp3"
               ]
             }
           ],
@@ -135,41 +120,31 @@
               "id": "original",
               "label": "Original",
               "clip": "/samples/clip-original-2.mp4",
-              "audio": [
-                "/samples/speech-1783043379543-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "joseon",
               "label": "Joseon Korea",
               "clip": "/samples/clip-joseon-2.mp4",
-              "audio": [
-                "/samples/speech-1783043379543-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "medieval",
               "label": "Medieval Europe",
               "clip": "/samples/clip-medieval-2.mp4",
-              "audio": [
-                "/samples/speech-1783043379543-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "k90s",
               "label": "1990s Korea",
               "clip": "/samples/clip-k90s-2.mp4",
-              "audio": [
-                "/samples/speech-1783043379543-0-0.mp3"
-              ]
+              "audio": []
             },
             {
               "id": "space",
               "label": "Space Colony",
               "clip": "/samples/clip-space-2.mp4",
-              "audio": [
-                "/samples/speech-1783043379543-0-0.mp3"
-              ]
+              "audio": []
             }
           ],
           "staging": "8-second video, 16:9. Close-up sequence. The boy slowly lifts his head from the newspaper and looks directly at the girl. His eyes are the greenest vivid green, like fresh neon ink, but still gentle and human. Abstract glowing handwritten strokes drift around the girl for a moment, suggesting hidden words and magic. Camera slowly pushes into his eyes. Audio: soft shimmer, paper flutter, held breath. Mood: wonder, surprise, the beginning of friendship."

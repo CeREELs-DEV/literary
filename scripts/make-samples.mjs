@@ -92,15 +92,17 @@ async function readExcerpt(client, excerpt) {
   return scene
 }
 
+// Only dialogue gets voiced — plain prose is for reading, not narration.
 // Era versions whisper a period-fitting word — swap it into the spoken line
 // so the TTS matches what the clip implies.
 function speechForVersion(speech, version) {
-  if (!version.dialogue) return speech
-  return (speech ?? []).map((seg) =>
-    seg.speaker !== 'narrator' && /pumpernickel/i.test(seg.text)
-      ? { ...seg, text: version.dialogue }
-      : seg,
-  )
+  return (speech ?? [])
+    .filter((seg) => seg.speaker !== 'narrator')
+    .map((seg) =>
+      version.dialogue && /pumpernickel/i.test(seg.text)
+        ? { ...seg, text: version.dialogue }
+        : seg,
+    )
 }
 
 const toSamplesUrl = (mediaUrl) => `/samples/${path.basename(mediaUrl)}`

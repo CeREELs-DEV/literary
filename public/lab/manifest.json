@@ -1,0 +1,32 @@
+{
+  "exception": {
+    "literal": "/lab/thumb-exception-literal.jpg",
+    "metaphorical": "/lab/thumb-exception-metaphorical.jpg",
+    "abstract": "/lab/thumb-exception-abstract.jpg"
+  },
+  "too-normal": {
+    "literal": "/lab/thumb-too-normal-literal.jpg",
+    "metaphorical": "/lab/thumb-too-normal-metaphorical.jpg",
+    "abstract": "/lab/thumb-too-normal-abstract.jpg"
+  },
+  "red-pen": {
+    "literal": "/lab/thumb-red-pen-literal.jpg",
+    "metaphorical": "/lab/thumb-red-pen-metaphorical.jpg",
+    "abstract": "/lab/thumb-red-pen-abstract.jpg"
+  },
+  "crooked-crown": {
+    "literal": "/lab/thumb-crooked-crown-literal.jpg",
+    "metaphorical": "/lab/thumb-crooked-crown-metaphorical.jpg",
+    "abstract": "/lab/thumb-crooked-crown-abstract.jpg"
+  },
+  "wrong-key": {
+    "literal": "/lab/thumb-wrong-key-literal.jpg",
+    "metaphorical": "/lab/thumb-wrong-key-metaphorical.jpg",
+    "abstract": "/lab/thumb-wrong-key-abstract.jpg"
+  },
+  "green-signal": {
+    "literal": "/lab/thumb-green-signal-literal.jpg",
+    "metaphorical": "/lab/thumb-green-signal-metaphorical.jpg",
+    "abstract": "/lab/thumb-green-signal-abstract.jpg"
+  }
+}

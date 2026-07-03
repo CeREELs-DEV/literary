@@ -18,19 +18,27 @@ button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 
 /* Mission cards */
 #mission-strip {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px; margin-bottom: 18px;
 }
 .mission-card {
+  --accent: #ffd479;
   display: flex; flex-direction: column; gap: 4px; text-align: left;
-  padding: 12px 14px; background: #1e1e29; border: 1px solid #2e2e3d;
-  font-size: 13px;
+  padding: 0 0 12px; background: #1e1e29; border: 1px solid #2e2e3d;
+  border-top: 3px solid var(--accent);
+  font-size: 13px; overflow: hidden;
 }
-.mission-card:hover { border-color: #5a5a78; }
-.mission-card.active { border-color: #ffd479; background: #262633; }
-.mission-card strong { font-size: 14px; }
-.mission-phrase { color: #ffd479; font-style: italic; }
-.mission-question { color: #9c9cae; font-size: 12px; }
+.mission-card:hover { border-color: #5a5a78; border-top-color: var(--accent); transform: translateY(-2px); }
+.mission-card { transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
+.mission-card.active { background: #262633; box-shadow: 0 0 0 2px var(--accent); }
+.mission-thumb {
+  width: 100%; aspect-ratio: 16 / 7; object-fit: cover; display: block;
+  margin-bottom: 8px; opacity: 0.9;
+}
+.mission-card.active .mission-thumb { opacity: 1; }
+.mission-card strong { font-size: 14px; padding: 0 12px; }
+.mission-phrase { color: var(--accent); font-style: italic; padding: 0 12px; }
+.mission-question { color: #9c9cae; font-size: 12px; padding: 0 12px; }
 
 /* Three panes */
 #lab { display: grid; grid-template-columns: 1.1fr 1fr 1.2fr; gap: 16px; }
@@ -45,15 +53,22 @@ button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 }
 .pane-hint, .hint { color: #9c9cae; font-size: 13px; margin: 6px 0 0; }
 
-/* Passage */
-#passage-book { margin: 0 0 10px; font-size: 15px; color: #d9d9e4; }
-#passage-text { font-size: 17px; line-height: 1.9; white-space: pre-line; margin: 0; }
-.anchor {
-  background: rgba(255, 212, 121, 0.16); border-bottom: 2px dashed #ffd479;
-  padding: 1px 3px; border-radius: 4px; cursor: pointer;
+/* Passage — a paper page inside the dark lab */
+#passage-pane { background: #f6efe0; border-color: #d8cbae; color: #2a2417; }
+#passage-pane .pane-title { color: #8a7a58; }
+#passage-pane .pane-hint { color: #8a7a58; }
+#passage-book { margin: 0 0 10px; font-size: 15px; color: #6b5c39; font-style: italic; }
+#passage-text {
+  font-size: 17.5px; line-height: 2.0; white-space: pre-line; margin: 0;
 }
-.anchor:hover { background: rgba(255, 212, 121, 0.32); }
-.anchor.selected { background: #ffd479; color: #14141c; border-bottom-style: solid; }
+#passage-text::first-letter { font-size: 220%; line-height: 1; padding-right: 2px; }
+.anchor {
+  background: rgba(226, 178, 68, 0.25); border-bottom: 2px dashed #b9922f;
+  padding: 1px 3px; border-radius: 4px; cursor: pointer;
+  transition: background 120ms ease;
+}
+.anchor:hover { background: rgba(226, 178, 68, 0.5); }
+.anchor.selected { background: #e2b244; color: #1c160a; border-bottom-style: solid; }
 
 /* Workbench */
 .step { margin-bottom: 18px; }
@@ -68,6 +83,20 @@ button { cursor: pointer; border: none; border-radius: 10px; color: inherit; }
 .chip.suggested { border-style: dashed; border-color: #6f6f52; }
 .chip.active { background: #ffd479; color: #14141c; border-color: #ffd479; }
 #workbench-empty, #output-empty { color: #7c7c90; font-size: 15px; padding: 30px 0; text-align: center; }
+
+/* Hypothesis image tiles — same sentence, three honest pictures */
+.hypo-tile {
+  display: flex; flex-direction: column; gap: 6px; width: calc(33.4% - 5px);
+  min-width: 110px; padding: 0 0 8px; background: #262633;
+  border: 1px solid #34344a; overflow: hidden; text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.hypo-tile:hover { transform: translateY(-2px); }
+.hypo-tile.active { box-shadow: 0 0 0 2px #ffd479; }
+.hypo-tile img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.hypo-tile span { font-size: 11px; color: #9c9cae; padding: 0 8px; line-height: 1.4; }
+.hypo-tile strong { display: block; font-size: 12px; color: #f5f5f5; }
+.hypo-tile.active strong { color: #ffd479; }
 
 /* Output */
 .badge {

@@ -37,6 +37,7 @@ const defendBox = document.getElementById('defend-box')
 
 let selection = null // { mission, device, lens, hypothesis }
 const defendNotes = new Map() // mission id -> student's defense text
+let thumbs = {} // mission id -> hypothesis id -> image url (pre-generated)
 
 // --- rendering -------------------------------------------------------------
 
@@ -46,8 +47,11 @@ function renderMissionStrip() {
     const card = document.createElement('button')
     card.type = 'button'
     card.className = `mission-card${selection?.mission === mission.id ? ' active' : ''}`
+    card.style.setProperty('--accent', mission.color)
+    const thumb = thumbs[mission.id]?.literal
     card.innerHTML =
-      `<strong>${mission.title}</strong>` +
+      (thumb ? `<img class="mission-thumb" src="${thumb}" alt="" />` : '') +
+      `<strong>${mission.icon} ${mission.title}</strong>` +
       `<span class="mission-phrase">${mission.phrase}</span>` +
       `<span class="mission-question">${mission.question}</span>`
     card.addEventListener('click', () => selectMission(mission.id))
@@ -72,11 +76,12 @@ function renderPassage() {
   }
 }
 
-function chip(label, active, suggested, onClick) {
+function chip(label, active, suggested, onClick, icon = '') {
   const btn = document.createElement('button')
   btn.type = 'button'
   btn.className = `chip${active ? ' active' : ''}${suggested ? ' suggested' : ''}`
-  btn.textContent = suggested && !active ? `${label} ✦` : label
+  const text = suggested && !active ? `${label} ✦` : label
+  btn.textContent = icon ? `${icon} ${text}` : text
   btn.addEventListener('click', onClick)
   return btn
 }
@@ -97,7 +102,7 @@ function renderWorkbench() {
       chip(device.label, selection.device === device.id, mission.device === device.id, () => {
         selection.device = device.id
         update()
-      }),
+      }, device.icon),
     )
   }
   deviceHint.textContent = findDevice(selection.device)?.hint ?? ''
@@ -108,19 +113,37 @@ function renderWorkbench() {
       chip(lens.label, selection.lens === lens.id, mission.lenses.includes(lens.id), () => {
         selection.lens = lens.id
         update()
-      }),
+      }, lens.icon),
     )
   }
   lensQuestion.textContent = findLens(selection.lens)?.question ?? ''
 
+  // Hypotheses are pictures, not words — show them as image tiles when the
+  // pre-generated thumbs exist, so "same sentence, different image" is
+  // visible at a glance.
   hypothesisTabs.innerHTML = ''
   for (const hypothesis of HYPOTHESES) {
-    hypothesisTabs.appendChild(
-      chip(hypothesis.label, selection.hypothesis === hypothesis.id, false, () => {
+    const thumb = thumbs[mission.id]?.[hypothesis.id]
+    if (thumb) {
+      const tile = document.createElement('button')
+      tile.type = 'button'
+      tile.className = `hypo-tile${selection.hypothesis === hypothesis.id ? ' active' : ''}`
+      tile.innerHTML =
+        `<img src="${thumb}" alt="${hypothesis.label}" />` +
+        `<span><strong>${hypothesis.label}</strong> ${hypothesis.blurb}</span>`
+      tile.addEventListener('click', () => {
         selection.hypothesis = hypothesis.id
         update()
-      }),
-    )
+      })
+      hypothesisTabs.appendChild(tile)
+    } else {
+      hypothesisTabs.appendChild(
+        chip(hypothesis.label, selection.hypothesis === hypothesis.id, false, () => {
+          selection.hypothesis = hypothesis.id
+          update()
+        }),
+      )
+    }
   }
   hypothesisBlurb.textContent =
     HYPOTHESES.find((h) => h.id === selection.hypothesis)?.blurb ?? ''
@@ -174,8 +197,14 @@ illustrateBtn?.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: promptBox.value }),
     })
-    const body = await res.json()
-    if (!res.ok) throw new Error(body?.error ?? `Illustration failed (${res.status})`)
+    // A non-JSON reply means the request never reached the API server.
+    const body = await res.json().catch(() => null)
+    if (!res.ok || !body?.src) {
+      throw new Error(
+        body?.error ??
+          'Could not reach the image server — start it with `npm run server` and try again.',
+      )
+    }
     illustration.innerHTML = ''
     const img = document.createElement('img')
     img.src = body.src
@@ -189,5 +218,14 @@ illustrateBtn?.addEventListener('click', async () => {
     illustrateBtn.disabled = false
   }
 })
+
+// Pre-generated mission/hypothesis illustrations (optional visual layer).
+fetch('/lab/manifest.json')
+  .then((res) => (res.ok ? res.json() : {}))
+  .catch(() => ({}))
+  .then((data) => {
+    thumbs = data ?? {}
+    update()
+  })
 
 update()

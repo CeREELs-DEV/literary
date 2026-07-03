@@ -33,25 +33,25 @@ export const PASSAGE = {
 // Literary devices — the reader's toolbox. promptNote turns the device into
 // an image instruction.
 export const DEVICES = [
-  { id: 'metaphor', label: 'Metaphor', hint: 'one thing pictured as truly being another', promptNote: 'paint what it becomes, not what it is' },
-  { id: 'simile', label: 'Simile', hint: 'a comparison using "like" or "as"', promptNote: 'make the comparison visible inside the frame' },
-  { id: 'personification', label: 'Personification', hint: 'a non-human thing acting like a person', promptNote: 'give the non-human thing quiet intention' },
-  { id: 'hyperbole', label: 'Hyperbole', hint: 'an exaggeration stretched past reality', promptNote: 'let the exaggeration gently bend the scene' },
-  { id: 'onomatopoeia', label: 'Onomatopoeia', hint: 'a word that sounds like its sound', promptNote: 'make the sound visible' },
-  { id: 'symbolism', label: 'Symbolism', hint: 'an object standing for an idea', promptNote: 'let it stand for the idea behind it' },
-  { id: 'contrast', label: 'Contrast', hint: 'two opposites placed side by side', promptNote: 'place the opposites side by side in one frame' },
+  { id: 'metaphor', label: 'Metaphor', icon: '🎭', hint: 'one thing pictured as truly being another', promptNote: 'paint what it becomes, not what it is' },
+  { id: 'simile', label: 'Simile', icon: '🪞', hint: 'a comparison using "like" or "as"', promptNote: 'make the comparison visible inside the frame' },
+  { id: 'personification', label: 'Personification', icon: '🌳', hint: 'a non-human thing acting like a person', promptNote: 'give the non-human thing quiet intention' },
+  { id: 'hyperbole', label: 'Hyperbole', icon: '📢', hint: 'an exaggeration stretched past reality', promptNote: 'let the exaggeration gently bend the scene' },
+  { id: 'onomatopoeia', label: 'Onomatopoeia', icon: '💥', hint: 'a word that sounds like its sound', promptNote: 'make the sound visible' },
+  { id: 'symbolism', label: 'Symbolism', icon: '🗝️', hint: 'an object standing for an idea', promptNote: 'let it stand for the idea behind it' },
+  { id: 'contrast', label: 'Contrast', icon: '⚖️', hint: 'two opposites placed side by side', promptNote: 'place the opposites side by side in one frame' },
 ]
 
 // Imagination lenses — different ways to imagine, so students who don't
 // "see pictures in their head" can work through rules, sound, emotion,
 // symbols, or point of view instead.
 export const LENSES = [
-  { id: 'visual', label: 'Visual', question: 'How does it look?', clause: 'Focus on what the eye actually sees: shapes, light, and small details.' },
-  { id: 'sound', label: 'Sound', question: 'What does it sound like?', clause: 'Let the image suggest its sound — show the visible trace of what we would hear.' },
-  { id: 'rule', label: 'Rule', question: 'What strange rule is at work?', clause: 'Show a quiet, invisible rule at work — the strangeness comes from the rule, not from magic effects.' },
-  { id: 'emotion', label: 'Emotion', question: 'What feeling changes?', clause: 'Let one clear feeling color the whole scene: light, posture, and distance carry the emotion.' },
-  { id: 'symbol', label: 'Symbol', question: 'What does it stand for?', clause: 'Compose the image so the subject clearly stands for something bigger than itself.' },
-  { id: 'camera', label: 'Camera', question: 'Where do we watch from?', clause: 'Choose a deliberate point of view — where the viewer stands changes what the moment means.' },
+  { id: 'visual', label: 'Visual', icon: '👁️', question: 'How does it look?', clause: 'Focus on what the eye actually sees: shapes, light, and small details.' },
+  { id: 'sound', label: 'Sound', icon: '🔊', question: 'What does it sound like?', clause: 'Let the image suggest its sound — show the visible trace of what we would hear.' },
+  { id: 'rule', label: 'Rule', icon: '📏', question: 'What strange rule is at work?', clause: 'Show a quiet, invisible rule at work — the strangeness comes from the rule, not from magic effects.' },
+  { id: 'emotion', label: 'Emotion', icon: '💛', question: 'What feeling changes?', clause: 'Let one clear feeling color the whole scene: light, posture, and distance carry the emotion.' },
+  { id: 'symbol', label: 'Symbol', icon: '🕯️', question: 'What does it stand for?', clause: 'Compose the image so the subject clearly stands for something bigger than itself.' },
+  { id: 'camera', label: 'Camera', icon: '🎬', question: 'Where do we watch from?', clause: 'Choose a deliberate point of view — where the viewer stands changes what the moment means.' },
 ]
 
 // Image hypotheses — the same sentence can honestly become very different
@@ -71,6 +71,8 @@ export const CONSTRAINTS =
 export const MISSIONS = [
   {
     id: 'exception',
+    icon: '🐦',
+    color: '#7ec8e3',
     title: 'The Exception',
     phrase: 'bird-poopless table',
     question: 'What if randomness avoided one table?',
@@ -93,6 +95,8 @@ export const MISSIONS = [
   },
   {
     id: 'too-normal',
+    icon: '😐',
+    color: '#c9c9d4',
     title: 'Too Normal',
     phrase: 'looked ... normal',
     question: 'Can someone feel strange because they look too normal?',
@@ -113,6 +117,8 @@ export const MISSIONS = [
   },
   {
     id: 'red-pen',
+    icon: '🖊️',
+    color: '#e36a6a',
     title: 'The Red Pen',
     phrase: 'twirling a red pen',
     question: "Is the pen a toy, a clock, a compass, or a conductor's baton?",
@@ -132,6 +138,8 @@ export const MISSIONS = [
   },
   {
     id: 'crooked-crown',
+    icon: '👑',
+    color: '#ffd479',
     title: 'The Crooked Crown',
     phrase: 'hair ... like a crown',
     question: 'What changes when messy hair becomes a crown?',
@@ -151,6 +159,8 @@ export const MISSIONS = [
   },
   {
     id: 'wrong-key',
+    icon: '🍞',
+    color: '#d8a06a',
     title: 'The Wrong Key',
     phrase: '"Pumpernickel?"',
     question: 'How can a silly word open a serious moment?',
@@ -171,6 +181,8 @@ export const MISSIONS = [
   },
   {
     id: 'green-signal',
+    icon: '💚',
+    color: '#7ecf9a',
     title: 'The Green Signal',
     phrase: 'greenest green',
     question: 'What if green is not a color, but a signal that the world has changed?',

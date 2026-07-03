@@ -8,7 +8,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "server": "node --env-file-if-exists=.env server/index.js",
-    "make-samples": "node --env-file=.env scripts/make-samples.mjs"
+    "make-samples": "node --env-file=.env scripts/make-samples.mjs",
+    "make-lab-thumbs": "node --env-file=.env scripts/make-lab-thumbs.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",

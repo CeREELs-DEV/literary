@@ -28,7 +28,7 @@ export const CURATED_SCENES = [
   {
     id: 'felicity-view',
     viewpoint: 'FELICITY',
-    status: 'DRAFT',
+    status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. FELICITY'S VIEW — the whole shot is her gaze. ` +
       `The camera glides slowly forward across a school courtyard, like a ` +
@@ -43,7 +43,7 @@ export const CURATED_SCENES = [
   {
     id: 'jonah-view',
     viewpoint: 'JONAH',
-    status: 'DRAFT',
+    status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. THE BOY'S VIEW — from behind his newspaper. The ` +
       `folded newspaper fills the lower edge of the frame; beyond it, a shy ` +
@@ -59,7 +59,7 @@ export const CURATED_SCENES = [
   {
     id: 'world-view',
     viewpoint: 'WORLD',
-    status: 'DRAFT',
+    status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. THE WORLD'S VIEW — a calm, high, wide shot of ` +
       `the whole school courtyard, camera nearly still. Bird shadows drift ` +

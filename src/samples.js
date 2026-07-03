@@ -21,20 +21,29 @@ export function manifestToScene(manifest) {
   }
 }
 
-// Map the manifest's canonical cards to their flattened beat indexes so the
-// per-passage viewer can seed each passage's Original tab.
-export function originalsByIndex(manifest) {
+// Map the manifest's pre-generated versions (Original + era remixes) to their
+// flattened beat indexes so the viewer can seed each passage's tabs.
+export function versionsByIndex(manifest) {
   const map = new Map()
   let index = 0
   for (const page of manifest.pages) {
     for (const beat of page.beats) {
-      map.set(index, {
-        label: 'Original',
-        still: beat.still,
-        clip: beat.clip,
-        audio: beat.audio ?? [],
-        text: beat.text,
-      })
+      const versions = (beat.versions ?? []).map((v) => ({
+        label: v.label,
+        still: v.still ?? null,
+        clip: v.clip ?? null,
+        audio: v.audio ?? [],
+      }))
+      // Older manifests carried a single canonical card per beat.
+      if (versions.length === 0 && (beat.still || beat.clip)) {
+        versions.push({
+          label: 'Original',
+          still: beat.still ?? null,
+          clip: beat.clip ?? null,
+          audio: beat.audio ?? [],
+        })
+      }
+      map.set(index, versions)
       index += 1
     }
   }

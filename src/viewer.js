@@ -1,18 +1,19 @@
 // src/viewer.js
 
 // Per-passage viewer: click a highlighted sentence and see THAT scene —
-// the Original card (loop + dialogue voices) and any transforms the child
-// has made, switchable as tabs. One passage, many ways to imagine it.
+// its pre-generated versions (Original + era remixes) plus any transforms
+// the child has made live, switchable as tabs. One passage, many worlds.
 export function createPassageViewer(
   { root, tabs, card },
   { audioFactory = (url) => new Audio(url) } = {},
 ) {
-  const state = new Map() // beat index -> { original, transforms: [] }
+  const state = new Map() // beat index -> { presets: [], transforms: [] }
   let currentIndex = null
+  let currentKey = null
   let currentAudio = null
 
   function entry(index) {
-    if (!state.has(index)) state.set(index, { original: null, transforms: [] })
+    if (!state.has(index)) state.set(index, { presets: [], transforms: [] })
     return state.get(index)
   }
 
@@ -51,13 +52,16 @@ export function createPassageViewer(
       img.src = version.still
       img.alt = version.label ?? ''
       frame.appendChild(img)
-    } else {
+    } else if (!version.clip) {
       frame.classList.add('pending')
     }
     if (version.clip) {
       const video = document.createElement('video')
       video.src = version.clip
-      video.muted = true // dialogue/bgm carry the sound
+      // The clips carry their own ambience (Omni Flash); keep it under the
+      // voices and bgm. Transform clips (Veo) are silent, so this is safe.
+      video.muted = false
+      video.volume = 0.35
       video.loop = true
       video.autoplay = true
       video.playsInline = true
@@ -71,41 +75,49 @@ export function createPassageViewer(
   function renderTabs(index, active) {
     tabs.innerHTML = ''
     const e = entry(index)
-    const make = (label, key, isActive) => {
+    const make = (label, key) => {
       const btn = document.createElement('button')
       btn.type = 'button'
-      btn.className = `version-tab${isActive ? ' active' : ''}`
+      btn.className = `version-tab${key === active ? ' active' : ''}`
       btn.textContent = label
       btn.addEventListener('click', () => selectTab(index, key))
       tabs.appendChild(btn)
     }
-    if (e.original) make('Original', 'original', active === 'original')
-    e.transforms.forEach((t, k) => make(t.label ?? 'Imagining...', k, active === k))
+    e.presets.forEach((v, i) => make(v.label ?? 'Original', `preset:${i}`))
+    e.transforms.forEach((t, k) => make(t.label ?? 'Imagining...', `transform:${k}`))
+  }
+
+  function versionFor(index, key) {
+    const e = entry(index)
+    const [kind, i] = key.split(':')
+    return kind === 'preset' ? e.presets[Number(i)] : e.transforms[Number(i)]
   }
 
   function selectTab(index, key) {
-    const e = entry(index)
-    const version = key === 'original' ? e.original : e.transforms[key]
+    const version = versionFor(index, key)
     if (!version) return
+    currentKey = key
     renderTabs(index, key)
+    // Render and voice together so the reading starts with the clip's frame 0.
     renderCard(version)
-    if (key === 'original' && version.audio?.length) playAudioChain(version.audio)
+    if (key.startsWith('preset') && version.audio?.length) playAudioChain(version.audio)
     else stopAudio()
   }
 
   return {
-    // Seed a passage's canonical card (from the samples manifest).
-    setOriginal(index, original) {
-      entry(index).original = original
+    // Seed a passage's pre-generated versions (from the samples manifest).
+    setVersions(index, versions) {
+      entry(index).presets = versions ?? []
     },
-    // Open the viewer on a passage; defaults to its Original tab.
+    // Open the viewer on a passage; defaults to its first (Original) tab.
     show(index) {
       currentIndex = index
       const e = entry(index)
       root.classList.remove('hidden')
-      if (e.original) selectTab(index, 'original')
-      else if (e.transforms.length) selectTab(index, e.transforms.length - 1)
+      if (e.presets.length) selectTab(index, 'preset:0')
+      else if (e.transforms.length) selectTab(index, `transform:${e.transforms.length - 1}`)
       else {
+        currentKey = null
         renderTabs(index, null)
         card.innerHTML = ''
         stopAudio()
@@ -116,7 +128,7 @@ export function createPassageViewer(
       const e = entry(index)
       e.transforms.push(transform)
       const id = e.transforms.length - 1
-      if (currentIndex === index) selectTab(index, id)
+      if (currentIndex === index) selectTab(index, `transform:${id}`)
       return id
     },
     // Patch a transform (e.g. the loop arriving) and re-render if visible.
@@ -124,11 +136,8 @@ export function createPassageViewer(
       const e = entry(index)
       if (!e.transforms[id]) return
       Object.assign(e.transforms[id], patch)
-      if (currentIndex === index) {
-        const activeBtns = tabs.querySelectorAll('.version-tab')
-        const activeIdx = [...activeBtns].findIndex((b) => b.classList.contains('active'))
-        const originalOffset = entry(index).original ? 1 : 0
-        if (activeIdx - originalOffset === id) selectTab(index, id)
+      if (currentIndex === index && currentKey === `transform:${id}`) {
+        selectTab(index, currentKey)
       }
     },
     stopAudio,

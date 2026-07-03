@@ -1,25 +1,24 @@
 // tests/samples.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { loadSampleBook, manifestToScene, originalsByIndex } from '../src/samples.js'
+import { loadSampleBook, manifestToScene, versionsByIndex } from '../src/samples.js'
 
 const manifest = {
   title: 'A Snicker of Magic',
   pages: [
     {
-      photo: 'page-1.jpg',
-      sceneTitle: 'Arriving',
+      source: 'excerpt',
+      sceneTitle: 'The Beedle',
       beats: [
         {
-          text: '"Home," she whispered.',
-          still: '/samples/still-page-1-0.jpg',
-          clip: '/samples/remix-1.mp4',
-          audio: ['/samples/speech-1.mp3'],
+          text: '"Pumpernickel?" I whispered.',
+          versions: [
+            { id: 'original', label: 'Original', clip: '/samples/clip-original-1.mp4', audio: ['/samples/speech-1.mp3'] },
+            { id: 'joseon', label: 'Joseon Korea', clip: '/samples/clip-joseon-1.mp4', audio: ['/samples/speech-2.mp3'] },
+          ],
         },
         {
-          text: 'The van rolled into Midnight Gulch.',
-          still: '/samples/still-page-1-1.jpg',
-          clip: null,
-          audio: [],
+          text: 'The boy glanced up then.',
+          versions: [],
         },
       ],
     },
@@ -43,22 +42,40 @@ describe('manifestToScene', () => {
     const scene = manifestToScene(manifest)
     expect(scene.title).toBe('A Snicker of Magic')
     expect(scene.beats).toEqual([
-      { text: '"Home," she whispered.' },
-      { text: 'The van rolled into Midnight Gulch.' },
+      { text: '"Pumpernickel?" I whispered.' },
+      { text: 'The boy glanced up then.' },
     ])
   })
 })
 
-describe('originalsByIndex', () => {
-  it('maps flattened beat indexes to their canonical cards', () => {
-    const map = originalsByIndex(manifest)
+describe('versionsByIndex', () => {
+  it('maps flattened beat indexes to their pre-generated version tabs', () => {
+    const map = versionsByIndex(manifest)
     expect(map.size).toBe(2)
-    expect(map.get(0)).toMatchObject({
+    expect(map.get(0)).toHaveLength(2)
+    expect(map.get(0)[0]).toMatchObject({
       label: 'Original',
-      still: '/samples/still-page-1-0.jpg',
-      clip: '/samples/remix-1.mp4',
+      clip: '/samples/clip-original-1.mp4',
       audio: ['/samples/speech-1.mp3'],
     })
-    expect(map.get(1)).toMatchObject({ clip: null, audio: [] })
+    expect(map.get(0)[1]).toMatchObject({ label: 'Joseon Korea' })
+    expect(map.get(1)).toEqual([])
+  })
+
+  it('adapts older single-card manifests into a lone Original version', () => {
+    const legacy = {
+      title: 'Old',
+      pages: [
+        {
+          beats: [
+            { text: 'x', still: '/samples/s.jpg', clip: '/samples/c.mp4', audio: [] },
+          ],
+        },
+      ],
+    }
+    const map = versionsByIndex(legacy)
+    expect(map.get(0)).toEqual([
+      { label: 'Original', still: '/samples/s.jpg', clip: '/samples/c.mp4', audio: [] },
+    ])
   })
 })

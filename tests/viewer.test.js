@@ -15,43 +15,67 @@ function makeDom() {
   }
 }
 
-const original = {
-  label: 'Original',
-  still: '/samples/still-0.jpg',
-  clip: '/samples/remix-0.mp4',
-  audio: ['/samples/speech-0.mp3'],
+const versions = [
+  {
+    label: 'Original',
+    clip: '/samples/clip-original-0.mp4',
+    audio: ['/samples/speech-0.mp3'],
+  },
+  {
+    label: 'Joseon Korea',
+    clip: '/samples/clip-joseon-0.mp4',
+    audio: ['/samples/speech-1.mp3'],
+  },
+]
+
+function recordingAudioFactory(played) {
+  return vi.fn((url) => {
+    const fake = { play: () => { played.push(url); fake.onended?.() }, pause: () => {} }
+    return fake
+  })
 }
 
 describe('createPassageViewer', () => {
-  it('show() opens the Original tab with its loop and plays the dialogue', async () => {
+  it('show() opens the first (Original) tab with its clip and plays its audio', async () => {
     const dom = makeDom()
     const played = []
-    const audioFactory = vi.fn((url) => {
-      const fake = { play: () => { played.push(url); fake.onended?.() }, pause: () => {} }
-      return fake
-    })
-    const viewer = createPassageViewer(dom, { audioFactory })
-    viewer.setOriginal(2, original)
+    const viewer = createPassageViewer(dom, { audioFactory: recordingAudioFactory(played) })
+    viewer.setVersions(2, versions)
     viewer.show(2)
     await new Promise((r) => setTimeout(r, 0)) // let the audio chain start
     expect(dom.root.classList.contains('hidden')).toBe(false)
     const tabBtns = dom.tabs.querySelectorAll('.version-tab')
-    expect(tabBtns).toHaveLength(1)
-    expect(tabBtns[0].textContent).toBe('Original')
+    expect([...tabBtns].map((b) => b.textContent)).toEqual(['Original', 'Joseon Korea'])
     expect(tabBtns[0].classList.contains('active')).toBe(true)
-    expect(dom.card.querySelector('video').getAttribute('src')).toBe('/samples/remix-0.mp4')
+    expect(dom.card.querySelector('video').getAttribute('src')).toBe('/samples/clip-original-0.mp4')
     expect(played).toEqual(['/samples/speech-0.mp3'])
   })
 
-  it('addTransform() adds a tab and switches to it when the passage is open', () => {
+  it('clicking a preset era tab switches the clip and plays that version audio', async () => {
+    const dom = makeDom()
+    const played = []
+    const viewer = createPassageViewer(dom, { audioFactory: recordingAudioFactory(played) })
+    viewer.setVersions(0, versions)
+    viewer.show(0)
+    await new Promise((r) => setTimeout(r, 0))
+    played.length = 0
+    dom.tabs.querySelectorAll('.version-tab')[1].click()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(dom.card.querySelector('video').getAttribute('src')).toBe('/samples/clip-joseon-0.mp4')
+    expect(played).toEqual(['/samples/speech-1.mp3'])
+  })
+
+  it('addTransform() adds a tab after the presets and switches to it', () => {
     const dom = makeDom()
     const viewer = createPassageViewer(dom, { audioFactory: () => ({ play: () => {}, pause: () => {} }) })
-    viewer.setOriginal(0, original)
+    viewer.setVersions(0, versions)
     viewer.show(0)
-    viewer.addTransform(0, { label: '1800s Joseon Korea', still: '/api/media/x.jpg', clip: null })
+    viewer.addTransform(0, { label: 'Deep Sea Kingdom', still: '/api/media/x.jpg', clip: null })
     const tabBtns = dom.tabs.querySelectorAll('.version-tab')
-    expect([...tabBtns].map((b) => b.textContent)).toEqual(['Original', '1800s Joseon Korea'])
-    expect(tabBtns[1].classList.contains('active')).toBe(true)
+    expect([...tabBtns].map((b) => b.textContent)).toEqual([
+      'Original', 'Joseon Korea', 'Deep Sea Kingdom',
+    ])
+    expect(tabBtns[2].classList.contains('active')).toBe(true)
     expect(dom.card.querySelector('img').getAttribute('src')).toBe('/api/media/x.jpg')
     expect(dom.card.querySelector('video')).toBeNull()
   })
@@ -65,15 +89,11 @@ describe('createPassageViewer', () => {
     expect(dom.card.querySelector('video').getAttribute('src')).toBe('/api/media/loop.mp4')
   })
 
-  it('clicking tabs switches versions; transforms do not autoplay dialogue', async () => {
+  it('switching to a transform stops preset audio; back to a preset replays it', async () => {
     const dom = makeDom()
     const played = []
-    const audioFactory = vi.fn((url) => {
-      const fake = { play: () => { played.push(url); fake.onended?.() }, pause: () => {} }
-      return fake
-    })
-    const viewer = createPassageViewer(dom, { audioFactory })
-    viewer.setOriginal(0, original)
+    const viewer = createPassageViewer(dom, { audioFactory: recordingAudioFactory(played) })
+    viewer.setVersions(0, versions)
     viewer.show(0) // plays once
     viewer.addTransform(0, { label: 'Medieval Europe', still: '/x.jpg', clip: null }) // switches away
     await new Promise((r) => setTimeout(r, 0))

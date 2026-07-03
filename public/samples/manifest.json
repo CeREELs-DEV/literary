@@ -2,99 +2,173 @@
   "title": "A Snicker of Magic",
   "pages": [
     {
-      "photo": "page-1.png",
-      "sceneTitle": "Boarding Bus 5548",
+      "source": "excerpt",
+      "sceneTitle": "The Boy at the Clean Table",
       "beats": [
         {
-          "text": "Instead of standing up as I expected, Jonah Pickett backed out from underneath the table in a motorized wheelchair. He clicked a button on the armrest, then clutched a handheld gear and sped forward, bumping across the playground so fast that I had to take extra-long steps to keep up with him.",
-          "still": "/samples/still-page-1-0.jpg",
-          "clip": "/samples/remix-1783036318855-wpwmkg.mp4",
-          "audio": []
-        },
-        {
-          "text": "When we got to Bus 5548, Jonah zoomed around to the back of the vehicle and knocked his fist twice on the side of the bus. A metal lift lowered, clanging as it hit the sidewalk.",
-          "still": "/samples/still-page-1-1.jpg",
-          "clip": "/samples/remix-1783036403310-8qfydm.mp4",
-          "audio": []
-        },
-        {
-          "text": "\"Hop on,\" Jonah said to me. And then he knocked twice on the side of the bus again and yelled, \"There's two of us, Day! Beam us up!\"",
-          "still": "/samples/still-page-1-2.jpg",
-          "clip": "/samples/remix-1783036490102-9cr3eo.mp4",
-          "audio": [
-            "/samples/speech-1783036492658-0-0.mp3",
-            "/samples/speech-1783036494652-0-1.mp3",
-            "/samples/speech-1783036495454-0-2.mp3"
+          "text": "But the boy sitting at the bird-poopless table looked ... normal. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of messy-spiky blond hair that reminded me of a crown. He didn't look at me.",
+          "speech": [
+            {
+              "speaker": "narrator",
+              "text": "But the boy sitting at the bird-poopless table looked ... normal. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of messy-spiky blond hair that reminded me of a crown. He didn't look at me.",
+              "delivery": "normal"
+            }
+          ],
+          "versions": [
+            {
+              "id": "original",
+              "label": "Original",
+              "clip": "/samples/clip-original-0.mp4",
+              "audio": [
+                "/samples/speech-1783042770501-0-0.mp3"
+              ]
+            },
+            {
+              "id": "joseon",
+              "label": "Joseon Korea",
+              "clip": "/samples/clip-joseon-0.mp4",
+              "audio": [
+                "/samples/speech-1783042770501-0-0.mp3"
+              ]
+            },
+            {
+              "id": "medieval",
+              "label": "Medieval Europe",
+              "clip": "/samples/clip-medieval-0.mp4",
+              "audio": [
+                "/samples/speech-1783042770501-0-0.mp3"
+              ]
+            },
+            {
+              "id": "k90s",
+              "label": "1990s Korea",
+              "clip": "/samples/clip-k90s-0.mp4",
+              "audio": [
+                "/samples/speech-1783042770501-0-0.mp3"
+              ]
+            },
+            {
+              "id": "space",
+              "label": "Space Colony",
+              "clip": "/samples/clip-space-0.mp4",
+              "audio": [
+                "/samples/speech-1783042770501-0-0.mp3"
+              ]
+            }
           ]
         },
         {
-          "text": "\"Yeeeee-up!\" somebody hollered back.",
-          "still": "/samples/still-page-1-3.jpg",
-          "clip": "/samples/remix-1783036593862-jj1y3s.mp4",
-          "audio": [
-            "/samples/speech-1783036597454-0-0.mp3",
-            "/samples/speech-1783036598060-0-1.mp3"
+          "text": "\"Pumpernickel?\" I whispered.",
+          "speech": [
+            {
+              "speaker": "character-1",
+              "text": "Pumpernickel?",
+              "delivery": "whisper"
+            },
+            {
+              "speaker": "narrator",
+              "text": "I whispered.",
+              "delivery": "normal"
+            }
+          ],
+          "versions": [
+            {
+              "id": "original",
+              "label": "Original",
+              "clip": "/samples/clip-original-1.mp4",
+              "audio": [
+                "/samples/speech-1783043086365-0-0.mp3",
+                "/samples/speech-1783043086760-0-1.mp3"
+              ]
+            },
+            {
+              "id": "joseon",
+              "label": "Joseon Korea",
+              "clip": "/samples/clip-joseon-1.mp4",
+              "audio": [
+                "/samples/speech-1783043145620-0-0.mp3",
+                "/samples/speech-1783043146154-0-1.mp3"
+              ]
+            },
+            {
+              "id": "medieval",
+              "label": "Medieval Europe",
+              "clip": "/samples/clip-medieval-1.mp4",
+              "audio": [
+                "/samples/speech-1783043086365-0-0.mp3",
+                "/samples/speech-1783043086760-0-1.mp3"
+              ]
+            },
+            {
+              "id": "k90s",
+              "label": "1990s Korea",
+              "clip": "/samples/clip-k90s-1.mp4",
+              "audio": [
+                "/samples/speech-1783043261896-0-0.mp3",
+                "/samples/speech-1783043262399-0-1.mp3"
+              ]
+            },
+            {
+              "id": "space",
+              "label": "Space Colony",
+              "clip": "/samples/clip-space-1.mp4",
+              "audio": [
+                "/samples/speech-1783043086365-0-0.mp3",
+                "/samples/speech-1783043086760-0-1.mp3"
+              ]
+            }
           ]
         },
-        {
-          "text": "The lift whirred as it lifted us off the ground. Once I stepped into the aisle behind Jonah, the lift folded up into the bus with a: Clang Boom Pffff \"Thanks, Day.\" Jonah waved toward the front of the bus.",
-          "still": "/samples/still-page-1-4.jpg",
-          "clip": "/samples/remix-1783036680271-j2rf6m.mp4",
-          "audio": [
-            "/samples/speech-1783036683620-0-0.mp3",
-            "/samples/speech-1783036684054-0-1.mp3",
-            "/samples/speech-1783036684735-0-2.mp3"
-          ]
-        },
-        {
-          "text": "Our bus driver, Day Grissom, looked the way I would imagine Santa Claus looked if Santa forgot to trim his beard and got real skinny and started wearing plaid shirts and overalls. Day Grissom saluted us in the rearview mirror. Then he turned up the radio and bopped his shaggy head to the rhythm of the song playing: a feisty tune full of banjos and guitars that had a dancing beat to it. Bluegrass music, Aunt Cleo's favorite.",
-          "still": "/samples/still-page-1-5.jpg",
-          "clip": "/samples/remix-1783036780691-fb70wx.mp4",
-          "audio": []
-        }
-      ]
-    },
-    {
-      "photo": "page-2.png",
-      "sceneTitle": "Meeting the Beedle",
-      "beats": [
         {
           "text": "The boy glanced up then. His eyes were the greenest green I'd ever seen, like somebody had taken a neon marker and colored them in just before I walked up to him and called him a Beedle.",
-          "still": "/samples/still-page-2-0.jpg",
-          "clip": "/samples/remix-1783036897179-6mwran.mp4",
-          "audio": []
-        },
-        {
-          "text": "He sighed. \"I can't believe I'm about to do this.\"",
-          "still": "/samples/still-page-2-1.jpg",
-          "clip": "/samples/remix-1783036989941-icgzhm.mp4",
-          "audio": [
-            "/samples/speech-1783036991704-0-0.mp3",
-            "/samples/speech-1783036992503-0-1.mp3"
-          ]
-        },
-        {
-          "text": "I glanced around nervously. \"Do what?\"",
-          "still": "/samples/still-page-2-2.jpg",
-          "clip": "/samples/remix-1783037076565-o019ml.mp4",
-          "audio": [
-            "/samples/speech-1783037078326-0-0.mp3",
-            "/samples/speech-1783037078808-0-1.mp3"
-          ]
-        },
-        {
-          "text": "He folded his newspaper and smiled at me. My heart kicked YES! as strong as a mule kick. My heart had never said yes over a smile before.",
-          "still": "/samples/still-page-2-3.jpg",
-          "clip": "/samples/remix-1783037172293-3qad5g.mp4",
-          "audio": []
-        },
-        {
-          "text": "He lowered his voice to a whisper. \"But I'm the Beedle, too, sometimes, to those who need me. You definitely need the Beedle, Flea. You got time to talk?\"",
-          "still": "/samples/still-page-2-5.jpg",
-          "clip": null,
-          "audio": [
-            "/samples/speech-1783037253014-0-0.mp3",
-            "/samples/speech-1783037254751-0-1.mp3"
+          "speech": [
+            {
+              "speaker": "narrator",
+              "text": "The boy glanced up then. His eyes were the greenest green I'd ever seen, like somebody had taken a neon marker and colored them in just before I walked up to him and called him a Beedle.",
+              "delivery": "normal"
+            }
+          ],
+          "versions": [
+            {
+              "id": "original",
+              "label": "Original",
+              "clip": "/samples/clip-original-2.mp4",
+              "audio": [
+                "/samples/speech-1783043379543-0-0.mp3"
+              ]
+            },
+            {
+              "id": "joseon",
+              "label": "Joseon Korea",
+              "clip": "/samples/clip-joseon-2.mp4",
+              "audio": [
+                "/samples/speech-1783043379543-0-0.mp3"
+              ]
+            },
+            {
+              "id": "medieval",
+              "label": "Medieval Europe",
+              "clip": "/samples/clip-medieval-2.mp4",
+              "audio": [
+                "/samples/speech-1783043379543-0-0.mp3"
+              ]
+            },
+            {
+              "id": "k90s",
+              "label": "1990s Korea",
+              "clip": "/samples/clip-k90s-2.mp4",
+              "audio": [
+                "/samples/speech-1783043379543-0-0.mp3"
+              ]
+            },
+            {
+              "id": "space",
+              "label": "Space Colony",
+              "clip": "/samples/clip-space-2.mp4",
+              "audio": [
+                "/samples/speech-1783043379543-0-0.mp3"
+              ]
+            }
           ]
         }
       ]

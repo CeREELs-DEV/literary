@@ -1,7 +1,7 @@
 // src/main.js
 import { requestExperience } from './upload.js'
 import { requestReimagine } from './remix.js'
-import { loadSampleBook, manifestToScene, originalsByIndex } from './samples.js'
+import { loadSampleBook, manifestToScene, versionsByIndex } from './samples.js'
 import { createPassageViewer } from './viewer.js'
 
 const startScreen = document.getElementById('start-screen')
@@ -67,9 +67,9 @@ startBtn?.addEventListener('click', async () => {
   currentScene = manifestToScene(manifest)
   renderBook(currentScene)
   showExperienceScreen()
-  // Seed each passage's Original tab — the viewer opens on passage click.
-  for (const [index, original] of originalsByIndex(manifest)) {
-    viewer.setOriginal(index, original)
+  // Seed each passage's version tabs — the viewer opens on passage click.
+  for (const [index, versions] of versionsByIndex(manifest)) {
+    viewer.setVersions(index, versions)
   }
   setStatus('Tap a highlighted sentence to see its scene.')
   if (!bgm) startBgm(0.2)

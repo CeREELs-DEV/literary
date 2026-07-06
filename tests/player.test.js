@@ -43,6 +43,22 @@ describe('Matter of Perspective — books data', () => {
     }
   })
 
+  it('cuentista plays real films where produced, storyboard fallback intact', () => {
+    const cuentista = BOOKS.cuentista
+    const wired = {
+      'petra|b1': 'cuentista-1a',
+      'javier|b1': 'cuentista-1b',
+      'petra|b2': 'cuentista-2',
+      'petra|b3': 'cuentista-3',
+    }
+    for (const [key, id] of Object.entries(wired)) {
+      const cell = cuentista.cells[key]
+      expect(cell.video).toBe(`/curated/${id}.mp4`)
+      expect(cell.poster).toBe(`/curated/${id}.jpg`)
+      expect(typeof cell.svg).toBe('function') // fallback until/unless the film loads
+    }
+  })
+
   it('NEVER ships generation internals to the student page', () => {
     const source = fs.readFileSync('src/books-data.js', 'utf8')
     expect(source).not.toContain('internalOmniPrompt')

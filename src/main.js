@@ -206,6 +206,17 @@ function renderPlayer() {
     if (cell.poster) video.poster = cell.poster
     video.playsInline = true
     video.preload = 'metadata'
+    // A cell whose film is not published yet falls back to its storyboard.
+    video.addEventListener('error', () => {
+      if (!cell.svg) return
+      controller?.dispose()
+      video.remove()
+      const holder = document.createElement('div')
+      holder.innerHTML = cell.svg()
+      player.insertBefore(holder.firstChild, player.firstChild)
+      $('ribbon').textContent = 'Video mockup'
+      controller = mockController()
+    })
     player.insertBefore(video, player.firstChild)
     $('ribbon').textContent = B().book
     controller = realController(video)

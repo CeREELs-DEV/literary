@@ -42,11 +42,11 @@ export const SCENE_BIBLE =
   `Location: a small-town school courtyard in warm late-afternoon light; ` +
   `several weathered wooden lunch tables scattered with leaves and bird ` +
   `droppings; ONE perfectly clean table beneath a large tree. At the clean ` +
-  `table sits the slim 12-year-old boy: narrow shoulders, messy spiky ` +
-  `light-gold hair like a small crooked crown, vivid green eyes, plain pale ` +
-  `shirt, a folded newspaper in one hand and a red pen twirling in the ` +
-  `other; his mobility chair sits naturally beside the table, never the ` +
-  `focus. His hair only RESEMBLES a crown — never draw an actual crown ` +
+  `table sits the slim 12-year-old boy IN HIS WHEELCHAIR, drawn up to the ` +
+  `table like any chair — natural, never the focus: narrow shoulders, messy ` +
+  `spiky light-gold hair like a small crooked crown, vivid green eyes, plain ` +
+  `pale shirt, a folded newspaper in one hand and a red pen twirling in the ` +
+  `other. His hair only RESEMBLES a crown — never draw an actual crown ` +
   `object on his head. The shy 12-year-old girl has brown shoulder-length ` +
   `hair, a simple blue dress, and canvas shoes. There are exactly TWO ` +
   `children in this story and no other people. The location, wardrobe, lighting, and ` +
@@ -74,10 +74,9 @@ export const CURATED_SCENES = [
       `appear anywhere in the frame — no girl at all. The camera glides ` +
       `slowly forward across the courtyard at a child's eye height, passing ` +
       `messy bird-stained tables, and settles on the one strangely clean ` +
-      `table under the big tree where the boy sits ON A WOODEN CHAIR reading ` +
-      `his folded newspaper and twirling the red pen — his wheelchair is ` +
-      `parked beside the table, empty, never the focus. He never looks ` +
-      `toward the camera; sunlight catches ` +
+      `table under the big tree where the boy sits in his wheelchair, drawn ` +
+      `up to the table, reading his folded newspaper and twirling the red ` +
+      `pen. He never looks toward the camera; sunlight catches ` +
       `his messy light-gold hair like a small crooked crown. Nothing else ` +
       `happens — the noticing IS the scene. Mood: curious, shy, quietly ` +
       `uncanny. Audio: distant schoolyard, soft footsteps, pen tapping.`,

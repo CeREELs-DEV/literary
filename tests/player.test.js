@@ -48,6 +48,7 @@ describe('Matter of Perspective — books data', () => {
     expect(html).not.toContain('href="/src/')
     expect(html).not.toContain('src="/src/')
     expect(config).toContain("base: './'")
+    expect(source).toContain("import.meta.env?.BASE_URL || './public/'")
     expect(source).toContain('const asset =')
     expect(source).not.toContain("video:'/curated/")
     expect(source).not.toContain("poster:'/curated/")

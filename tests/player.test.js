@@ -42,6 +42,7 @@ describe('Matter of Perspective — books data', () => {
     const html = fs.readFileSync('index.html', 'utf8')
     const config = fs.readFileSync('vite.config.js', 'utf8')
     const source = fs.readFileSync('src/books-data.js', 'utf8')
+    const workflow = fs.readFileSync('.github/workflows/deploy.yml', 'utf8')
 
     expect(html).toContain('href="./src/styles.css"')
     expect(html).toContain('src="./src/main.js"')
@@ -52,6 +53,9 @@ describe('Matter of Perspective — books data', () => {
     expect(source).toContain('const asset =')
     expect(source).not.toContain("video:'/curated/")
     expect(source).not.toContain("poster:'/curated/")
+    expect(workflow).toContain('npm run build')
+    expect(workflow).toContain('path: ./dist')
+    expect(workflow).toContain('actions/deploy-pages@v5')
   })
 
   it('adds setup, point-of-view info, and passage-owned questions for every book', () => {

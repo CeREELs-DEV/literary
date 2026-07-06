@@ -1,5 +1,6 @@
 node_modules
 dist
+.vite/
 .DS_Store
 .claude/
 .omc/
@@ -7,3 +8,5 @@ dist
 .env.local
 .env.*.local
 server/generated/
+production/cuentista-keyframes/old/
+production/cuentista-keyframes/old-style/

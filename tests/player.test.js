@@ -22,6 +22,33 @@ describe('Matter of Perspective — books data', () => {
     expect(main).toContain('let bookKey = Object.keys(BOOKS)[0]')
   })
 
+  it('includes the question and point-of-view support hooks from the reference page', () => {
+    const html = fs.readFileSync('index.html', 'utf8')
+    const styles = fs.readFileSync('src/styles.css', 'utf8')
+    const main = fs.readFileSync('src/main.js', 'utf8')
+
+    expect(html).toContain('<div class="qsection" id="qsection"></div>')
+    expect(styles).toContain('.qsection')
+    expect(styles).toContain('.recap')
+    expect(styles).toContain('.povinfo')
+    expect(styles).toContain('.huntable')
+    expect(main).toContain('function renderQuestions')
+    expect(main).toContain('function bindPovInfo')
+  })
+
+  it('adds setup, point-of-view info, and passage-owned questions for every book', () => {
+    for (const [key, book] of Object.entries(BOOKS)) {
+      expect(book.setup, key).toEqual(expect.any(String))
+      expect(book.setup.length, key).toBeGreaterThan(20)
+      expect(book.povInfo, key).toContain('<b>')
+      expect(book.questions, key).toHaveLength(3)
+      expect(book.questions.every((q) => q.part && q.q && q.type), key).toBe(true)
+      expect(book.questions.some((q) => q.type === 'find'), key).toBe(true)
+      expect(book.excerpt, key).toContain('class="huntable"')
+      expect(book.excerpt, key).toContain('data-correct="1"')
+    }
+  })
+
   it('cuentista offers Camera plus the two character POVs across three beats', () => {
     expect(BOOKS.cuentista.povs.map((p) => p.key)).toEqual(['wide', 'petra', 'javier'])
     expect(BOOKS.cuentista.beats).toHaveLength(3)
@@ -105,8 +132,9 @@ describe('Matter of Perspective — books data', () => {
   it('NEVER ships generation internals to the student page', () => {
     const source = fs.readFileSync('src/books-data.js', 'utf8')
     expect(source).not.toContain('internalOmniPrompt')
+    expect(source.toLowerCase()).not.toContain('internalomniprompt')
     expect(source.toLowerCase()).not.toContain('gemini')
-    expect(source.toLowerCase()).not.toContain('omni')
+    expect(source.toLowerCase()).not.toContain('omni prompt')
   })
 })
 

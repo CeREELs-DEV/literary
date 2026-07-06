@@ -16,6 +16,11 @@ const ICON = {
 let bookKey = Object.keys(BOOKS)[0]
 let povIdx = 0
 let beatIdx = 0
+let qIdx = 0
+let hunting = false
+let questionDone = false
+let qEditing = -1
+const answers = {}
 
 const B = () => BOOKS[bookKey]
 const cellKey = () => `${B().povs[povIdx].key}|${B().beats[beatIdx].key}`
@@ -26,8 +31,10 @@ function renderReader() {
   const b = B()
   $('reader').innerHTML =
     `<div class="chap">${b.author} &middot; ${b.chap}</div>` +
-    `<div class="passagename">&ldquo;${b.passage}&rdquo;</div>` +
-    `<div class="byline"></div><div class="excerpt">${b.excerpt}</div>`
+    `<div class="passagename">&ldquo;${b.passage}&rdquo;` +
+    `<button class="povinfo" id="povinfo" aria-label="About this story's point of view">i</button>` +
+    `<div class="povpop" id="povpop"><div class="pph">Point of view</div>${b.povInfo}</div></div>` +
+    `<div class="byline"></div><div class="recap">${b.setup}</div><div class="excerpt">${b.excerpt}</div>`
   // Tap a beat in the text -> the scene jumps there and plays.
   $('reader').querySelectorAll('.beatblock').forEach((el) =>
     el.addEventListener('click', () => {
@@ -36,7 +43,33 @@ function renderReader() {
       controller?.play()
     }),
   )
+  bindPovInfo()
   syncBeatBlocks()
+}
+
+function bindPovInfo() {
+  const pi = $('povinfo')
+  const pp = $('povpop')
+  if (!pi || !pp) return
+  let closeT = null
+  const open = () => {
+    clearTimeout(closeT)
+    pp.classList.add('show')
+  }
+  const close = () => pp.classList.remove('show')
+  const softClose = () => {
+    closeT = setTimeout(close, 220)
+  }
+  pi.addEventListener('click', (event) => {
+    event.stopPropagation()
+    pp.classList.toggle('show')
+  })
+  pp.addEventListener('click', (event) => event.stopPropagation())
+  pi.addEventListener('mouseenter', open)
+  pi.addEventListener('mouseleave', softClose)
+  pp.addEventListener('mouseenter', open)
+  pp.addEventListener('mouseleave', softClose)
+  document.addEventListener('click', close)
 }
 
 function syncBeatBlocks() {
@@ -240,16 +273,231 @@ function render(full) {
   renderButtons()
   renderPlayer()
   renderMeta()
+  renderQuestions()
   syncBeatBlocks()
+}
+
+/* ---- passage questions ---- */
+
+const ansKey = (i) => `${bookKey}|${i}`
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function withIcons(s) {
+  return s.replace(/\[eye\]/g, `<span class="qeye">${ICON.eye}</span>`)
+}
+
+function needCount() {
+  const q = (B().questions || [])[qIdx]
+  return q?.need || 1
+}
+
+function renderQuestions() {
+  const qs = B().questions || []
+  const section = $('qsection')
+  if (!section) return
+  if (!qs.length) {
+    section.innerHTML = ''
+    return
+  }
+  if (qIdx >= qs.length) qIdx = 0
+  const q = qs[qIdx]
+  const nav = qs
+    .map((_, i) => `<button class="${i === qIdx ? 'on' : ''}" data-i="${i}">${i + 1}</button>`)
+    .join('')
+  const partChip = q.part ? `<span class="qpart">${q.part}</span>` : ''
+
+  let body
+  if (q.type === 'find') {
+    let actions
+    let hint = ''
+    if (!hunting) {
+      actions = `<button class="qbtn primary" id="huntbtn">Tap the clue${needCount() > 1 ? 's' : ''}</button>`
+    } else if (!questionDone) {
+      actions =
+        '<button class="qbtn ghost" id="revealbtn">Show all clues</button>' +
+        '<button class="qbtn ghost" id="clearbtn">Clear</button>'
+      hint = `<div class="qhint" id="qhint">${huntStatus(0)}</div>`
+    } else {
+      actions = '<button class="qbtn primary" id="huntbtn">Try again</button>'
+    }
+    body =
+      `${partChip}<span class="qtype find">Find in the text</span>` +
+      `<div class="qprompt">${withIcons(q.q)}</div>${hint}` +
+      `<div class="qactions">${actions}</div><div class="qfeedback" id="qfb"></div>`
+  } else {
+    const saved = answers[ansKey(qIdx)]
+    const editing = qEditing === qIdx || !saved
+    let ansUI
+    if (editing) {
+      ansUI =
+        `<textarea class="qanswer" id="qanswer" placeholder="Type your answer...">${saved ? esc(saved) : ''}</textarea>` +
+        '<div class="qactions"><button class="qbtn primary" id="savebtn">Save answer</button><span class="qhint" id="savemsg"></span></div>'
+    } else {
+      ansUI =
+        `<div class="qsaved">${esc(saved).replace(/\n/g, '<br>')}</div>` +
+        '<div class="qactions"><button class="qbtn ghost" id="editbtn">Edit answer</button><span class="qhint">Saved ✓</span></div>'
+    }
+    body =
+      `${partChip}<span class="qtype open">Think &amp; discuss</span>` +
+      `<div class="qprompt">${withIcons(q.q)}</div>${ansUI}`
+  }
+
+  section.innerHTML =
+    `<div class="qhead"><span class="qtitle">Questions</span><span class="qsub">${qIdx + 1} of ${qs.length}</span>` +
+    `<span class="qnav">${nav}</span></div><div class="qcard">${body}</div>`
+
+  section.querySelectorAll('.qnav button').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      exitHunt()
+      qEditing = -1
+      qIdx = +btn.dataset.i
+      renderQuestions()
+    }),
+  )
+
+  if (q.type === 'find') {
+    $('huntbtn')?.addEventListener('click', () => {
+      if (!hunting) startHunt()
+      else {
+        clearHunt()
+        startHunt()
+      }
+    })
+    $('revealbtn')?.addEventListener('click', revealAll)
+    $('clearbtn')?.addEventListener('click', clearHunt)
+    if (questionDone) paintFeedback()
+    return
+  }
+
+  const ta = $('qanswer')
+  ta?.addEventListener('input', () => {
+    answers[ansKey(qIdx)] = ta.value
+    const msg = $('savemsg')
+    if (msg) msg.textContent = ''
+  })
+  $('savebtn')?.addEventListener('click', () => {
+    const value = $('qanswer').value.trim()
+    answers[ansKey(qIdx)] = value
+    qEditing = -1
+    if (value) renderQuestions()
+    else {
+      const msg = $('savemsg')
+      if (msg) msg.textContent = 'Write something first'
+    }
+  })
+  $('editbtn')?.addEventListener('click', () => {
+    qEditing = qIdx
+    renderQuestions()
+  })
+}
+
+function huntables() {
+  return $('reader').querySelectorAll('.huntable')
+}
+
+function markedCorrect() {
+  return [...huntables()].filter((el) => el.dataset.correct === '1' && el.classList.contains('marked')).length
+}
+
+function totalCorrect() {
+  return [...huntables()].filter((el) => el.dataset.correct === '1').length
+}
+
+function huntStatus(found) {
+  const need = needCount()
+  if (need > 1) {
+    return `Tap the clues in the passage — find at least <b>${need}</b>. Found: <b>${found}</b>`
+  }
+  return 'Tap the clue in the passage that answers the question.'
+}
+
+function bindToggles() {
+  huntables().forEach((el) => {
+    el.onclick = (event) => {
+      event.stopPropagation()
+      if (questionDone) return
+      el.classList.toggle('marked')
+      const found = markedCorrect()
+      const hint = $('qhint')
+      if (hint) hint.innerHTML = huntStatus(found)
+      if (found >= needCount()) revealAll()
+    }
+  })
+}
+
+function startHunt() {
+  hunting = true
+  questionDone = false
+  $('reader').classList.add('hunting')
+  huntables().forEach((el) => el.classList.remove('marked', 'right', 'wrong', 'missed'))
+  bindToggles()
+  renderQuestions()
+}
+
+function revealAll() {
+  questionDone = true
+  huntables().forEach((el) => {
+    const correct = el.dataset.correct === '1'
+    const marked = el.classList.contains('marked')
+    el.classList.remove('marked')
+    if (correct) el.classList.add(marked ? 'right' : 'missed')
+    else if (marked) el.classList.add('wrong')
+  })
+  renderQuestions()
+}
+
+function paintFeedback() {
+  const fb = $('qfb')
+  if (!fb) return
+  const found = [...huntables()].filter((el) => el.classList.contains('right')).length
+  const need = needCount()
+  fb.className = 'qfeedback show'
+  fb.innerHTML =
+    need > 1
+      ? `You found <b>${found}</b> of the clues. Here's all the evidence in the passage — <b>${totalCorrect()}</b> in total.`
+      : found
+        ? "That's it — nicely found."
+        : "Here's the clue you were looking for."
+}
+
+function clearHunt() {
+  questionDone = false
+  huntables().forEach((el) => el.classList.remove('marked', 'right', 'wrong', 'missed'))
+  bindToggles()
+  const hint = $('qhint')
+  if (hint) hint.innerHTML = huntStatus(0)
+  const fb = $('qfb')
+  if (fb) {
+    fb.className = 'qfeedback'
+    fb.innerHTML = ''
+  }
+}
+
+function exitHunt() {
+  hunting = false
+  questionDone = false
+  const reader = $('reader')
+  if (!reader) return
+  reader.classList.remove('hunting')
+  reader.querySelectorAll('.huntable').forEach((el) => {
+    el.classList.remove('marked', 'right', 'wrong', 'missed')
+    el.onclick = null
+  })
 }
 
 /* ---- wiring ---- */
 
 document.querySelectorAll('.booktab').forEach((t) =>
   t.addEventListener('click', () => {
+    exitHunt()
+    qEditing = -1
     bookKey = t.dataset.b
     povIdx = 0
     beatIdx = 0
+    qIdx = 0
     render(true)
   }),
 )

@@ -16,15 +16,22 @@ import {
 const BOOK_DEFINITIONS = {
 snicker:{
   passage:'The Beedle', book:'A Snicker of Magic', author:'Natalie Lloyd', chap:'Chapter 5',
+  setup:'On her first day at a new school, Felicity gets a note from the town\'s secret gift-giver, "the Beedle," asking to meet at a picnic table on the playground.',
+  povInfo:'This story is written in <b>first person</b>. Felicity tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
   povs:[{key:'world',label:'Camera',icon:'frame'},{key:'felicity',label:'Felicity',icon:'eye'},{key:'jonah',label:'The Beedle',icon:'eye'}],
   beats:[{key:'table',n:'Beat 1',label:'The clean table'},{key:'whisper',n:'Beat 2',label:'The password'},{key:'glance',n:'Beat 3',label:'The green glance'}],
+  questions:[
+    {part:'Part 1',q:'What does Felicity notice about the boy at the table, and why is she surprised?',type:'open'},
+    {part:'Part 2',q:'Tap the words that describe the boy\'s bright green eyes.',type:'find',need:1},
+    {part:'Part 3',q:'How does Felicity\'s point of view shape the way we understand this first meeting?',type:'open'},
+  ],
   excerpt:`
    <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; The clean table</span>
-    <p>But the boy sitting at the bird-poopless table looked &hellip; <i>normal</i>. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of messy-spiky blond hair that reminded me of a crown. He didn't look at me.</p></div>
+    <p>But the boy sitting at the bird-poopless table looked &hellip; <i>normal</i>. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of <span class="huntable" data-correct="0">messy-spiky blond hair that reminded me of a crown</span>. He didn't look at me.</p></div>
    <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The password</span>
     <p>"Pumpernickel?" I whispered.</p></div>
    <div class="beatblock b3" data-beat="2"><span class="btag">Beat 3 &middot; The green glance</span>
-    <p>The boy glanced up then. His eyes were the greenest green I'd ever seen, like somebody had taken a neon marker and colored them in just before I walked up to him and called him a Beedle.</p></div>`,
+    <p>The boy glanced up then. His eyes were the greenest green I'd ever seen, <span class="huntable" data-correct="1">like somebody had taken a neon marker and colored them in</span> just before I walked up to him and called him a Beedle.</p></div>`,
   cells:{
    'world|table':{video:'/curated/table-world.mp4',poster:'/curated/table-world.jpg',notes:'The world keeps one table clean, and waits.'},
    'felicity|table':{video:'/curated/table-felicity.mp4',poster:'/curated/table-felicity.jpg',notes:"He looks so normal - so why can't I stop noticing him?"},
@@ -39,15 +46,22 @@ snicker:{
 },
 james:{
   passage:'Aren\u2019t you hungry?', book:'James and the Giant Peach', author:'Roald Dahl', chap:'Chapter 11',
+  setup:'After climbing inside a giant, magical peach, James comes face to face with the enormous insects who live there.',
+  povInfo:'This story is written in <b>third person omniscient</b>. A narrator outside the story tells it using "he" and "James," and can share what different characters are thinking and feeling.',
   povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'james',label:"James",icon:'eye'},{key:'bugs',label:"The insects",icon:'eye'}],
   beats:[{key:'b1',n:'Beat 1',label:'\u201cI\u2019m hungry!\u201d'},{key:'b2',n:'Beat 2',label:'One of us'}],
+  questions:[
+    {part:'Part 1',q:'Why does James think the creatures want to eat him? Tap the clues in the text — find at least 3.',type:'find',need:3},
+    {part:'Part 2',q:'Why do the insects laugh when they realize what James is thinking? What does this show about the difference between what James understands and what they understand?',type:'open'},
+    {part:'Whole scene',q:'How is [eye] James\'s POV different from [eye] the insects\' in this scene? Explain how each understands the same moment in a different way.',type:'open'},
+  ],
   excerpt:`
    <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; "I'm hungry!"</span>
     <p>Every one of these "creatures" was at least as big as James himself, and in the strange greenish light that shone down from somewhere in the ceiling, they were absolutely terrifying to behold.</p>
-    <p>"I'm hungry!" the Spider announced suddenly, staring hard at James.</p>
-    <p>"<i>I'm</i> famished!" the Old-Green-Grasshopper said. "So am <i>I</i>!" the Ladybug cried. The Centipede sat up a little straighter on the sofa. "<i>Everyone's</i> famished!" he said. "We need food!"</p>
-    <p>Four pairs of round black glassy eyes were all fixed upon James. There was a long pause &mdash; and a long silence.</p>
-    <p>The Spider (who happened to be a female spider) opened her mouth and ran a long black tongue delicately over her lips. "Aren't <i>you</i> hungry?" she asked suddenly, leaning forward and addressing herself to James.</p>
+    <p><span class="huntable" data-correct="1">"I'm hungry!" the Spider announced suddenly, staring hard at James</span>.</p>
+    <p>"<i>I'm</i> <span class="huntable" data-correct="1">famished!" the Old-Green-Grasshopper said</span>. "<span class="huntable" data-correct="1">So am <i>I</i>!" the Ladybug cried</span>. The Centipede sat up a little straighter on the sofa. "<i><span class="huntable" data-correct="1">Everyone's</span></i><span class="huntable" data-correct="1"> famished!" he said. "We need food!</span>"</p>
+    <p><span class="huntable" data-correct="1">Four pairs of round black glassy eyes were all fixed upon James</span>. There was a long pause &mdash; and a long silence.</p>
+    <p>The Spider (who happened to be a female spider) opened her mouth and <span class="huntable" data-correct="1">ran a long black tongue delicately over her lips</span>. "Aren't <i>you</i> hungry?" she asked suddenly, leaning forward and addressing herself to James.</p>
     <p>Poor James was backed up against the far wall, shivering with fright and much too terrified to answer.</p></div>
    <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; One of us</span>
     <p>"What's the matter with you?" the Old-Green-Grasshopper asked. "You look positively ill!"</p>
@@ -72,13 +86,20 @@ james:{
 },
 cuentista:{
   passage:'Leaving Earth', book:'The Last Cuentista', author:'Donna Barba Higuera', chap:'Chapter 2',
+  setup:'A comet is about to destroy Earth. Petra\u2019s family is among the few chosen to leave on a spaceship, and they hike through the forest to reach it with her little brother, Javier.',
+  povInfo:'This story is written in <b>first person</b>. Petra tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
   povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'petra',label:"Petra",icon:'eye'},{key:'javier',label:"Javier",icon:'eye'}],
   beats:[{key:'b1',n:'Beat 1',label:'The ship'},{key:'b2',n:'Beat 2',label:'The memory'},{key:'b3',n:'Beat 3',label:'The march'}],
+  questions:[
+    {part:'Part 1',q:'How does Petra feel about leaving Earth, and how does she act in front of her little brother Javier? Why might those be different?',type:'open'},
+    {part:'Part 1',q:'Tap the words that compare the ship to a living creature.',type:'find',need:1},
+    {part:'Part 2',q:'Why does Petra picture Lita and Tía Berta under the blanket instead of imagining her friends being afraid? What does this choice show about her?',type:'open'},
+  ],
   excerpt:`
    <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; The ship</span>
-    <p>We continue to the ship along the path that could be any hiking trail. It's the least official final exodus off Earth you could imagine. My parents told me that chatter tracking showed too many fringe and conspiracy groups suspecting something was up out here. Turns out they were right. My little brother, Javier, skids to a stop when we emerge from the camouflage of the cedar canopy to an open field of green. A monstrous ship resembling a stainless-steel-and-crystal praying mantis comes into view.</p>
+    <p>We continue to the ship along the path that could be any hiking trail. It's the least official final exodus off Earth you could imagine. My parents told me that chatter tracking showed too many fringe and conspiracy groups suspecting something was up out here. Turns out they were right. My little brother, Javier, skids to a stop when we emerge from the camouflage of the cedar canopy to an open field of green. A monstrous ship <span class="huntable" data-correct="1">resembling a stainless-steel-and-crystal praying mantis</span> comes into view.</p>
     <p>"Petra &hellip;?" He clenches my wrist.</p>
-    <p>At the opposite end of the field sits an exact replica of our ship. So far away, it looks half the size of the behemoth in front of us. With only two ships left, I know one is already gone. Dad said they lost contact when the final ping came as they approached Alpha Centauri.</p>
+    <p>At the opposite end of the field sits <span class="huntable" data-correct="0">an exact replica of our ship</span>. So far away, it looks half the size of the behemoth in front of us. With only two ships left, I know one is already gone. Dad said they lost contact when the final ping came as they approached Alpha Centauri.</p>
     <p>"It's okay." I urge Javier on, even though I want to run back into the forest too.</p></div>
    <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The memory</span>
     <p>I think of Lita and my teachers and my classmates, and I wonder what they're doing right now. I don't want to imagine them being so afraid they'd try to hide from something they can't hide from.</p>
@@ -86,7 +107,7 @@ cuentista:{
     <p>"Berta! This isn't the time to be stingy." Lita would tip the brown glass bottle, pouring rich liquid of the same color into her coffee cup.</p>
     <p>"I suppose you're right," T&iacute;a Berta replies. "We won't have another Christmas to keep this for." Lita will make an even bigger pour into T&iacute;a Berta's cup. They'll clink their clay mugs, take a long drink, and lean back shoulder to shoulder against T&iacute;a Berta's one-hundred-year-old pecan tree.</p>
     <p>This is the story my mind will keep of them.</p></div>
-   <p class="between">(Between beats, Petra remembers the looting, her mother's words &mdash; "people are afraid" &mdash; and feeling like she's been given the last glass of water on Earth.)</p>
+   <p class="recap between">(Between beats, Petra remembers the looting, her mother's words &mdash; "people are afraid" &mdash; and feeling like she's been given the last glass of water on Earth.)</p>
    <div class="beatblock b3" data-beat="2"><span class="btag">Beat 3 &middot; The march</span>
     <p>I look up at the comet and wince. I <i>hate you</i>.</p>
     <p>Like ants on an orderly march to our hole, my family and I walk quietly across the grass field with several scientists and one other family with a blond teenager. As we get closer, instead of the cement commercial launch pad I expect, there's just freshly cut grass.</p></div>`,

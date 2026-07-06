@@ -35,7 +35,8 @@ const MANTIS_STILL =
   'keeps the EXACT same chrome-and-crystal mantis design, silhouette, and ' +
   'pose from both keyframes in every in-between frame — it must NEVER morph ' +
   'into an airplane, jet, spider, robot, mech, or any other vehicle or ' +
-  'creature, and it never gains wings, landing gear, eyes, or a face.'
+  'creature, and it never gains antennae, wings, landing gear, eyes, or a ' +
+  'face.'
 
 const FPV =
   'The camera is the character\u2019s own eyes: strict first-person, gentle ' +
@@ -84,12 +85,12 @@ const CLIPS = [
       'revealing the vast green field as she joins her family and a few ' +
       'scientists walking in a quiet, orderly line — small as ants — toward the ' +
       'enormous parked chrome-and-crystal praying-mantis spacecraft, the comet ' +
-      'still overhead. The camera pull-back is a straight linear move with no ' +
-      'rotation: the parked ship slides into the frame edge already complete, ' +
-      'in its exact final pose and side angle from the last frame — it never ' +
-      'turns toward the camera, never unfolds, and is never seen from the ' +
-      'front. The comet stays a small bright comet and never changes shape. ' +
-      'Audio: wind over grass, distant unhurried footsteps, a ' +
+      'still overhead. The parked ship is already visible small in the ' +
+      'background of the first frame and stays in exactly that side-view ' +
+      'pose the whole time — the camera pull-back only makes it larger in ' +
+      'frame; it never turns toward the camera, never unfolds, and is never ' +
+      'seen from the front. The comet stays a small bright comet and never ' +
+      'changes shape. Audio: wind over grass, distant unhurried footsteps, a ' +
       'long low hum from the ship.' + MANTIS_STILL,
   },
   // ---- Petra, strict first person ----
@@ -134,10 +135,15 @@ const CLIPS = [
       'ahead, the quiet single line of walkers crosses the fresh-cut grass ' +
       'toward the enormous parked mantis ship, her own arm reaching from the ' +
       'bottom edge to rest a hand on her little brother\u2019s shoulder as he ' +
-      'walks just ahead. The comet stays a small bright comet the whole time ' +
+      'walks just ahead. Her little brother is ONE single boy who appears ' +
+      'exactly once \u2014 never two boys in the same frame. Her own hands stay ' +
+      'out of view until that final reach from the bottom edge, and the ' +
+      'view stays her eyes the whole time \u2014 never a shot of her or from ' +
+      'behind her. The comet stays a small bright comet the whole time ' +
       'and NEVER transforms into anything else; nothing flies or descends ' +
-      'from the sky; the ship appears only on the ground, already parked and ' +
-      'complete in its final pose, revealed as the gaze lowers. Audio: wind, ' +
+      'from the sky. The parked ship is already visible on the horizon in ' +
+      'the first frame and simply grows nearer as she walks, staying in the ' +
+      'same grounded parked pose throughout. Audio: wind, ' +
       'her slow exhale, distant footsteps, a low hum.' + MANTIS_STILL,
   },
   // ---- Javier, strict first person ----
@@ -151,11 +157,18 @@ const CLIPS = [
       'to a halt at the forest\u2019s edge — a jolt, dust at the bottom edge — his ' +
       'small hand shoots out and grabs his sister\u2019s wrist; then the view cranes ' +
       'slowly, steeply upward until the enormous parked mantis spacecraft fills ' +
-      'the whole sky above. During the whole upward tilt the ship stays firmly ' +
-      'planted on the ground in its exact parked pose seen from below \u2014 it is ' +
-      'NEVER airborne, never flying, and the sky contains only clouds and the ' +
-      'small comet; the view simply travels up the ship\u2019s planted legs to its ' +
-      'body. Audio: sneakers skidding on dirt, a sharp little ' +
+      'the whole sky above. The boy\u2019s own head, hair, face, and body must ' +
+      'NEVER appear anywhere in the frame \u2014 he is the camera; of him only ' +
+      'his one small hand on his sister\u2019s wrist may show, and of his sister ' +
+      'only her arm at the frame edge. The parked ship is already visible across the ' +
+      'field in the first frame and stays firmly planted on the ground in ' +
+      'that exact parked pose for the entire clip \u2014 it is NEVER airborne, ' +
+      'never flying, and the sky contains only clouds and the small comet; ' +
+      'every one of its legs stays planted in exactly the same spot on the ' +
+      'grass from first frame to last, with no dust at its feet, no ' +
+      'stomping, no rearing up, no rising and no change of stance \u2014 the ' +
+      'view alone moves closer and tilts up the ship\u2019s planted legs to ' +
+      'its body. Audio: sneakers skidding on dirt, a sharp little ' +
       'inhale, \u201cPetra\u2026?\u201d whispered, a deep resonant hum.' + MANTIS_STILL,
   },
   {

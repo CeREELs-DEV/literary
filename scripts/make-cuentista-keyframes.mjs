@@ -117,7 +117,10 @@ const FRAMES = [
       `Third-person medium shot: the teenage girl stands in the open green ` +
       `field looking up at the sky with a pained, resentful expression; the ` +
       `bright comet with its long luminous tail streaks across the pale ` +
-      `overcast sky above her. No one else in frame.`,
+      `overcast sky above her. Far behind her in the background, small in ` +
+      `the distance, the enormous chrome-and-crystal praying-mantis ` +
+      `spacecraft stands PARKED on the grass in side view, completely ` +
+      `still. No one else in frame.`,
   },
   {
     file: 'javier-b2-last.jpg',
@@ -170,10 +173,15 @@ const FRAMES = [
     file: 'p3-first.jpg',
     style: COLD_STYLE,
     prompt:
-      `Strict FIRST-PERSON view through the teenage girl's eyes, looking ` +
-      `straight up at the sky: the bright comet with its long luminous tail ` +
-      `blazes across the pale overcast sky, filling the frame; thin clouds ` +
-      `drift at the edges. No people visible at all.`,
+      `Strict FIRST-PERSON view through the teenage girl's eyes, gazing up ` +
+      `and ahead at the sky: the pale white-green comet with its long ` +
+      `luminous tail blazes across the overcast sky, dominating the upper ` +
+      `frame; a thin strip of the green field and horizon stays visible ` +
+      `along the bottom of the frame, where the enormous chrome-and-crystal ` +
+      `praying-mantis spacecraft stands PARKED far in the distance in side ` +
+      `view, small against the horizon. ABSOLUTE RULE: zero people in the ` +
+      `picture — no hair, no head, no shoulders, no back, no body parts, ` +
+      `not even at the frame edges; she is the camera, never the subject.`,
   },
   {
     file: 'p3-last.jpg',
@@ -199,9 +207,11 @@ const FRAMES = [
     prompt:
       `Strict FIRST-PERSON view through the young boy's eyes at his lower, ` +
       `child-height eye level, skidding to a stop at the forest's edge: the ` +
-      `green field opens ahead, the ground slightly tilted with the sudden ` +
-      `halt, a little dust kicked up at the bottom edge; his own small hand ` +
-      `shoots out to grab his sister's wrist — her arm in the patched ` +
+      `green field opens ahead, and across it the enormous chrome-and-crystal ` +
+      `praying-mantis spacecraft stands PARKED on the grass, still at a ` +
+      `distance but already towering; the ground slightly tilted with the ` +
+      `sudden halt, a little dust kicked up at the bottom edge; his own small ` +
+      `hand shoots out to grab his sister's wrist — her arm in the patched ` +
       `earth-tone sleeve at the frame's edge. The boy himself is NOT visible.`,
   },
   {

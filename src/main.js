@@ -3,7 +3,7 @@
 // One structure, three sample books: the reader on the left is split into
 // clickable beat blocks; the scene column plays the beat from the chosen
 // point of view. Snicker cells play real pre-produced films; the other
-// books show ink storyboard mockups until their films are produced.
+// cells can play real curated films or fall back to ink storyboard mockups.
 import { BOOKS } from './books-data.js'
 
 const $ = (id) => document.getElementById(id)
@@ -13,7 +13,7 @@ const ICON = {
   frame: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9h19"/><circle cx="6" cy="7" r="0.6" fill="currentColor"/><circle cx="9" cy="7" r="0.6" fill="currentColor"/></svg>',
 }
 
-let bookKey = 'snicker'
+let bookKey = Object.keys(BOOKS)[0]
 let povIdx = 0
 let beatIdx = 0
 

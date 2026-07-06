@@ -10,7 +10,8 @@
     "server": "node --env-file-if-exists=.env server/index.js",
     "make-samples": "node --env-file=.env scripts/make-samples.mjs",
     "make-curated-videos": "node --env-file=.env scripts/make-curated-videos.mjs",
-    "make-cuentista-videos": "node --env-file=.env scripts/make-cuentista-videos.mjs"
+    "make-cuentista-videos": "node --env-file=.env scripts/make-cuentista-videos.mjs",
+    "make-cuentista-keyframes": "node --env-file=.env scripts/make-cuentista-keyframes.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.0",

@@ -25,7 +25,24 @@ const VIDEO_MODELS = [
   'veo-3.1-lite-generate-preview',
 ]
 
+// The mantis ship is a MACHINE: Veo loves to animate it like a living
+// insect, so every prompt carries this contract explicitly.
+const MANTIS_STILL =
+  ' IMPORTANT: the praying-mantis spacecraft is a parked, lifeless MACHINE ' +
+  'and must stay PERFECTLY STILL for the entire clip — no leg movement, no ' +
+  'head movement, no swaying, no breathing, no insect behavior of any kind. ' +
+  'Only the people, grass, clouds, light, and the comet may move. The ship ' +
+  'keeps the EXACT same chrome-and-crystal mantis design, silhouette, and ' +
+  'pose from both keyframes in every in-between frame — it must NEVER morph ' +
+  'into an airplane, jet, spider, robot, mech, or any other vehicle or ' +
+  'creature, and it never gains wings, landing gear, eyes, or a face.'
+
+const FPV =
+  'The camera is the character\u2019s own eyes: strict first-person, gentle ' +
+  'handheld sway at walking rhythm, the character never appears on screen. '
+
 const CLIPS = [
+  // ---- Camera (third-person) ----
   {
     id: 'cuentista-1a',
     first: '1a-first.jpg',
@@ -35,36 +52,26 @@ const CLIPS = [
       'from the first second to the last — no style change. The two children walk ' +
       'away from the camera down the shaded cedar forest trail toward the light at ' +
       'its end; the camera follows smoothly behind them at walking pace; they step ' +
-      'out of the tree line into a wide open field of green grass as an enormous ' +
-      'chrome-and-crystal praying-mantis spacecraft is revealed, towering over the ' +
-      'field. Audio: soft footsteps on dirt, forest birdsong fading, a low deep ' +
-      'hum swelling as the ship comes into view.',
-  },
-  {
-    id: 'cuentista-1b',
-    first: '1b-first.jpg',
-    last: '1b-last.jpg',
-    prompt:
-      'Animate between the two frames, keeping their exact flat cartoon art style ' +
-      'throughout — no style change. The younger boy skids to a stop on the dirt, ' +
-      'gripping his older sister’s wrist; the camera pushes in slowly on his face ' +
-      'as he tilts his head up, eyes going wide; behind and above him the towering ' +
-      'chrome-and-crystal praying-mantis ship fills the sky. Audio: shoes skidding ' +
-      'on dirt, a small sharp inhale, wind, a low resonant ship hum.',
+      'out of the tree line into a wide open field of green grass where the ' +
+      'enormous chrome-and-crystal praying-mantis spacecraft stands revealed, its ' +
+      'tiny identical twin far across the horizon. Audio: soft footsteps on dirt, ' +
+      'forest birdsong fading, a low deep hum swelling as the ship comes into ' +
+      'view.' + MANTIS_STILL,
   },
   {
     id: 'cuentista-2',
     first: '2-first.jpg',
     last: '2-last.jpg',
     prompt:
-      'A slow, dreamy cross-dissolve between the two frames, keeping each frame’s ' +
-      'flat cartoon art style — no photorealism. From the girl’s distant, faraway ' +
-      'gaze in the cold steel-and-crystal light, the scene melts into her warm ' +
-      'memory: two elderly women under a red-and-black fringed blanket leaning ' +
-      'against a great old pecan tree at golden hour, one pouring from a brown ' +
-      'glass bottle into a clay mug, steam rising; they clink mugs and lean ' +
-      'shoulder to shoulder. Audio: a cold hum fading into warm breeze, soft ' +
-      'birdsong, gentle laughter, the clink of clay mugs.',
+      'A slow, dreamy cross-dissolve between the two frames, keeping each frame\u2019s ' +
+      'flat cartoon art style — no photorealism. From the girl\u2019s distant, faraway ' +
+      'gaze in the cold overcast field, the scene melts into her warm memory: two ' +
+      'elderly women under a red-and-black fringed blanket leaning against a great ' +
+      'old pecan tree at golden hour, one pouring from a brown glass bottle into a ' +
+      'clay mug, steam rising; they clink mugs and lean shoulder to shoulder while ' +
+      'a gentle green snake glides home through the golden grass far behind. ' +
+      'Audio: a cold hum fading into warm breeze, soft birdsong, gentle laughter, ' +
+      'the clink of clay mugs.',
   },
   {
     id: 'cuentista-3',
@@ -76,9 +83,95 @@ const CLIPS = [
       'streaking across the pale sky; the camera pulls back and rises steadily, ' +
       'revealing the vast green field as she joins her family and a few ' +
       'scientists walking in a quiet, orderly line — small as ants — toward the ' +
-      'enormous chrome-and-crystal praying-mantis spacecraft, the comet still ' +
-      'overhead. Audio: wind over grass, distant unhurried footsteps, a long low ' +
-      'hum from the ship.',
+      'enormous parked chrome-and-crystal praying-mantis spacecraft, the comet ' +
+      'still overhead. Audio: wind over grass, distant unhurried footsteps, a ' +
+      'long low hum from the ship.' + MANTIS_STILL,
+  },
+  // ---- Petra, strict first person ----
+  {
+    id: 'cuentista-p1',
+    first: 'p1-first.jpg',
+    last: 'p1-last.jpg',
+    prompt:
+      FPV +
+      'Through the teenage girl\u2019s eyes: walking the shaded cedar trail toward ' +
+      'the light, her little brother a step ahead at the frame\u2019s edge; the view ' +
+      'emerges from the trees onto the vast green field and tilts slightly up as ' +
+      'the enormous parked mantis spacecraft is revealed towering across the ' +
+      'field, its twin tiny on the horizon; at the last moment her brother\u2019s ' +
+      'small hand grips her wrist at the bottom corner. Audio: footsteps on ' +
+      'dirt, birdsong fading, a whispered \u201cPetra\u2026?\u201d, a low hum swelling.' +
+      MANTIS_STILL,
+  },
+  {
+    id: 'cuentista-p2',
+    first: 'p2-first.jpg',
+    last: '2-last.jpg',
+    prompt:
+      FPV +
+      'Through the teenage girl\u2019s eyes, the field ahead going soft and ' +
+      'unfocused as her mind drifts — then a slow, warm cross-dissolve into the ' +
+      'memory she chooses to keep: the two elderly women under the fringed ' +
+      'blanket against the old pecan tree at golden hour, pouring, clinking clay ' +
+      'mugs, leaning shoulder to shoulder, the gentle green snake gliding home ' +
+      'far behind. Keep both frames\u2019 flat cartoon style. Audio: wind fading ' +
+      'into warm breeze, soft laughter, the clink of mugs.',
+  },
+  {
+    id: 'cuentista-p3',
+    first: 'p3-first.jpg',
+    last: 'p3-last.jpg',
+    prompt:
+      FPV +
+      'Through the teenage girl\u2019s eyes: first glaring up at the bright comet ' +
+      'crossing the pale sky — the view holds on it, trembling slightly with ' +
+      'resentment — then the gaze drops back to ground level and keeps walking: ' +
+      'ahead, the quiet single line of walkers crosses the fresh-cut grass ' +
+      'toward the enormous parked mantis ship, her own arm reaching from the ' +
+      'bottom edge to rest a hand on her little brother\u2019s shoulder as he ' +
+      'walks just ahead. Audio: wind, her slow exhale, distant footsteps, a ' +
+      'low hum.' + MANTIS_STILL,
+  },
+  // ---- Javier, strict first person ----
+  {
+    id: 'cuentista-j1',
+    first: 'j1-first.jpg',
+    last: 'j1-last.jpg',
+    prompt:
+      FPV +
+      'Through the young boy\u2019s eyes at a child\u2019s low height: the view skids ' +
+      'to a halt at the forest\u2019s edge — a jolt, dust at the bottom edge — his ' +
+      'small hand shoots out and grabs his sister\u2019s wrist; then the view cranes ' +
+      'slowly, steeply upward until the enormous parked mantis spacecraft fills ' +
+      'the whole sky above. Audio: sneakers skidding on dirt, a sharp little ' +
+      'inhale, \u201cPetra\u2026?\u201d whispered, a deep resonant hum.' + MANTIS_STILL,
+  },
+  {
+    id: 'cuentista-j2',
+    first: 'j2-first.jpg',
+    last: 'javier-b2-last.jpg',
+    prompt:
+      FPV +
+      'Through the young boy\u2019s eyes while walking: he glances sideways and up ' +
+      'at his older sister half a step ahead — she has gone completely quiet, ' +
+      'her eyes far away; the view drifts gently closer as his small hand ' +
+      'tightens around hers at the bottom edge, and a faint warm light passes ' +
+      'across her quiet profile like a good memory moving through her. Audio: ' +
+      'wind over grass, two sets of soft footsteps, a distant low hum.' +
+      MANTIS_STILL,
+  },
+  {
+    id: 'cuentista-j3',
+    first: 'j3-first.jpg',
+    last: 'j3-last.jpg',
+    prompt:
+      FPV +
+      'Through the young boy\u2019s eyes inside the quiet walking line, holding his ' +
+      'sister\u2019s hand: the line moves steadily forward across the fresh-cut ' +
+      'grass, and as they arrive the gaze tilts steeply up — the parked mantis ' +
+      'spacecraft\u2019s chrome-and-crystal body and one planted crystalline leg ' +
+      'fill the sky overhead, the walkers passing tiny beneath. Audio: unhurried ' +
+      'footsteps in grass, wind, a deep hum growing closer.' + MANTIS_STILL,
   },
 ]
 

@@ -1,6 +1,9 @@
 node_modules
 dist
+.DS_Store
 .claude/
 .omc/
 .env
+.env.local
+.env.*.local
 server/generated/

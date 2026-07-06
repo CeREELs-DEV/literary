@@ -84,7 +84,12 @@ const CLIPS = [
       'revealing the vast green field as she joins her family and a few ' +
       'scientists walking in a quiet, orderly line — small as ants — toward the ' +
       'enormous parked chrome-and-crystal praying-mantis spacecraft, the comet ' +
-      'still overhead. Audio: wind over grass, distant unhurried footsteps, a ' +
+      'still overhead. The camera pull-back is a straight linear move with no ' +
+      'rotation: the parked ship slides into the frame edge already complete, ' +
+      'in its exact final pose and side angle from the last frame — it never ' +
+      'turns toward the camera, never unfolds, and is never seen from the ' +
+      'front. The comet stays a small bright comet and never changes shape. ' +
+      'Audio: wind over grass, distant unhurried footsteps, a ' +
       'long low hum from the ship.' + MANTIS_STILL,
   },
   // ---- Petra, strict first person ----
@@ -129,8 +134,11 @@ const CLIPS = [
       'ahead, the quiet single line of walkers crosses the fresh-cut grass ' +
       'toward the enormous parked mantis ship, her own arm reaching from the ' +
       'bottom edge to rest a hand on her little brother\u2019s shoulder as he ' +
-      'walks just ahead. Audio: wind, her slow exhale, distant footsteps, a ' +
-      'low hum.' + MANTIS_STILL,
+      'walks just ahead. The comet stays a small bright comet the whole time ' +
+      'and NEVER transforms into anything else; nothing flies or descends ' +
+      'from the sky; the ship appears only on the ground, already parked and ' +
+      'complete in its final pose, revealed as the gaze lowers. Audio: wind, ' +
+      'her slow exhale, distant footsteps, a low hum.' + MANTIS_STILL,
   },
   // ---- Javier, strict first person ----
   {
@@ -143,7 +151,11 @@ const CLIPS = [
       'to a halt at the forest\u2019s edge — a jolt, dust at the bottom edge — his ' +
       'small hand shoots out and grabs his sister\u2019s wrist; then the view cranes ' +
       'slowly, steeply upward until the enormous parked mantis spacecraft fills ' +
-      'the whole sky above. Audio: sneakers skidding on dirt, a sharp little ' +
+      'the whole sky above. During the whole upward tilt the ship stays firmly ' +
+      'planted on the ground in its exact parked pose seen from below \u2014 it is ' +
+      'NEVER airborne, never flying, and the sky contains only clouds and the ' +
+      'small comet; the view simply travels up the ship\u2019s planted legs to its ' +
+      'body. Audio: sneakers skidding on dirt, a sharp little ' +
       'inhale, \u201cPetra\u2026?\u201d whispered, a deep resonant hum.' + MANTIS_STILL,
   },
   {

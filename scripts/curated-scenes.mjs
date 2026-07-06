@@ -83,15 +83,19 @@ export const CURATED_SCENES = [
     status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. SCENE: THE CLEAN TABLE — THE BOY'S VIEW. This is ` +
-      `a strict FIRST-PERSON shot: the boy IS the camera, sitting at his own ` +
-      `clean table, so he must NOT appear anywhere in the frame — no second ` +
-      `boy at any table. Visible of him: ONLY his two hands at the bottom ` +
-      `edge, one holding the folded newspaper, one twirling the red pen. ` +
-      `Beyond the newspaper: the messy courtyard, and the girl in the blue ` +
-      `dress, far off, slowing down as she notices his table. The pen twirls ` +
-      `steadily, a little too steadily. Camera fixed. Mood: "don't look up — ` +
-      `she's coming closer." Audio: paper rustle, distant courtyard, ` +
-      `approaching footsteps.`,
+      `a strict FIRST-PERSON shot from where the boy sits: AT the clean table ` +
+      `UNDER the big tree, looking OUTWARD across the courtyard. The tree is ` +
+      `BEHIND the camera — no tree trunk in view, at most a few leaves ` +
+      `overhanging the very top edge of the frame. In front of the camera ` +
+      `there is NO table except a sliver of his own tabletop at the very ` +
+      `bottom edge — no clean table, no empty chairs, no wheelchair, no boy ` +
+      `anywhere in the frame. Visible of him: ONLY his two hands at the ` +
+      `bottom edge, one holding the folded newspaper, one twirling the red ` +
+      `pen. Beyond the newspaper: only the MESSY bird-stained tables of the ` +
+      `courtyard and the girl in the blue dress, far off, slowing down as she ` +
+      `notices his table. The pen twirls steadily, a little too steadily. ` +
+      `Camera fixed. Mood: "don't look up — she's coming closer." Audio: ` +
+      `paper rustle, distant courtyard, approaching footsteps.`,
   },
   {
     id: 'table-world',
@@ -131,14 +135,19 @@ export const CURATED_SCENES = [
     status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. SCENE: THE WHISPER — THE BOY'S VIEW. This is a ` +
-      `strict FIRST-PERSON shot: the boy IS the camera, so he must NOT appear ` +
-      `in the frame — only his hands. Close: the newsprint at frame bottom, ` +
-      `his fingers twirling the red pen at the edge. Beyond the paper, the ` +
-      `girl in the blue dress stands right in front of the table. A whispered ` +
-      `word crosses the paper — his fingers freeze around the pen mid-turn; ` +
-      `the newspaper lowers one centimeter, no more. Camera fixed. Mood: "one ` +
-      `word, and the pen forgets how to turn." Audio: paper rustle, whisper, ` +
-      `silence.`,
+      `strict FIRST-PERSON shot from his seat at the clean table: the boy IS ` +
+      `the camera, so he must NOT appear in the frame — only his hands and ` +
+      `the newsprint at the frame bottom, his fingers twirling the red pen at ` +
+      `the edge. The girl is VERY CLOSE: she stands at the opposite edge of ` +
+      `his table, barely an arm's length beyond the newspaper, leaning ` +
+      `slightly over the table toward him — close enough that a whisper ` +
+      `reaches. She is the ONLY person in the frame: this story has exactly ` +
+      `two children, and the boy is the camera, so besides his hands there ` +
+      `must be no other child or person anywhere. Her whispered word crosses ` +
+      `the paper — his fingers freeze ` +
+      `around the pen mid-turn; the newspaper lowers one centimeter, no more. ` +
+      `Camera fixed. Mood: "one word, and the pen forgets how to turn." ` +
+      `Audio: paper rustle, whisper, silence.`,
   },
   {
     id: 'whisper-world',
@@ -147,12 +156,14 @@ export const CURATED_SCENES = [
     status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. SCENE: THE WHISPER — THE WORLD'S VIEW. A calm ` +
-      `medium-wide shot from the side: the girl standing before the clean ` +
-      `table, the boy behind his raised newspaper, the red pen turning ` +
-      `between them like the scene's small clock. She says one soft word — ` +
-      `the pen stops, drifting leaves seem to pause, and the courtyard falls ` +
-      `gently quiet all at once. Camera still. Mood: "the world goes quiet ` +
-      `for one small word." Audio: wind fading out, a soft voice, calm.`,
+      `medium shot from the side of the clean table: the girl stands RIGHT AT ` +
+      `the table's edge, directly across from the boy, leaning slightly over ` +
+      `the table toward his raised newspaper — whisper-close, almost touching ` +
+      `distance. The red pen turns between them like the scene's small clock. ` +
+      `She says one soft word — the pen stops, drifting leaves seem to pause, ` +
+      `and the courtyard falls gently quiet all at once. Camera still. Mood: ` +
+      `"the world goes quiet for one small word." Audio: wind fading out, a ` +
+      `soft voice, calm.`,
   },
   // ---- Scene 3: The Green Glance ----
   {

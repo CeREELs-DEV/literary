@@ -4,6 +4,8 @@ import { describe, it, expect } from 'vitest'
 import { BOOKS } from '../src/books-data.js'
 import { CURATED_SCENES } from '../scripts/curated-scenes.mjs'
 
+const publicAssetPath = (url) => `public/${url.replace(/^\.?\//, '')}`
+
 describe('Matter of Perspective — books data', () => {
   it('offers the three sample books', () => {
     expect(Object.keys(BOOKS)).toEqual(['james', 'snicker', 'cuentista'])
@@ -34,6 +36,21 @@ describe('Matter of Perspective — books data', () => {
     expect(styles).toContain('.huntable')
     expect(main).toContain('function renderQuestions')
     expect(main).toContain('function bindPovInfo')
+  })
+
+  it('uses deploy-safe relative paths for GitHub Pages project hosting', () => {
+    const html = fs.readFileSync('index.html', 'utf8')
+    const config = fs.readFileSync('vite.config.js', 'utf8')
+    const source = fs.readFileSync('src/books-data.js', 'utf8')
+
+    expect(html).toContain('href="./src/styles.css"')
+    expect(html).toContain('src="./src/main.js"')
+    expect(html).not.toContain('href="/src/')
+    expect(html).not.toContain('src="/src/')
+    expect(config).toContain("base: './'")
+    expect(source).toContain('const asset =')
+    expect(source).not.toContain("video:'/curated/")
+    expect(source).not.toContain("poster:'/curated/")
   })
 
   it('adds setup, point-of-view info, and passage-owned questions for every book', () => {
@@ -80,10 +97,10 @@ describe('Matter of Perspective — books data', () => {
     for (const pov of snicker.povs) {
       for (const beat of snicker.beats) {
         const cell = snicker.cells[`${pov.key}|${beat.key}`]
-        expect(cell.video).toBe(`/curated/${beat.key}-${pov.key}.mp4`)
-        expect(cell.poster).toBe(`/curated/${beat.key}-${pov.key}.jpg`)
-        expect(fs.existsSync(`public${cell.video}`), cell.video).toBe(true)
-        expect(fs.existsSync(`public${cell.poster}`), cell.poster).toBe(true)
+        expect(cell.video.endsWith(`curated/${beat.key}-${pov.key}.mp4`)).toBe(true)
+        expect(cell.poster.endsWith(`curated/${beat.key}-${pov.key}.jpg`)).toBe(true)
+        expect(fs.existsSync(publicAssetPath(cell.video)), cell.video).toBe(true)
+        expect(fs.existsSync(publicAssetPath(cell.poster)), cell.poster).toBe(true)
       }
     }
   })
@@ -100,10 +117,10 @@ describe('Matter of Perspective — books data', () => {
     }
     for (const [key, id] of Object.entries(wired)) {
       const cell = james.cells[key]
-      expect(cell.video).toBe(`/curated/${id}.mp4`)
-      expect(cell.poster).toBe(`/curated/${id}.jpg`)
-      expect(fs.existsSync(`public${cell.video}`), cell.video).toBe(true)
-      expect(fs.existsSync(`public${cell.poster}`), cell.poster).toBe(true)
+      expect(cell.video.endsWith(`curated/${id}.mp4`)).toBe(true)
+      expect(cell.poster.endsWith(`curated/${id}.jpg`)).toBe(true)
+      expect(fs.existsSync(publicAssetPath(cell.video)), cell.video).toBe(true)
+      expect(fs.existsSync(publicAssetPath(cell.poster)), cell.poster).toBe(true)
       expect(typeof cell.svg).toBe('function')
     }
   })
@@ -123,8 +140,8 @@ describe('Matter of Perspective — books data', () => {
     }
     for (const [key, id] of Object.entries(wired)) {
       const cell = cuentista.cells[key]
-      expect(cell.video).toBe(`/curated/${id}.mp4`)
-      expect(cell.poster).toBe(`/curated/${id}.jpg`)
+      expect(cell.video.endsWith(`curated/${id}.mp4`)).toBe(true)
+      expect(cell.poster.endsWith(`curated/${id}.jpg`)).toBe(true)
       expect(typeof cell.svg).toBe('function') // fallback until/unless the film loads
     }
   })

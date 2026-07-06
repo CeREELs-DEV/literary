@@ -82,13 +82,16 @@ export const CURATED_SCENES = [
     viewpoint: 'JONAH',
     status: 'GENERATED',
     internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE CLEAN TABLE — THE BOY'S VIEW, from ` +
-      `behind his newspaper. The folded newspaper fills the lower edge of the ` +
-      `frame; beyond it, the messy courtyard — and the girl in the blue ` +
-      `dress, far off, slowing down as she notices his table. He pretends to ` +
-      `read; his red pen twirls steadily, a little too steadily. He does NOT ` +
-      `look up. Camera fixed. Mood: "don't look up — she's coming closer." ` +
-      `Audio: paper rustle, distant courtyard, approaching footsteps.`,
+      `8-second video, 16:9. SCENE: THE CLEAN TABLE — THE BOY'S VIEW. This is ` +
+      `a strict FIRST-PERSON shot: the boy IS the camera, sitting at his own ` +
+      `clean table, so he must NOT appear anywhere in the frame — no second ` +
+      `boy at any table. Visible of him: ONLY his two hands at the bottom ` +
+      `edge, one holding the folded newspaper, one twirling the red pen. ` +
+      `Beyond the newspaper: the messy courtyard, and the girl in the blue ` +
+      `dress, far off, slowing down as she notices his table. The pen twirls ` +
+      `steadily, a little too steadily. Camera fixed. Mood: "don't look up — ` +
+      `she's coming closer." Audio: paper rustle, distant courtyard, ` +
+      `approaching footsteps.`,
   },
   {
     id: 'table-world',
@@ -127,10 +130,11 @@ export const CURATED_SCENES = [
     viewpoint: 'JONAH',
     status: 'GENERATED',
     internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE WHISPER — THE BOY'S VIEW, from behind ` +
-      `his newspaper. Close: the newsprint blur at frame bottom, his fingers ` +
-      `twirling the red pen at the edge. Beyond the paper, the girl's blue ` +
-      `dress and canvas shoes stop right in front of the table. A whispered ` +
+      `8-second video, 16:9. SCENE: THE WHISPER — THE BOY'S VIEW. This is a ` +
+      `strict FIRST-PERSON shot: the boy IS the camera, so he must NOT appear ` +
+      `in the frame — only his hands. Close: the newsprint at frame bottom, ` +
+      `his fingers twirling the red pen at the edge. Beyond the paper, the ` +
+      `girl in the blue dress stands right in front of the table. A whispered ` +
       `word crosses the paper — his fingers freeze around the pen mid-turn; ` +
       `the newspaper lowers one centimeter, no more. Camera fixed. Mood: "one ` +
       `word, and the pen forgets how to turn." Audio: paper rustle, whisper, ` +

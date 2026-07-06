@@ -80,20 +80,31 @@ async function main() {
     }
     console.log(`producing ${scene.id} (${scene.viewpoint})...`)
     try {
-      // 1) The opening frame carries the style and the continuity.
-      const frameData = await paintOpeningFrame({
-        ai, scene, styleRefs, previousFrames: previousFrames.slice(-3),
-      })
+      // 1) The opening frame carries the style and the continuity. An
+      //    already-approved frame on disk is reused (delete the jpg to
+      //    force a repaint).
+      let frameData
+      if (fs.existsSync(jpg)) {
+        frameData = fs.readFileSync(jpg).toString('base64')
+        console.log(`  reusing frame /curated/${scene.id}.jpg`)
+      } else {
+        frameData = await paintOpeningFrame({
+          ai, scene, styleRefs, previousFrames: previousFrames.slice(-3),
+        })
+        fs.writeFileSync(jpg, Buffer.from(frameData, 'base64'))
+        console.log(`  ✓ frame /curated/${scene.id}.jpg`)
+      }
       const frameMime = sniffImageMime(frameData)
-      fs.writeFileSync(jpg, Buffer.from(frameData, 'base64'))
-      console.log(`  ✓ frame /curated/${scene.id}.jpg`)
 
       // 2) Omni animates that exact frame.
       const prompt =
         `The attached illustration is the FIRST FRAME of this shot — its art ` +
         `style, characters, and composition are the law: do not restyle, ` +
         `redraw, or add realism; no new objects, terrain, or characters may ` +
-        `appear; keep correct anatomy (two arms per person). ` +
+        `appear; keep correct anatomy (two arms per person). EVERY frame of ` +
+        `the video must keep exactly the first frame's art style — the same ` +
+        `bold flat outlines and flat solid colors from the first second to ` +
+        `the last; the style must never shift mid-shot. ` +
         `Animate it gently, ~8 seconds: ${scene.internalOmniPrompt}`
       await generateOmniClip({
         ai,

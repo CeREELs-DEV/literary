@@ -1,56 +1,41 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Imagination Player</title>
-    <link rel="stylesheet" href="/src/styles.css" />
-  </head>
-  <body>
-    <div id="app">
-      <header id="lab-header">
-        <h1>Curated Imagination Player</h1>
-      </header>
-
-      <!-- Reading first: the passage, undisturbed. No prompts, no generation,
-           no literary terms — just the text and, at its end, one button. -->
-      <main id="reader">
-        <article id="passage-page">
-          <h3 id="passage-book"></h3>
-          <p id="passage-text"></p>
-        </article>
-
-        <div id="after-passage">
-          <button id="open-player-btn" type="button">✨ See the imagined scenes</button>
-          <p class="hint">Three short films — the same paragraph, three different eyes.</p>
-        </div>
-      </main>
-
-      <!-- Imagination Player: pre-produced videos only. Students watch,
-           observe, and compare; nothing here generates anything. -->
-      <div id="player-overlay" class="hidden">
-        <div id="player-sheet" role="dialog" aria-modal="true">
-          <header id="sheet-header">
-            <h2>The same paragraph, three ways</h2>
-            <button id="close-player-btn" type="button">Back to reading</button>
-          </header>
-
-          <div id="viewpoint-tabs"></div>
-
-          <section id="scene-card">
-            <div id="scene-media"></div>
-            <p id="scene-interpretation"></p>
-            <div id="scene-anchors"></div>
-            <div id="scene-questions"></div>
-          </section>
-
-          <section id="compare-block">
-            <h4>Now compare the three</h4>
-            <ol id="compare-questions"></ol>
-          </section>
-        </div>
-      </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matter of Perspective</title>
+<link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="brandmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.6 10-6.6S22 12 22 12s-3.6 6.6-10 6.6S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>Matter of Perspective</span>
+    <span class="booklabel">Book</span>
+    <div class="booktabs" id="tabs">
+      <button class="booktab on" data-b="snicker">A Snicker of Magic</button>
+      <button class="booktab" data-b="james">James &amp; the Giant Peach</button>
+      <button class="booktab" data-b="cuentista">The Last Cuentista</button>
     </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  </div>
+
+  <div class="readercol"><div class="reader" id="reader"></div></div>
+
+  <div class="scenecol">
+    <div class="body">
+      <div class="btnrow" id="beatrow"></div>
+      <div class="playerwrap" id="player">
+        <span class="ribbon" id="ribbon">Video mockup</span>
+        <div class="bigplay" id="bigplay" aria-label="Play"><span class="tri"></span></div>
+      </div>
+      <div class="transport">
+        <button class="ppbtn" id="pp" aria-label="Play/pause"><span class="ic-play"></span><span class="ic-pause"><b></b><b></b></span></button>
+        <div class="seek" id="seek"><div class="track"></div><div class="fill" id="fill"></div><div class="head" id="head"></div></div>
+        <span class="tcode" id="tcode">0:00 / 0:08</span>
+      </div>
+      <div class="povseg" id="povrow"></div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
 </html>

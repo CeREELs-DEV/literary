@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matter of Perspective</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,400;1,7..72,500&display=swap');
+:root{--ink:#322F3A;--paperw:#FBF9F4;--butter:#EE9E22;--butter-d:#C0770F;--magic:#3FA96A;--red:#D6483A;--night:#EAE7F2;--vio:#6A4CE0;--vioDeep:#4A31AE;--sb-ink:#4A4238;--sb-paper:#F6F1E4;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Hanken Grotesk',sans-serif;background:var(--night);color:var(--ink);overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:3px solid var(--butter);outline-offset:2px;border-radius:6px}
+.stage{position:fixed;inset:0;display:grid;grid-template-columns:minmax(320px,42%) 1fr;grid-template-rows:auto 1fr;grid-template-areas:"topbar topbar" "reader scene"}
+@media(max-aspect-ratio:1/1){.stage{grid-template-columns:1fr;grid-template-rows:auto 56% 1fr;grid-template-areas:"topbar" "scene" "reader"}}
+
+/* ---- reader ---- */
+.readercol{position:relative;grid-area:reader;min-width:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;z-index:10;background:var(--paperw);box-shadow:14px 0 34px -18px rgba(40,30,80,.4);border-right:1.5px solid rgba(58,48,112,.14)}
+@media(max-aspect-ratio:1/1){.readercol{border-right:none;border-top:1.5px solid rgba(58,48,112,.14);box-shadow:0 -14px 34px -20px rgba(40,30,80,.42)}}
+.reader{position:relative;flex:1;min-height:0;overflow-y:auto;padding:16px clamp(20px,3vw,44px) 48px}
+.reader::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.24 0 0 0 0 0.18 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.chap{font-size:10px;font-weight:800;letter-spacing:3px;color:#8A6BC0;text-transform:uppercase;text-align:center}
+.passagename{font-family:'Literata',serif;font-weight:700;font-size:clamp(20px,2.4vw,28px);margin:8px 0 3px;text-align:center}
+.byline{margin-bottom:20px;text-align:center}
+.byline::after{content:"";display:block;width:74px;height:2px;margin:13px auto 0;background:linear-gradient(90deg,transparent,#D8D0EC 30%,#D8D0EC 70%,transparent);border-radius:2px}
+.excerpt{font-family:'Literata',serif;font-size:clamp(14.5px,1.5vw,17px);line-height:1.9;text-wrap:pretty}
+.excerpt p{margin-bottom:12px}
+.excerpt i{font-style:italic}
+.beatblock{position:relative;border-left:4px solid transparent;border-radius:6px;padding:8px 12px 2px 14px;margin:0 -14px 12px;cursor:pointer;transition:background .18s,border-color .18s}
+.beatblock .btag{display:inline-block;font-family:'Hanken Grotesk';font-size:9px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px;opacity:.85}
+.beatblock.b1{border-left-color:rgba(238,158,34,.55)}
+.beatblock.b1 .btag{background:rgba(238,158,34,.18);color:#9A6A0C}
+.beatblock.b2{border-left-color:rgba(63,169,106,.55)}
+.beatblock.b2 .btag{background:rgba(63,169,106,.16);color:#1F7A46}
+.beatblock.b3{border-left-color:rgba(106,76,224,.5)}
+.beatblock.b3 .btag{background:rgba(106,76,224,.13);color:var(--vioDeep)}
+.beatblock:hover{background:rgba(58,48,112,.05)}
+.beatblock.on.b1{background:rgba(238,158,34,.12)}
+.beatblock.on.b2{background:rgba(63,169,106,.10)}
+.beatblock.on.b3{background:rgba(106,76,224,.09)}
+.between{opacity:.55;padding:0 12px 0 18px;margin:0 -14px 12px}
+
+/* ---- scene column ---- */
+.scenecol{grid-area:scene;display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--paperw);overflow-y:auto}
+.scenehead{display:flex;align-items:center;gap:8px;padding:12px 18px 6px;flex-shrink:0;flex-wrap:wrap}
+.topbar{grid-area:topbar;z-index:20;display:flex;align-items:center;gap:10px;padding:11px clamp(18px,2.4vw,28px);background:var(--paperw);border-bottom:1.5px solid rgba(58,48,112,.14);box-shadow:0 6px 18px -12px rgba(40,30,80,.4)}
+.brandmark{display:inline-flex;align-items:center;gap:8px;font-family:'Literata',serif;font-style:italic;font-weight:600;font-size:15px;color:var(--vioDeep);padding-right:8px;margin-right:2px;border-right:1.5px solid rgba(58,48,112,.14)}
+.brandmark svg{width:19px;height:19px}
+.booklabel{font-size:9.5px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:#9A937F;margin-right:2px}
+.booktabs{display:flex;gap:8px;flex-wrap:wrap}
+.booktab{display:inline-flex;align-items:center;min-height:34px;padding:0 15px;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:.2px;color:#5A5346;background:#FFF;border:1.5px solid rgba(70,60,40,.2);box-shadow:0 2px 0 rgba(70,60,40,.1);transition:.16s;cursor:pointer}
+.booktab:hover{border-color:rgba(106,76,224,.3)}
+.booktab.on{color:var(--vioDeep);border-color:rgba(106,76,224,.5);background:rgba(106,76,224,.09);box-shadow:0 2px 0 rgba(106,76,224,.28)}
+.hspace{flex:1}
+.dotgrid{display:grid;grid-template-columns:repeat(3,7px);gap:3px}
+.dotgrid i{width:7px;height:7px;border-radius:2px;background:rgba(238,158,34,.22)}
+.dotgrid i.on{background:var(--butter-d)}
+
+.body{padding:4px 18px 20px;display:flex;flex-direction:column;gap:10px}
+.playerwrap{position:relative;aspect-ratio:16/9;background:#1D1826;border-radius:10px 10px 0 0;overflow:hidden;box-shadow:0 0 0 1px rgba(60,50,40,.3),0 0 0 6px #FFF,0 0 0 7.5px rgba(60,50,40,.2);flex-shrink:0}
+.playerwrap svg{position:absolute;inset:0;width:100%;height:100%}
+.ribbon{position:absolute;top:10px;left:10px;z-index:4;font-size:9px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:#FFF;background:rgba(29,24,38,.72);border:1px solid rgba(255,255,255,.28);border-radius:99px;padding:4px 10px;backdrop-filter:blur(2px)}
+.bigplay{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;background:rgba(20,14,30,.12);transition:background .2s,opacity .2s;cursor:pointer}
+.bigplay:hover{background:rgba(20,14,30,.22)}
+.bigplay .tri{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px -8px rgba(0,0,0,.55);transition:transform .16s}
+.bigplay:hover .tri{transform:scale(1.07)}
+.bigplay .tri::after{content:"";display:block;margin-left:5px;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #241833}
+.playerwrap.playing .bigplay{opacity:0;pointer-events:none}
+
+/* transport bar */
+.transport{display:flex;align-items:center;gap:11px;padding:9px 13px;background:#221C2E;border-radius:0 0 10px 10px;box-shadow:0 0 0 1px rgba(60,50,40,.3),0 0 0 6px #FFF,0 0 0 7.5px rgba(60,50,40,.2),0 14px 28px -14px rgba(40,30,80,.4);margin-bottom:2px}
+.ppbtn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;transition:background .16s;cursor:pointer}
+.ppbtn:hover{background:rgba(255,255,255,.2)}
+.ppbtn .ic-play{width:0;height:0;margin-left:3px;border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent #FBF9F4}
+.ppbtn .ic-pause{display:none;gap:4px}
+.ppbtn .ic-pause b{display:block;width:4px;height:15px;border-radius:1.5px;background:#FBF9F4}
+.playing .ppbtn .ic-play{display:none}
+.playing .ppbtn .ic-pause{display:flex}
+.seek{flex:1;position:relative;height:16px;display:flex;align-items:center;cursor:pointer}
+.seek .track{position:absolute;left:0;right:0;height:5px;border-radius:99px;background:rgba(255,255,255,.18)}
+.seek .fill{position:absolute;left:0;height:5px;border-radius:99px;background:var(--butter);width:0}
+.seek .head{position:absolute;width:13px;height:13px;border-radius:50%;background:#FBF9F4;box-shadow:0 1px 4px rgba(0,0,0,.4);left:0;transform:translateX(-50%);transition:transform .1s}
+.seek:hover .head{transform:translateX(-50%) scale(1.15)}
+.tcode{flex-shrink:0;font-size:11px;font-weight:800;letter-spacing:.4px;color:#CFC7DE;font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
+
+
+.rowlbl{font-size:9.5px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;color:#9A937F;margin:2px 2px -6px}
+.btnrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+/* POV = lens switcher attached under the player */
+.povseg{display:flex;align-items:stretch;gap:4px;padding:5px;margin:-2px auto 0;width:min(100%,560px);background:#FFF;border:1.5px solid rgba(58,48,112,.15);border-radius:14px;box-shadow:0 3px 12px -8px rgba(40,30,80,.35)}
+.seglbl{font-size:9px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;color:#9A937F;align-self:center;padding:0 10px 0 8px;white-space:nowrap}
+.seg{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border-radius:9px;font-size:10.5px;font-weight:800;color:#5A5346;line-height:1.15;text-align:center;transition:.15s;cursor:pointer}
+.seg svg{width:16px;height:16px;stroke:currentColor;flex-shrink:0}
+.seg:hover{background:rgba(106,76,224,.08)}
+.seg.on{background:var(--vioDeep);color:#FBF9F4}
+/* beats = moment cards */
+.beatbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 6px 8px;border-radius:12px;background:#FFF;border:2px solid rgba(58,48,112,.13);box-shadow:0 2px 0 rgba(70,60,40,.08);font-weight:800;transition:.16s;text-align:center;cursor:pointer}
+.beatbtn .bn{font-size:9px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;opacity:.7}
+.beatbtn .bl{font-size:11px;line-height:1.2;color:#5A5346;text-transform:uppercase;letter-spacing:.5px;font-weight:900}
+.beatbtn.k1.on{border-color:var(--butter-d);background:rgba(238,158,34,.09);box-shadow:0 2px 0 rgba(238,158,34,.3)}
+.beatbtn.k2.on{border-color:var(--magic);background:rgba(63,169,106,.08);box-shadow:0 2px 0 rgba(63,169,106,.3)}
+.beatbtn.k3.on{border-color:var(--vio);background:rgba(106,76,224,.07);box-shadow:0 2px 0 rgba(106,76,224,.28)}
+.beatbtn.k1.on .bl{color:#9A6A0C}.beatbtn.k2.on .bl{color:#1F7A46}.beatbtn.k3.on .bl{color:var(--vioDeep)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="topbar">
+    <span class="brandmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.6 10-6.6S22 12 22 12s-3.6 6.6-10 6.6S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>Matter of Perspective</span>
+    <span class="booklabel">Book</span>
+    <div class="booktabs" id="tabs">
+      <button class="booktab on" data-b="snicker">A Snicker of Magic</button>
+      <button class="booktab" data-b="james">James &amp; the Giant Peach</button>
+      <button class="booktab" data-b="cuentista">The Last Cuentista</button>
+    </div>
+  </div>
+
+  <div class="readercol"><div class="reader" id="reader"></div></div>
+
+  <div class="scenecol">
+    <div class="body">
+      <div class="btnrow" id="beatrow"></div>
+      <div class="playerwrap" id="player">
+        <span class="ribbon">Video mockup</span>
+        <div class="bigplay" id="bigplay" aria-label="Play"><span class="tri"></span></div>
+      </div>
+      <div class="transport">
+        <button class="ppbtn" id="pp" aria-label="Play/pause"><span class="ic-play"></span><span class="ic-pause"><b></b><b></b></span></button>
+        <div class="seek" id="seek"><div class="track"></div><div class="fill" id="fill"></div><div class="head" id="head"></div></div>
+        <span class="tcode" id="tcode">0:00 / 0:08</span>
+      </div>
+      <div class="povseg" id="povrow"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const INK='#4A4238', PAPER='#F6F1E4';
+
+/* ============ storyboard frame helpers ============ */
+function frame(inner,mode,accentGlow){
+  let fx='';
+  if(mode==='fpv') fx='<rect width="480" height="270" fill="url(#vg)"/>';
+  if(mode==='wide') fx='<rect x="0" y="0" width="480" height="26" fill="#241f2e"/><rect x="0" y="244" width="480" height="26" fill="#241f2e"/>';
+  const glow=accentGlow?'<ellipse cx="240" cy="30" rx="260" ry="80" fill="'+accentGlow+'" opacity=".16"/>':'';
+  return '<svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+   +'<defs><radialGradient id="vg" cx="0.5" cy="0.5" r="0.72"><stop offset="0.62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#12101a" stop-opacity="0.62"/></radialGradient></defs>'
+   +'<rect width="480" height="270" fill="'+PAPER+'"/>'+glow+inner+fx+'</svg>';
+}
+/* simple ink silhouette person: standing */
+function person(x,y,h,extra){ // y = ground line, h = height
+  const r=h*0.14, cy=y-h+r;
+  return '<g fill="'+INK+'" opacity=".88"><circle cx="'+x+'" cy="'+cy+'" r="'+r+'"/>'
+   +'<path d="M'+(x-r*1.1)+' '+y+' Q'+(x-r*1.25)+' '+(cy+r*1.2)+' '+x+' '+(cy+r*1.1)+' Q'+(x+r*1.25)+' '+(cy+r*1.2)+' '+(x+r*1.1)+' '+y+' Z"/>'+(extra||'')+'</g>';
+}
+/* seated-behind-table torso */
+function seated(x,y,h){const r=h*.17,cy=y-h+r;
+  return '<g fill="'+INK+'" opacity=".88"><circle cx="'+x+'" cy="'+cy+'" r="'+r+'"/><path d="M'+(x-r*1.5)+' '+y+' Q'+x+' '+(cy+r*.9)+' '+(x+r*1.5)+' '+y+' Z"/></g>';}
+function tableSide(x,y,w){return '<g stroke="'+INK+'" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"><path d="M'+x+' '+y+' h'+w+'"/><path d="M'+(x+14)+' '+y+' l-12 34 M'+(x+w-14)+' '+y+' l12 34"/></g>';}
+function speechArcs(x,y,flip){const s=flip?-1:1;return '<g stroke="'+INK+'" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".8"><path d="M'+x+' '+y+' q'+(8*s)+' -4 '+(6*s)+' -12"/><path d="M'+(x+6*s)+' '+(y+4)+' q'+(12*s)+' -6 '+(10*s)+' -18"/></g>';}
+function fpvHand(x,y,flip){const s=flip?-1:1;return '<path d="M'+x+' 270 q'+(-6*s)+' -26 '+(10*s)+' -34 q'+(20*s)+' -8 '+(30*s)+' 6 q'+(8*s)+' 12 '+(2*s)+' 28 z" fill="'+INK+'" opacity=".9"/>';}
+
+/* Snicker bits */
+const NEON='#39F06B';
+function newsSheet(x,y,w,h,rot){return '<g transform="rotate('+(rot||0)+' '+(x+w/2)+' '+(y+h/2)+')"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="#FFFDF4" stroke="'+INK+'" stroke-width="3"/><path d="M'+(x+w/2)+' '+(y+4)+' v'+(h-8)+'" stroke="'+INK+'" stroke-width="1.6" opacity=".6"/><g stroke="'+INK+'" stroke-width="2" opacity=".55">'+[0,1,2,3].map(i=>'<path d="M'+(x+8)+' '+(y+12+i*10)+' h'+(w/2-16)+' M'+(x+w/2+8)+' '+(y+12+i*10)+' h'+(w/2-16)+'"/>').join('')+'</g></g>';}
+function villainGhost(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')" fill="none" stroke="'+INK+'" stroke-width="2.6" stroke-dasharray="6 5" opacity=".55"><path d="M0 -34 q-30 10 -36 78 q36 12 72 0 q-6 -68 -36 -78"/><circle cx="0" cy="-44" r="17"/><path d="M-14 -48 h28"/><path d="M-10 -34 q10 6 20 0 M-10 -34 q-8 1 -11 -4 M10 -34 q8 1 11 -4"/></g>';}
+function eyesBig(cx,cy,gap,r,col){return '<g><ellipse cx="'+(cx-gap)+'" cy="'+cy+'" rx="'+(r*1.5)+'" ry="'+r+'" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><ellipse cx="'+(cx+gap)+'" cy="'+cy+'" rx="'+(r*1.5)+'" ry="'+r+'" fill="#fff" stroke="'+INK+'" stroke-width="3.5"/><circle cx="'+(cx-gap)+'" cy="'+cy+'" r="'+(r*.62)+'" fill="'+col+'"/><circle cx="'+(cx+gap)+'" cy="'+cy+'" r="'+(r*.62)+'" fill="'+col+'"/><circle cx="'+(cx-gap)+'" cy="'+cy+'" r="'+(r*.28)+'" fill="#221"/><circle cx="'+(cx+gap)+'" cy="'+cy+'" r="'+(r*.28)+'" fill="#221"/></g>';}
+
+/* James bits */
+function grasshopper(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')" fill="'+INK+'" opacity=".88"><ellipse cx="0" cy="0" rx="34" ry="16"/><circle cx="30" cy="-12" r="10"/><path d="M-6 8 l-16 26 l10 2 M12 8 l-4 30 M-20 -8 q-22 -12 -30 -2" stroke="'+INK+'" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M34 -18 q10 -10 18 -8" stroke="'+INK+'" stroke-width="2.5" fill="none"/></g>';}
+function spider(x,y,s){let legs='';for(let i=0;i<4;i++){const a=18+i*16;legs+='<path d="M-10 0 q-26 '+(-14+i*9)+' -44 '+(-26+i*14)+'" /><path d="M10 0 q26 '+(-14+i*9)+' 44 '+(-26+i*14)+'"/>';}
+  return '<g transform="translate('+x+' '+y+') scale('+s+')"><g stroke="'+INK+'" stroke-width="4" fill="none" stroke-linecap="round" opacity=".88">'+legs+'</g><ellipse cx="0" cy="4" rx="20" ry="17" fill="'+INK+'" opacity=".92"/><circle cx="0" cy="-16" r="10" fill="'+INK+'" opacity=".92"/></g>';}
+function ladybug(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')"><path d="M-26 0 a26 22 0 0 1 52 0 z" fill="#C24438" stroke="'+INK+'" stroke-width="3"/><path d="M0 -22 v22" stroke="'+INK+'" stroke-width="2.5"/><circle cx="-12" cy="-8" r="3.4" fill="'+INK+'"/><circle cx="12" cy="-8" r="3.4" fill="'+INK+'"/><circle cx="-6" cy="-15" r="3" fill="'+INK+'"/><circle cx="7" cy="-16" r="3" fill="'+INK+'"/><circle cx="0" cy="-27" r="7" fill="'+INK+'"/></g>';}
+function centipede(x,y,s){let seg='';for(let i=0;i<6;i++){seg+='<circle cx="'+(i*16)+'" cy="'+(i%2?-4:0)+'" r="9"/>';}
+  return '<g transform="translate('+x+' '+y+') scale('+s+')" fill="'+INK+'" opacity=".85">'+seg+'<circle cx="-14" cy="0" r="11"/><g stroke="'+INK+'" stroke-width="2.4"><path d="M0 8 l-3 10 M16 6 l-2 10 M32 8 l-3 10 M48 6 l-2 10 M64 8 l-3 10" fill="none"/></g></g>';}
+function boyCower(x,y,h){const r=h*.15,cy=y-h+r;return '<g fill="'+INK+'" opacity=".9"><circle cx="'+x+'" cy="'+cy+'" r="'+r+'"/><path d="M'+(x-r*1.3)+' '+y+' Q'+(x-r*.6)+' '+(cy+r)+' '+(x+r*.4)+' '+(cy+r*.8)+' Q'+(x+r*1.4)+' '+(cy+r*1.6)+' '+(x+r*1.1)+' '+y+' Z"/></g>'
+  +'<g stroke="'+INK+'" stroke-width="2" fill="none" opacity=".55"><path d="M'+(x-r*2.4)+' '+(cy)+' q-4 5 0 10 M'+(x-r*3)+' '+(cy+6)+' q-4 5 0 10"/></g>';}
+function laughArcs(x,y){return '<g stroke="'+INK+'" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".8"><path d="M'+x+' '+y+' q6 -8 14 -6 M'+(x+4)+' '+(y+10)+' q8 -8 18 -5 M'+(x-2)+' '+(y-10)+' q5 -7 12 -6"/></g>';}
+function boot(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')"><path d="M0 0 v-26 h12 v18 h16 q6 4 0 8 z" fill="'+INK+'" opacity=".9"/></g>';}
+
+/* Cuentista bits */
+function pine(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')" fill="'+INK+'" opacity=".82"><path d="M0 0 L-20 44 L20 44 Z"/><path d="M0 24 L-26 74 L26 74 Z"/><rect x="-4" y="74" width="8" height="14"/></g>';}
+function trunk(x,h){return '<rect x="'+x+'" y="0" width="'+(h||16)+'" height="270" fill="'+INK+'" opacity=".8" rx="4"/>';}
+function lightShaft(x,w,col){return '<path d="M'+x+' 0 L'+(x+w)+' 0 L'+(x+w+70)+' 270 L'+(x+70)+' 270 Z" fill="'+col+'" opacity=".2"/>';}
+function mantisShip(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')"><ellipse cx="0" cy="0" rx="70" ry="20" fill="'+INK+'" opacity=".9"/><circle cx="62" cy="-16" r="14" fill="'+INK+'" opacity=".9"/><path d="M-30 -8 q-30 -34 -14 -58 M6 -12 q-6 -40 18 -56" stroke="'+INK+'" stroke-width="6" fill="none" stroke-linecap="round" opacity=".9"/><path d="M-40 16 l-16 34 M-6 20 l-4 36 M30 16 l14 34" stroke="'+INK+'" stroke-width="7" fill="none" stroke-linecap="round" opacity=".9"/><path d="M56 -28 q6 -10 2 -18 M70 -26 q8 -8 6 -18" stroke="'+INK+'" stroke-width="3" fill="none" opacity=".8"/></g>';}
+function comet(x,y){return '<g opacity=".85"><circle cx="'+x+'" cy="'+y+'" r="7" fill="#D6483A"/><path d="M'+x+' '+y+' q-40 -12 -78 -8" stroke="#D6483A" stroke-width="4" fill="none" stroke-linecap="round" opacity=".55"/><path d="M'+x+' '+(y+4)+' q-30 -4 -56 2" stroke="#EE9E22" stroke-width="3" fill="none" stroke-linecap="round" opacity=".5"/></g>';}
+function nest(x,y,s){return '<g transform="translate('+x+' '+y+') scale('+s+')"><path d="M-22 0 q22 14 44 0 l-4 10 q-18 10 -36 0 z" fill="'+INK+'" opacity=".85"/><circle cx="-8" cy="-5" r="4.5" fill="'+INK+'"/><circle cx="2" cy="-6" r="4.5" fill="'+INK+'"/><circle cx="12" cy="-4" r="4.5" fill="'+INK+'"/><path d="M-10 -9 l2 -4 M0 -10 l2 -4" stroke="'+INK+'" stroke-width="1.6"/></g>';}
+function marchLine(x0,y0,x1,y1,n){let out='';for(let i=0;i<n;i++){const t=i/(n-1),x=x0+(x1-x0)*t,y=y0+(y1-y0)*t,h=10+t*16;out+=person(x,y,h);}return out;}
+
+/* ============ BOOKS DATA ============ */
+const BOOKS={
+snicker:{
+  passage:'The Beedle', book:'A Snicker of Magic', author:'Natalie Lloyd', chap:'Chapter 5',
+  povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'fel',label:"Felicity",icon:'eye'},{key:'boy',label:"The Beedle",icon:'eye'}],
+  beats:[{key:'b1',n:'Beat 1',label:'The approach'},{key:'b2',n:'Beat 2',label:'The password'},{key:'b3',n:'Beat 3',label:'The invitation'}],
+  excerpt:`
+   <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; The approach</span>
+    <p>"Uh &hellip; the Beedle?" I asked. And then I immediately felt stupid for asking, because nothing about this kid looked like a Beedle. I hoped a character called the Beedle would at least have a cape and a mask and a mustache that twirled into curlicues at the edges. I expected a dastardly villain of some sort.</p>
+    <p>But the boy sitting at the bird-poopless table looked &hellip; <i>normal</i>. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of messy-spiky blond hair that reminded me of a crown. He didn't look at me.</p></div>
+   <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The password</span>
+    <p>"Pumpernickel?" I whispered.</p>
+    <p>The boy glanced up then. His eyes were the greenest green I'd ever seen, like somebody had taken a neon marker and colored them in just before I walked up to him and called him a Beedle.</p>
+    <p>He sighed. "I can't believe I'm about to do this."</p>
+    <p>I glanced around nervously. "Do what?"</p></div>
+   <div class="beatblock b3" data-beat="2"><span class="btag">Beat 3 &middot; The invitation</span>
+    <p>He folded his newspaper and smiled at me. My heart kicked <i>YES!</i> as strong as a mule kick. My heart had never said yes over a smile before.</p>
+    <p>He lowered his voice to a whisper. "But I'm the Beedle, too, sometimes, to those who need me. You definitely need the Beedle, Flea. You got time to talk?"</p></div>`,
+  cells:{
+   'fel|b1':{notes:"First-person, Felicity. Her imagined caped villain hangs ghost-like over the real view, then dissolves: an ordinary boy behind a picnic table, reading, not looking up.",
+    svg:()=>frame(tableSide(150,190,220)+seated(268,190,84)+newsSheet(226,138,84,52,-6)+villainGhost(120,140,1.05),'fpv')},
+   'boy|b1':{notes:"First-person, the Beedle. Newsprint fills the frame — he will not look up. A girl's voice says his secret name from somewhere beyond the top edge of the paper.",
+    svg:()=>frame(newsSheet(60,60,360,230,-2)+speechArcs(72,44,false)+'<text x="96" y="42" font-family="Literata,serif" font-style="italic" font-size="17" fill="'+INK+'" opacity=".8">&hellip;the Beedle?</text>','fpv')},
+   'wide|b1':{notes:"Wide shot. A girl hovers a few steps from a picnic table, mid-question. Behind the table: a boy absorbed in his newspaper, red pen twirling. Distance between them is the subject.",
+    svg:()=>frame(person(96,224,96,speechArcs(118,150,false))+tableSide(210,196,220)+seated(330,196,88)+newsSheet(292,146,80,48,-5),'wide')},
+   'fel|b2':{notes:"First-person, Felicity. The newspaper drops and two impossibly green eyes lock onto camera — neon-marker green, the whole frame's only color.",
+    svg:()=>frame(newsSheet(120,190,240,84,0)+eyesBig(240,120,58,34,NEON),'fpv','#39F06B')},
+   'boy|b2':{notes:"First-person, the Beedle. Over the top edge of the paper: a nervous girl, hands knotted, whispering the code word. Hold on her while he decides.",
+    svg:()=>frame(newsSheet(40,196,400,80,0)+person(240,196,120,speechArcs(214,108,true))+'<text x="150" y="70" font-family="Literata,serif" font-style="italic" font-size="16" fill="'+INK+'" opacity=".8">pumpernickel?</text>','fpv')},
+   'wide|b2':{notes:"Wide shot. Two kids locked eye-to-eye over a folded newspaper — a dotted sightline joins them across the table. Nobody else in the world.",
+    svg:()=>frame(person(110,222,96)+tableSide(200,196,220)+seated(330,196,88)+'<path d="M136 150 L316 128" stroke="'+INK+'" stroke-width="2.5" stroke-dasharray="3 7" opacity=".65"/>','wide')},
+   'fel|b3':{notes:"First-person, Felicity. His smile lands; a heart slams a mule-kick YES — quick cutaway flash of the kick, then back to the smile.",
+    svg:()=>frame(seated(240,230,140)+'<path d="M212 172 q28 22 56 0" stroke="'+PAPER+'" stroke-width="5" fill="none" stroke-linecap="round"/>'+'<g transform="translate(392 64)"><path d="M0 10 c-9 -12 -27 -3 -23 11 c3 10 15 16 23 22 c8 -6 20 -12 23 -22 c4 -14 -14 -23 -23 -11 z" fill="#C24438" stroke="'+INK+'" stroke-width="2.5"/><path d="M-32 6 l-10 -7 M-34 20 l-12 1 M-30 32 l-9 7 M32 6 l10 -7 M34 20 l12 1 M30 32 l9 7" stroke="#C24438" stroke-width="3.5" stroke-linecap="round"/></g>','fpv','#EE9E22')},
+   'boy|b3':{notes:"First-person, the Beedle. His own hand pushes the folded paper aside at the bottom of frame; the girl leans in as his whisper pulls her closer. He's committing.",
+    svg:()=>frame(person(240,210,132)+newsSheet(300,216,110,54,8)+fpvHand(120,270,false)+speechArcs(198,250,true),'fpv')},
+   'wide|b3':{notes:"Wide shot. Two heads leaning together across the picnic table, a whisper passing between them — a secret changing hands in broad daylight.",
+    svg:()=>frame(person(160,224,100)+tableSide(200,196,220)+'<g transform="rotate(8 330 160)">'+seated(330,200,92)+'</g><path d="M226 132 q14 -10 28 0" stroke="'+INK+'" stroke-width="2.4" fill="none" stroke-dasharray="2 5" opacity=".7"/>','wide')}
+  }
+},
+james:{
+  passage:'Aren\u2019t you hungry?', book:'James and the Giant Peach', author:'Roald Dahl', chap:'Chapter 11',
+  povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'james',label:"James",icon:'eye'},{key:'bugs',label:"The insects",icon:'eye'}],
+  beats:[{key:'b1',n:'Beat 1',label:'\u201cI\u2019m hungry!\u201d'},{key:'b2',n:'Beat 2',label:'One of us'}],
+  excerpt:`
+   <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; "I'm hungry!"</span>
+    <p>Every one of these "creatures" was at least as big as James himself, and in the strange greenish light that shone down from somewhere in the ceiling, they were absolutely terrifying to behold.</p>
+    <p>"I'm hungry!" the Spider announced suddenly, staring hard at James.</p>
+    <p>"<i>I'm</i> famished!" the Old-Green-Grasshopper said. "So am <i>I</i>!" the Ladybug cried. The Centipede sat up a little straighter on the sofa. "<i>Everyone's</i> famished!" he said. "We need food!"</p>
+    <p>Four pairs of round black glassy eyes were all fixed upon James. There was a long pause &mdash; and a long silence.</p>
+    <p>The Spider (who happened to be a female spider) opened her mouth and ran a long black tongue delicately over her lips. "Aren't <i>you</i> hungry?" she asked suddenly, leaning forward and addressing herself to James.</p>
+    <p>Poor James was backed up against the far wall, shivering with fright and much too terrified to answer.</p></div>
+   <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; One of us</span>
+    <p>"What's the matter with you?" the Old-Green-Grasshopper asked. "You look positively ill!"</p>
+    <p>"He looks as though he's going to faint any second," the Centipede said.</p>
+    <p>"Oh, my goodness, the poor thing!" the Ladybug cried. "I do believe he thinks it's <i>him</i> that we are wanting to eat!"</p>
+    <p>There was a roar of laughter from all sides. "Oh dear, oh dear!" they said. "What an awful thought!"</p>
+    <p>"You mustn't be frightened," the Ladybug said kindly. "We wouldn't <i>dream</i> of hurting you. You are one of <i>us</i> now, didn't you know that? You are one of the crew. We're all in the same boat."</p></div>`,
+  cells:{
+   'james|b1':{notes:"First-person, James. One continuous shot: the room in sickly greenish light \u2014 grasshopper, ladybug, centipede, every one as big as him \u2014 then the Spider leans in, the long black tongue crosses her lips, and \u201chungry\u201d lands like a verdict. Wall at his back.",
+    svg:()=>frame(grasshopper(80,150,1)+ladybug(408,150,1.1)+centipede(388,238,.9)+spider(230,160,2.2)+'<path d="M218 184 q12 11 26 1" stroke="#C24438" stroke-width="4.5" fill="none" stroke-linecap="round"/>'+speechArcs(316,124,false),'fpv','#3FA96A')},
+   'bugs|b1':{notes:"First-person, the insects. Honest hospitality: everyone's famished and the guest is invited. But the small boy just shivers against the far wall \u2014 why does he look ill?",
+    svg:()=>frame(boyCower(240,232,100)+'<text x="196" y="86" font-family="Literata,serif" font-style="italic" font-size="20" fill="'+INK+'" opacity=".85">Aren\u2019t you hungry?</text>'+speechArcs(180,92,true),'fpv','#3FA96A')},
+   'wide|b1':{notes:"Wide shot \u2014 the only view where the joke is visible. The huge creatures lean hungrily from the right; James is flattened against the left wall. One sentence, two opposite meanings, one frame.",
+    svg:()=>frame(boyCower(66,228,92)+spider(340,170,1.6)+grasshopper(440,200,.95)+'<path d="M284 150 L120 160" stroke="'+INK+'" stroke-width="2.4" stroke-dasharray="3 7" opacity=".6"/>','wide','#3FA96A')},
+   'james|b2':{notes:"First-person, James. The room erupts \u2014 but the laughter is warm. The Ladybug comes close and kind: \u201cyou are one of us now.\u201d Fear drains out of the frame; the light warms.",
+    svg:()=>frame(ladybug(240,190,2.4)+laughArcs(96,90)+laughArcs(380,100)+laughArcs(330,200),'fpv','#EE9E22')},
+   'bugs|b2':{notes:"First-person, the insects. Fond disbelief \u2014 \u201cwhat an awful thought!\u201d The boy unclenches before their eyes: shoulders drop, chin lifts, the first small smile.",
+    svg:()=>frame(person(240,236,110)+laughArcs(140,110)+laughArcs(340,110),'fpv','#EE9E22')},
+   'wide|b2':{notes:"Wide shot. The whole room loosens with laughter, and the gap between James and the creatures finally closes \u2014 he steps toward them as the Ladybug's line lands: one of the crew, all in the same boat.",
+    svg:()=>frame(person(140,226,88)+'<path d="M162 190 l30 -4" stroke="'+INK+'" stroke-width="2.4" stroke-dasharray="2 5" opacity=".6"/>'+centipede(250,222,1.2)+ladybug(330,206,1.3)+laughArcs(300,110)+laughArcs(180,120)+grasshopper(420,180,.9),'wide','#EE9E22')}
+  }
+},
+cuentista:{
+  passage:'Leaving Earth', book:'The Last Cuentista', author:'Donna Barba Higuera', chap:'Chapter 2',
+  povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'petra',label:"Petra",icon:'eye'},{key:'javier',label:"Javier",icon:'eye'}],
+  beats:[{key:'b1',n:'Beat 1',label:'The ship'},{key:'b2',n:'Beat 2',label:'The memory'},{key:'b3',n:'Beat 3',label:'The march'}],
+  excerpt:`
+   <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; The ship</span>
+    <p>We continue to the ship along the path that could be any hiking trail. It's the least official final exodus off Earth you could imagine. My parents told me that chatter tracking showed too many fringe and conspiracy groups suspecting something was up out here. Turns out they were right. My little brother, Javier, skids to a stop when we emerge from the camouflage of the cedar canopy to an open field of green. A monstrous ship resembling a stainless-steel-and-crystal praying mantis comes into view.</p>
+    <p>"Petra &hellip;?" He clenches my wrist.</p>
+    <p>At the opposite end of the field sits an exact replica of our ship. So far away, it looks half the size of the behemoth in front of us. With only two ships left, I know one is already gone. Dad said they lost contact when the final ping came as they approached Alpha Centauri.</p>
+    <p>"It's okay." I urge Javier on, even though I want to run back into the forest too.</p></div>
+   <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The memory</span>
+    <p>I think of Lita and my teachers and my classmates, and I wonder what they're doing right now. I don't want to imagine them being so afraid they'd try to hide from something they can't hide from.</p>
+    <p>Instead, I picture Lita and T&iacute;a Berta lying under the red-and-black fringed blanket, drinking coffee with "secret sauce" as they watch the nagual snake come home.</p>
+    <p>"Berta! This isn't the time to be stingy." Lita would tip the brown glass bottle, pouring rich liquid of the same color into her coffee cup.</p>
+    <p>"I suppose you're right," T&iacute;a Berta replies. "We won't have another Christmas to keep this for." Lita will make an even bigger pour into T&iacute;a Berta's cup. They'll clink their clay mugs, take a long drink, and lean back shoulder to shoulder against T&iacute;a Berta's one-hundred-year-old pecan tree.</p>
+    <p>This is the story my mind will keep of them.</p></div>
+   <p class="between">(Between beats, Petra remembers the looting, her mother's words &mdash; "people are afraid" &mdash; and feeling like she's been given the last glass of water on Earth.)</p>
+   <div class="beatblock b3" data-beat="2"><span class="btag">Beat 3 &middot; The march</span>
+    <p>I look up at the comet and wince. I <i>hate you</i>.</p>
+    <p>Like ants on an orderly march to our hole, my family and I walk quietly across the grass field with several scientists and one other family with a blond teenager. As we get closer, instead of the cement commercial launch pad I expect, there's just freshly cut grass.</p></div>`,
+  cells:{
+   'petra|b1':{notes:"First-person, Petra. The canopy opens and the mantis-ship devours the skyline; its far-off twin looks toy-sized. Javier's small hand clenches her wrist at the frame's edge. Her body says run; her voice says it's okay.",
+    svg:()=>frame(mantisShip(280,170,1.5)+mantisShip(440,120,.4)+'<path d="M0 120 Q60 40 150 30 L0 0 Z" fill="'+INK+'" opacity=".8"/>'+fpvHand(60,270,false),'fpv','#6A4CE0')},
+   'javier|b1':{notes:"First-person, Javier. Camera skids to a stop, tilts up at his sister: her face is calm against the blurred monster behind her. If Petra is calm, it must be okay. \u201cPetra\u2026?\u201d",
+    svg:()=>frame(mantisShip(240,90,1.1)+'<rect width="480" height="270" fill="'+PAPER+'" opacity=".45"/>'+person(240,270,190,'')+'<text x="70" y="90" font-family="Literata,serif" font-style="italic" font-size="19" fill="'+INK+'" opacity=".85">Petra&hellip;?</text>','fpv','#6A4CE0')},
+   'wide|b1':{notes:"Wide shot. Two small figures frozen at the treeline, dwarfed by the crystal mantis across the field. The scale gap is the whole shot.",
+    svg:()=>frame(pine(50,140,.9)+pine(110,150,.7)+person(96,238,54)+person(122,238,38)+mantisShip(340,190,1.3),'wide','#6A4CE0')},
+   'petra|b2':{notes:"First-person, Petra \u2014 but her eyes are somewhere else entirely. The memory she chooses to keep plays warm and whole: Lita and T\u00eda Berta under the red-and-black fringed blanket, clay mugs clinking, shoulder to shoulder against the hundred-year-old pecan tree.",
+    svg:()=>frame('<g opacity=".95"><rect x="96" y="40" width="288" height="176" rx="18" fill="#FFFDF4" stroke="'+INK+'" stroke-width="3"/><path d="M120 178 q80 -26 240 0 l0 12 q-160 -22 -240 0 z" fill="#C24438" opacity=".8"/><path d="M126 182 l6 12 M156 178 l4 12 M330 178 l6 12" stroke="'+INK+'" stroke-width="2" opacity=".6"/><circle cx="196" cy="140" r="15" fill="'+INK+'" opacity=".85"/><circle cx="262" cy="140" r="15" fill="'+INK+'" opacity=".85"/><path d="M226 152 l12 -9 M238 143 l-9 -7" stroke="'+INK+'" stroke-width="3.2"/>'+pine(346,58,.65)+'</g>','fpv','#EE9E22')},
+   'javier|b2':{notes:"First-person, Javier. The outside of that same moment: his sister walking beside him gone completely quiet, eyes far away, half a step behind the family. He watches her and keeps hold of her hand.",
+    svg:()=>frame('<rect y="220" width="480" height="50" fill="'+INK+'" opacity=".12"/>'+person(140,232,90)+person(178,230,100)+person(300,238,120,'')+'<path d="M282 122 q-8 -4 -8 -12" stroke="'+INK+'" stroke-width="2.4" fill="none" opacity="0"/>'+'<g stroke="'+INK+'" stroke-width="2.6" fill="none" opacity=".55"><circle cx="352" cy="120" r="3"/><circle cx="366" cy="106" r="4.5"/><circle cx="384" cy="88" r="6"/></g>'+fpvHand(410,270,true),'fpv','#EE9E22')},
+   'wide|b2':{notes:"Wide shot. The family keeps moving across the field, but one figure lags half a step \u2014 and above Petra, faint as breath, the memory floats: two old women, a blanket, a tree. Inner life made visible from outside.",
+    svg:()=>frame('<rect y="210" width="480" height="60" fill="'+INK+'" opacity=".08"/>'+marchLine(80,244,300,232,4)+person(348,238,60)+'<g opacity=".55"><circle cx="356" cy="168" r="2.5" fill="'+INK+'"/><circle cx="366" cy="152" r="4" fill="'+INK+'"/><rect x="330" y="70" width="120" height="66" rx="14" fill="#FFFDF4" stroke="'+INK+'" stroke-width="2.4"/><path d="M342 122 q36 -12 96 0 l0 6 q-60 -10 -96 0 z" fill="#C24438" opacity=".8"/><circle cx="372" cy="106" r="7" fill="'+INK+'"/><circle cx="398" cy="106" r="7" fill="'+INK+'"/>'+pine(432,84,.3)+'</g>','wide','#6A4CE0')},
+   'petra|b3':{notes:"First-person, Petra. She looks up: the comet owns the sky, dragging its tail over the treeline. A wince \u2014 the closest the excerpt comes to a scream. I hate you.",
+    svg:()=>frame('<g transform="scale(1.6) translate(60 10)">'+comet(240,60)+'</g>'+pine(60,210,.6)+pine(130,220,.45)+mantisShip(380,236,.55)+'<text x="180" y="196" font-family="Literata,serif" font-style="italic" font-size="20" fill="'+INK+'" opacity=".85">I hate you.</text>','fpv','#6A4CE0')},
+   'javier|b3':{notes:"First-person, Javier. Holding tight to his sister's hand (her sleeve at frame edge). Fresh-cut grass underfoot, the other family ahead \u2014 that blond teenager \u2014 and the ramp where a launch pad should be.",
+    svg:()=>frame('<rect y="220" width="480" height="50" fill="'+INK+'" opacity=".14"/>'+fpvHand(400,270,true)+person(200,232,84)+person(238,230,96)+person(270,228,64)+mantisShip(150,140,.8),'fpv','#EE9E22')},
+   'wide|b3':{notes:"Wide shot, high angle \u2014 the text's own image: like ants on an orderly march to their hole, a thin line of figures crossing the freshly cut grass toward the ship, comet overhead.",
+    svg:()=>frame('<rect y="150" width="480" height="120" fill="'+INK+'" opacity=".07"/>'+marchLine(40,250,340,200,9)+mantisShip(400,180,1)+comet(90,44),'wide','#6A4CE0')}
+  }
+}
+};
+
+/* ============ state & rendering ============ */
+let bookKey='snicker', povIdx=0, beatIdx=0;
+const ICON={
+ eye:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.6 10-6.6S22 12 22 12s-3.6 6.6-10 6.6S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>',
+ frame:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9h19"/><circle cx="6" cy="7" r="0.6" fill="currentColor"/><circle cx="9" cy="7" r="0.6" fill="currentColor"/></svg>'
+};
+function B(){return BOOKS[bookKey];}
+function cellKey(){return B().povs[povIdx].key+'|'+B().beats[beatIdx].key;}
+
+function renderReader(){
+  const b=B();
+  $('reader').innerHTML='<div class="chap">'+b.author+' &middot; '+b.chap+'</div><div class="passagename">&ldquo;'+b.passage+'&rdquo;</div><div class="byline"></div><div class="excerpt">'+b.excerpt+'</div>';
+  $('reader').querySelectorAll('.beatblock').forEach(el=>el.addEventListener('click',()=>{beatIdx=+el.dataset.beat;render(false);}));
+  syncBeatBlocks();
+}
+function syncBeatBlocks(){
+  $('reader').querySelectorAll('.beatblock').forEach(el=>el.classList.toggle('on',+el.dataset.beat===beatIdx));
+}
+function renderButtons(){
+  const b=B();
+  $('beatrow').innerHTML=b.beats.map((bt,i)=>{
+    return '<button class="beatbtn k'+(i+1)+(i===beatIdx?' on':'')+'" data-i="'+i+'"><span class="bn">'+bt.n+'</span><span class="bl">'+bt.label+'</span></button>';
+  }).join('');
+  $('beatrow').style.gridTemplateColumns='repeat('+b.beats.length+',1fr)';
+  $('povrow').innerHTML='<span class="seglbl">POV</span>'+b.povs.map((p,i)=>'<button class="seg'+(i===povIdx?' on':'')+'" data-i="'+i+'">'+ICON[p.icon]+'<span>'+p.label+'</span></button>').join('');
+  $('beatrow').querySelectorAll('.beatbtn').forEach(el=>el.addEventListener('click',()=>{beatIdx=+el.dataset.i;render(false);}));
+  $('povrow').querySelectorAll('.seg').forEach(el=>el.addEventListener('click',()=>{povIdx=+el.dataset.i;render(false);}));
+}
+function renderPlayer(){
+  const b=B(),cell=b.cells[cellKey()];
+  const p=$('player');
+  p.querySelectorAll('svg').forEach(s=>s.remove());
+  const holder=document.createElement('div');holder.innerHTML=cell.svg();
+  p.insertBefore(holder.firstChild,p.firstChild);
+  resetClip();
+}
+function renderMeta(){
+  document.querySelectorAll('.booktab').forEach(t=>t.classList.toggle('on',t.dataset.b===bookKey));
+}
+function render(full){
+  if(full)renderReader();
+  renderButtons();renderPlayer();renderMeta();syncBeatBlocks();
+}
+document.querySelectorAll('.booktab').forEach(t=>t.addEventListener('click',()=>{bookKey=t.dataset.b;povIdx=0;beatIdx=0;render(true);}));
+
+/* ===== mock video transport (8s clip) ===== */
+const CLIP=8;
+let t=0, playing=false, rafId=null, lastTs=0;
+function fmt(s){s=Math.max(0,Math.min(CLIP,s));const m=Math.floor(s/60),ss=Math.floor(s%60);return m+':'+(ss<10?'0':'')+ss;}
+function paint(){
+  const pct=(t/CLIP)*100;
+  $('fill').style.width=pct+'%';
+  $('head').style.left=pct+'%';
+  $('tcode').textContent=fmt(t)+' / '+fmt(CLIP);
+}
+function setPlaying(on){
+  playing=on;
+  $('player').classList.toggle('playing',on);
+  if(on){lastTs=performance.now();rafId=requestAnimationFrame(tick);}
+  else if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+}
+function tick(ts){
+  if(!playing)return;
+  t+=(ts-lastTs)/1000;lastTs=ts;
+  if(t>=CLIP){t=CLIP;paint();setPlaying(false);return;}
+  paint();rafId=requestAnimationFrame(tick);
+}
+function resetClip(){setPlaying(false);t=0;paint();}
+function toggle(){ if(t>=CLIP)t=0; setPlaying(!playing); }
+$('pp').addEventListener('click',toggle);
+$('bigplay').addEventListener('click',toggle);
+function seekTo(clientX){
+  const r=$('seek').getBoundingClientRect();
+  t=Math.max(0,Math.min(1,(clientX-r.left)/r.width))*CLIP;
+  paint();
+}
+let scrubbing=false;
+$('seek').addEventListener('pointerdown',e=>{scrubbing=true;$('seek').setPointerCapture(e.pointerId);seekTo(e.clientX);});
+$('seek').addEventListener('pointermove',e=>{if(scrubbing)seekTo(e.clientX);});
+$('seek').addEventListener('pointerup',()=>{scrubbing=false;});
+render(true);
+</script>
+</body>
+</html>

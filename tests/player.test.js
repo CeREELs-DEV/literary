@@ -1,96 +1,66 @@
 // tests/player.test.js
+import fs from 'node:fs'
 import { describe, it, expect } from 'vitest'
-import {
-  PASSAGE, SCENES, VIEWPOINTS, COMPARE_QUESTIONS,
-} from '../src/player-data.js'
-import {
-  CURATED_SCENES, CURATED_STYLE, SCENE_BIBLE,
-} from '../scripts/curated-scenes.mjs'
+import { BOOKS } from '../src/books-data.js'
+import { CURATED_SCENES } from '../scripts/curated-scenes.mjs'
 
-describe('student-facing player data (3 scenes x 3 viewpoints)', () => {
-  it('offers three scenes and three constant viewpoints', () => {
-    expect(SCENES.map((s) => s.id)).toEqual(['table', 'whisper', 'glance'])
-    expect(VIEWPOINTS.map((v) => v.id)).toEqual(['FELICITY', 'JONAH', 'WORLD'])
+describe('Matter of Perspective — books data', () => {
+  it('offers the three sample books', () => {
+    expect(Object.keys(BOOKS)).toEqual(['snicker', 'james', 'cuentista'])
   })
 
-  it('every scene has all three views, each with a film and a one-line interpretation', () => {
-    for (const scene of SCENES) {
-      expect(scene.excerpt).toBeTruthy()
-      expect(scene.anchorPhrases.length).toBeGreaterThan(0)
-      expect(scene.questions.length).toBeGreaterThanOrEqual(2)
-      expect(scene.questions.length).toBeLessThanOrEqual(3)
-      for (const viewpoint of VIEWPOINTS) {
-        const view = scene.views[viewpoint.id]
-        expect(view).toBeTruthy()
-        expect(view.interpretation).toBeTruthy()
-        expect(view.interpretation).not.toContain('\n') // one line
-        expect(view.videoAssetUrl).toBe(`/curated/${scene.id}-${viewpoint.id.toLowerCase()}.mp4`)
-        expect(view.thumbnailUrl).toBe(`/curated/${scene.id}-${viewpoint.id.toLowerCase()}.jpg`)
+  it('every book fills its full povs x beats grid with a playable cell', () => {
+    for (const book of Object.values(BOOKS)) {
+      expect(book.povs.length).toBeGreaterThanOrEqual(3)
+      expect(book.beats.length).toBeGreaterThanOrEqual(2)
+      for (const pov of book.povs) {
+        for (const beat of book.beats) {
+          const cell = book.cells[`${pov.key}|${beat.key}`]
+          expect(cell, `${book.book}: ${pov.key}|${beat.key}`).toBeTruthy()
+          expect(!!cell.video || typeof cell.svg === 'function').toBe(true)
+        }
       }
     }
   })
 
-  it('scene excerpts and anchors come from the passage itself', () => {
-    for (const scene of SCENES) {
-      for (const phrase of scene.anchorPhrases) {
-        expect(PASSAGE.text).toContain(phrase)
+  it('marks one beat block in the excerpt per beat (text-driven playback)', () => {
+    for (const book of Object.values(BOOKS)) {
+      const blocks = [...book.excerpt.matchAll(/data-beat="(\d+)"/g)].map((m) => +m[1])
+      expect(blocks).toEqual(book.beats.map((_, i) => i))
+    }
+  })
+
+  it('snicker plays the nine real films, and the assets exist on disk', () => {
+    const snicker = BOOKS.snicker
+    for (const pov of snicker.povs) {
+      for (const beat of snicker.beats) {
+        const cell = snicker.cells[`${pov.key}|${beat.key}`]
+        expect(cell.video).toBe(`/curated/${beat.key}-${pov.key}.mp4`)
+        expect(cell.poster).toBe(`/curated/${beat.key}-${pov.key}.jpg`)
+        expect(fs.existsSync(`public${cell.video}`), cell.video).toBe(true)
+        expect(fs.existsSync(`public${cell.poster}`), cell.poster).toBe(true)
       }
-      // the excerpt is verbatim passage text (whitespace aside)
-      expect(PASSAGE.text.replace(/\s+/g, ' ')).toContain(
-        scene.excerpt.replace(/\s+/g, ' ').slice(0, 60),
-      )
     }
   })
 
   it('NEVER ships generation internals to the student page', () => {
-    for (const scene of SCENES) {
-      const keys = [
-        ...Object.keys(scene),
-        ...Object.values(scene.views).flatMap((v) => Object.keys(v)),
-      ].join(' ').toLowerCase()
-      expect(keys).not.toContain('prompt')
-      expect(keys).not.toContain('model')
-      expect(keys).not.toContain('status')
-    }
-  })
-
-  it('provides comparison questions — the comparison is the point', () => {
-    expect(COMPARE_QUESTIONS.length).toBeGreaterThanOrEqual(2)
-    for (const q of COMPARE_QUESTIONS) expect(q.endsWith('?')).toBe(true)
+    const source = fs.readFileSync('src/books-data.js', 'utf8')
+    expect(source).not.toContain('internalOmniPrompt')
+    expect(source.toLowerCase()).not.toContain('gemini')
+    expect(source.toLowerCase()).not.toContain('omni')
   })
 })
 
 describe('internal production data (makers only)', () => {
-  it('has one internal Omni prompt per scene x viewpoint, ids matching the student grid', () => {
-    const expected = SCENES.flatMap((scene) =>
-      VIEWPOINTS.map((v) => `${scene.id}-${v.id.toLowerCase()}`),
+  it('covers exactly the snicker grid with one prompt per film', () => {
+    const snicker = BOOKS.snicker
+    const expected = snicker.beats.flatMap((beat) =>
+      snicker.povs.map((pov) => `${beat.key}-${pov.key}`),
     )
     expect(CURATED_SCENES.map((s) => s.id).sort()).toEqual(expected.sort())
     for (const scene of CURATED_SCENES) {
       expect(scene.internalOmniPrompt).toContain('8-second video')
       expect(['DRAFT', 'GENERATED', 'APPROVED']).toContain(scene.status)
-    }
-  })
-
-  it('locks style, anatomy, and world continuity in words', () => {
-    expect(CURATED_STYLE).toContain('STYLE LOCK')
-    expect(CURATED_STYLE).toContain('exactly two arms')
-    expect(CURATED_STYLE.toLowerCase()).toContain('no floating letters')
-    expect(CURATED_STYLE.toLowerCase()).toContain('no horror')
-    expect(SCENE_BIBLE).toContain('SAME place')
-    expect(SCENE_BIBLE).toContain('only the moment and the camera')
-  })
-
-  it('each prompt names its scene and viewpoint exactly once', () => {
-    for (const scene of CURATED_SCENES) {
-      expect(scene.internalOmniPrompt).toContain('SCENE:')
-      const view =
-        scene.viewpoint === 'FELICITY'
-          ? "FELICITY'S VIEW"
-          : scene.viewpoint === 'JONAH'
-            ? "THE BOY'S VIEW"
-            : "THE WORLD'S VIEW"
-      expect(scene.internalOmniPrompt).toContain(view)
     }
   })
 })

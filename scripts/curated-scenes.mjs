@@ -46,8 +46,10 @@ export const SCENE_BIBLE =
   `light-gold hair like a small crooked crown, vivid green eyes, plain pale ` +
   `shirt, a folded newspaper in one hand and a red pen twirling in the ` +
   `other; his mobility chair sits naturally beside the table, never the ` +
-  `focus. The shy 12-year-old girl has brown shoulder-length hair, a simple ` +
-  `blue dress, and canvas shoes. The location, wardrobe, lighting, and ` +
+  `focus. His hair only RESEMBLES a crown — never draw an actual crown ` +
+  `object on his head. The shy 12-year-old girl has brown shoulder-length ` +
+  `hair, a simple blue dress, and canvas shoes. There are exactly TWO ` +
+  `children in this story and no other people. The location, wardrobe, lighting, and ` +
   `layout are identical in every video — only the moment and the camera's ` +
   `point of view change.`
 
@@ -67,11 +69,15 @@ export const CURATED_SCENES = [
     viewpoint: 'FELICITY',
     status: 'GENERATED',
     internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE CLEAN TABLE — FELICITY'S VIEW. The ` +
-      `whole shot is the girl's gaze: the camera glides slowly forward across ` +
-      `the courtyard, passing messy bird-stained tables, and settles on the ` +
-      `one strangely clean table where the boy reads his folded newspaper and ` +
-      `twirls the red pen. He never looks toward the camera; sunlight catches ` +
+      `8-second video, 16:9. SCENE: THE CLEAN TABLE — FELICITY'S VIEW. This ` +
+      `is a strict FIRST-PERSON shot: the girl IS the camera, so she must NOT ` +
+      `appear anywhere in the frame — no girl at all. The camera glides ` +
+      `slowly forward across the courtyard at a child's eye height, passing ` +
+      `messy bird-stained tables, and settles on the one strangely clean ` +
+      `table under the big tree where the boy sits ON A WOODEN CHAIR reading ` +
+      `his folded newspaper and twirling the red pen — his wheelchair is ` +
+      `parked beside the table, empty, never the focus. He never looks ` +
+      `toward the camera; sunlight catches ` +
       `his messy light-gold hair like a small crooked crown. Nothing else ` +
       `happens — the noticing IS the scene. Mood: curious, shy, quietly ` +
       `uncanny. Audio: distant schoolyard, soft footsteps, pen tapping.`,
@@ -173,13 +179,17 @@ export const CURATED_SCENES = [
     status: 'GENERATED',
     internalOmniPrompt:
       `8-second video, 16:9. SCENE: THE GREEN GLANCE — FELICITY'S VIEW. A ` +
-      `gentle close-up, her gaze: the boy lifts his head from the newspaper ` +
-      `and looks straight into the camera. His eyes are the greenest green — ` +
-      `vivid and clear like fresh marker ink, yet warm and human, never ` +
-      `glowing. As he looks up, the greens of the courtyard behind him ` +
-      `(grass, leaves) quietly deepen one shade. Camera fixed with a very ` +
-      `slow, slight push in. Mood: quiet astonishment. Audio: a held breath, ` +
-      `paper flutter, a soft warm shimmer.`,
+      `gentle close-up, her strict first-person gaze from where she stands at ` +
+      `the opposite edge of his table: the girl herself is NOT in the frame. ` +
+      `A sliver of the tabletop crosses the very bottom of the frame between ` +
+      `the camera and the boy — he SITS at the table behind it, and lifts his ` +
+      `head from the newspaper to look straight into the camera, slightly ` +
+      `upward. His eyes are the greenest green — vivid and clear like fresh ` +
+      `marker ink, yet warm and human, never glowing. As he looks up, the ` +
+      `greens of the courtyard behind him (leaves, tree) quietly deepen one ` +
+      `shade. Camera fixed with a very slow, slight push in. Mood: quiet ` +
+      `astonishment. Audio: a held breath, paper flutter, a soft warm ` +
+      `shimmer.`,
   },
   {
     id: 'glance-jonah',
@@ -187,13 +197,18 @@ export const CURATED_SCENES = [
     viewpoint: 'JONAH',
     status: 'GENERATED',
     internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE GREEN GLANCE — THE BOY'S VIEW. From ` +
-      `his side of the table: the newspaper lowers and the frame tilts gently ` +
-      `up to the girl standing before him — her astonished face catching the ` +
-      `warm afternoon light, a faint green reflection passing across it. She ` +
-      `finally sees him seeing her. Camera: one gentle tilt up, then still. ` +
-      `Mood: "she said the word — now she gets the real me." Audio: paper ` +
-      `lowering, a held breath, soft courtyard returning.`,
+      `8-second video, 16:9. SCENE: THE GREEN GLANCE — THE BOY'S VIEW. This ` +
+      `is a strict FIRST-PERSON shot from his seat at the clean table under ` +
+      `the tree: the boy IS the camera, so no boy, no clean table, no empty ` +
+      `chairs, and no wheelchair may appear in front of the camera — only a ` +
+      `sliver of his own tabletop and his hands at the bottom edge. The ` +
+      `newspaper lowers and the frame tilts gently up to the girl standing ` +
+      `right at the opposite edge of his table — her astonished face catching ` +
+      `the warm afternoon light, a faint green reflection passing across it. ` +
+      `Behind her: only the messy courtyard tables. She finally sees him ` +
+      `seeing her. Camera: one gentle tilt up, then still. Mood: "she said ` +
+      `the word — now she gets the real me." Audio: paper lowering, a held ` +
+      `breath, soft courtyard returning.`,
   },
   {
     id: 'glance-world',

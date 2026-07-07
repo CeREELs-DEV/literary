@@ -16,11 +16,15 @@ const ICON = {
 let bookKey = Object.keys(BOOKS)[0]
 let povIdx = 0
 let beatIdx = 0
-let qIdx = 0
-let hunting = false
-let questionDone = false
-let qEditing = -1
-const answers = {}
+let commentsOpen = false
+let editingComment = null
+const pollState = {}
+const commentState = {}
+
+const EYE_BOOK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 1 5.5 18H20v3H5.5A1.5 1.5 0 0 1 4 19.5z"/><path d="M8 8.4s1.6-2.4 4-2.4 4 2.4 4 2.4-1.6 2.4-4 2.4-4-2.4-4-2.4z"/><circle cx="12" cy="8.4" r="1.1" fill="currentColor" stroke="none"/></svg>'
+const BUBBLE =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4 3.5V15H5.5A1.5 1.5 0 0 1 4 13.5z"/><circle cx="9" cy="9.5" r="1"/><circle cx="12" cy="9.5" r="1"/><circle cx="15" cy="9.5" r="1"/></svg>'
 
 const B = () => BOOKS[bookKey]
 const cellKey = () => `${B().povs[povIdx].key}|${B().beats[beatIdx].key}`
@@ -31,9 +35,13 @@ function renderReader() {
   const b = B()
   $('reader').innerHTML =
     `<div class="chap">${b.author} &middot; ${b.chap}</div>` +
-    `<div class="passagename">&ldquo;${b.passage}&rdquo;` +
-    `<button class="povinfo" id="povinfo" aria-label="About this story's point of view">i</button>` +
+    `<div class="passagename">&ldquo;${b.passage}&rdquo;</div>` +
+    `<div class="prow">` +
+    `<div class="pchip"><button class="picon" id="povinfo" aria-label="About this story's point of view">${EYE_BOOK}</button>` +
     `<div class="povpop" id="povpop"><div class="pph">Point of view</div>${b.povInfo}</div></div>` +
+    `<div class="pchip"><button class="picon" id="thinkbtn" aria-label="Something to think about">${BUBBLE}</button>` +
+    `<div class="povpop thinkpop" id="thinkpop"><div class="pph">Think about…</div>${b.think}</div></div>` +
+    `</div>` +
     `<div class="byline"></div><div class="recap">${b.setup}</div><div class="excerpt">${b.excerpt}</div>`
   // Tap a beat in the text -> the scene jumps there and plays.
   $('reader').querySelectorAll('.beatblock').forEach((el) =>
@@ -43,17 +51,21 @@ function renderReader() {
       controller?.play()
     }),
   )
-  bindPovInfo()
+  wirePop('povinfo', 'povpop')
+  wirePop('thinkbtn', 'thinkpop')
   syncBeatBlocks()
 }
 
-function bindPovInfo() {
-  const pi = $('povinfo')
-  const pp = $('povpop')
+function wirePop(btnId, popId) {
+  const pi = $(btnId)
+  const pp = $(popId)
   if (!pi || !pp) return
   let closeT = null
   const open = () => {
     clearTimeout(closeT)
+    document.querySelectorAll('.povpop.show').forEach((pop) => {
+      if (pop !== pp) pop.classList.remove('show')
+    })
     pp.classList.add('show')
   }
   const close = () => pp.classList.remove('show')
@@ -273,231 +285,172 @@ function render(full) {
   renderButtons()
   renderPlayer()
   renderMeta()
-  renderQuestions()
+  renderPoll()
   syncBeatBlocks()
 }
 
-/* ---- passage questions ---- */
-
-const ansKey = (i) => `${bookKey}|${i}`
+/* ---- poll + comments ---- */
 
 function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-function withIcons(s) {
-  return s.replace(/\[eye\]/g, `<span class="qeye">${ICON.eye}</span>`)
+function pState() {
+  if (!pollState[bookKey]) {
+    pollState[bookKey] = { voted: null, votes: B().poll.votes.slice() }
+  }
+  return pollState[bookKey]
 }
 
-function needCount() {
-  const q = (B().questions || [])[qIdx]
-  return q?.need || 1
+function cState() {
+  if (!commentState[bookKey]) {
+    commentState[bookKey] = B().comments.map((comment) => ({ n: comment.n, t: comment.t }))
+  }
+  return commentState[bookKey]
 }
 
-function renderQuestions() {
-  const qs = B().questions || []
-  const section = $('qsection')
+function initials(name) {
+  return name.trim().slice(0, 1).toUpperCase()
+}
+
+function renderPoll() {
+  const b = B()
+  const section = $('pollsection')
   if (!section) return
-  if (!qs.length) {
+  if (!b.poll) {
     section.innerHTML = ''
     return
   }
-  if (qIdx >= qs.length) qIdx = 0
-  const q = qs[qIdx]
-  const nav = qs
-    .map((_, i) => `<button class="${i === qIdx ? 'on' : ''}" data-i="${i}">${i + 1}</button>`)
-    .join('')
-  const partChip = q.part ? `<span class="qpart">${q.part}</span>` : ''
 
-  let body
-  if (q.type === 'find') {
-    let actions
-    let hint = ''
-    if (!hunting) {
-      actions = `<button class="qbtn primary" id="huntbtn">Tap the clue${needCount() > 1 ? 's' : ''}</button>`
-    } else if (!questionDone) {
-      actions =
-        '<button class="qbtn ghost" id="revealbtn">Show all clues</button>' +
-        '<button class="qbtn ghost" id="clearbtn">Clear</button>'
-      hint = `<div class="qhint" id="qhint">${huntStatus(0)}</div>`
-    } else {
-      actions = '<button class="qbtn primary" id="huntbtn">Try again</button>'
-    }
-    body =
-      `${partChip}<span class="qtype find">Find in the text</span>` +
-      `<div class="qprompt">${withIcons(q.q)}</div>${hint}` +
-      `<div class="qactions">${actions}</div><div class="qfeedback" id="qfb"></div>`
+  const ps = pState()
+  const cs = cState()
+  const total = ps.votes.reduce((sum, vote) => sum + vote, 0)
+  let options
+
+  if (ps.voted === null) {
+    options = b.poll.options
+      .map((option, i) => `<button class="pollopt" data-i="${i}"><span class="poplabel">${esc(option)}</span></button>`)
+      .join('')
   } else {
-    const saved = answers[ansKey(qIdx)]
-    const editing = qEditing === qIdx || !saved
-    let ansUI
-    if (editing) {
-      ansUI =
-        `<textarea class="qanswer" id="qanswer" placeholder="Type your answer...">${saved ? esc(saved) : ''}</textarea>` +
-        '<div class="qactions"><button class="qbtn primary" id="savebtn">Save answer</button><span class="qhint" id="savemsg"></span></div>'
-    } else {
-      ansUI =
-        `<div class="qsaved">${esc(saved).replace(/\n/g, '<br>')}</div>` +
-        '<div class="qactions"><button class="qbtn ghost" id="editbtn">Edit answer</button><span class="qhint">Saved ✓</span></div>'
-    }
-    body =
-      `${partChip}<span class="qtype open">Think &amp; discuss</span>` +
-      `<div class="qprompt">${withIcons(q.q)}</div>${ansUI}`
+    options = b.poll.options
+      .map((option, i) => {
+        const pct = total ? Math.round((ps.votes[i] / total) * 100) : 0
+        return (
+          `<div class="pollbar${i === ps.voted ? ' mine' : ''}" data-i="${i}">` +
+          `<div class="pbfill" style="width:${pct}%"></div>` +
+          `<span class="pblabel">${esc(option)}${i === ps.voted ? ' <span class="pbyou">✓ you</span>' : ''}</span>` +
+          `<span class="pbpct">${pct}%</span></div>`
+        )
+      })
+      .join('')
+  }
+
+  const commentIcon =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
+  let commentsInner = ''
+
+  if (commentsOpen) {
+    const comments = cs
+      .map((comment, idx) => {
+        const mine = comment.n === 'You'
+        if (mine && editingComment === idx) {
+          return (
+            '<div class="citem"><div class="cav you">You</div><div class="cbody">' +
+            `<textarea class="cinput cedit" id="ceditinput">${esc(comment.t)}</textarea>` +
+            `<div class="cactions"><button class="clink" data-save="${idx}">Save</button>` +
+            '<button class="clink" data-cancel="1">Cancel</button></div></div></div>'
+          )
+        }
+        return (
+          `<div class="citem"><div class="cav${mine ? ' you' : ''}">${mine ? 'You' : initials(comment.n)}</div>` +
+          `<div class="cbody"><div class="cname">${esc(comment.n)}</div><div class="ctext">${esc(comment.t)}</div>` +
+          (mine
+            ? `<div class="cactions"><button class="clink" data-edit="${idx}">Edit</button><button class="clink" data-del="${idx}">Delete</button></div>`
+            : '') +
+          '</div></div>'
+        )
+      })
+      .join('')
+
+    commentsInner =
+      '<div class="cwrap"><div class="cadd"><div class="cav you">You</div>' +
+      '<textarea class="cinput" id="cinput" placeholder="Add a comment…" rows="1"></textarea>' +
+      '<button class="cpost" id="cpost">Post</button></div>' +
+      `<div class="clist">${comments}</div></div>`
   }
 
   section.innerHTML =
-    `<div class="qhead"><span class="qtitle">Questions</span><span class="qsub">${qIdx + 1} of ${qs.length}</span>` +
-    `<span class="qnav">${nav}</span></div><div class="qcard">${body}</div>`
+    `<div class="pollcard"><div class="pollq">${esc(b.poll.q)}</div>` +
+    `<div class="pollmeta">${total} votes</div>` +
+    `<div class="pollopts">${options}</div>` +
+    `<div class="pollactions"><button class="cbtn${commentsOpen ? ' open' : ''}" id="ctoggle">` +
+    `${commentIcon}<span class="ccount">${cs.length}</span></button></div>` +
+    `${commentsInner}</div>`
 
-  section.querySelectorAll('.qnav button').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      exitHunt()
-      qEditing = -1
-      qIdx = +btn.dataset.i
-      renderQuestions()
+  section.querySelectorAll('.pollopt,.pollbar').forEach((el) =>
+    el.addEventListener('click', () => {
+      const i = +el.dataset.i
+      const st = pState()
+      if (st.voted === i) return
+      if (st.voted !== null) st.votes[st.voted] = Math.max(0, st.votes[st.voted] - 1)
+      st.votes[i] += 1
+      st.voted = i
+      renderPoll()
     }),
   )
 
-  if (q.type === 'find') {
-    $('huntbtn')?.addEventListener('click', () => {
-      if (!hunting) startHunt()
-      else {
-        clearHunt()
-        startHunt()
+  $('ctoggle').addEventListener('click', () => {
+    commentsOpen = !commentsOpen
+    editingComment = null
+    renderPoll()
+  })
+
+  if (!commentsOpen) return
+
+  const commentInput = $('cinput')
+  commentInput?.addEventListener('input', () => {
+    commentInput.style.height = 'auto'
+    commentInput.style.height = `${Math.min(commentInput.scrollHeight, 120)}px`
+  })
+  $('cpost')?.addEventListener('click', () => {
+    const value = $('cinput').value.trim()
+    if (!value) return
+    editingComment = null
+    cState().unshift({ n: 'You', t: value })
+    renderPoll()
+  })
+  section.querySelectorAll('.clink').forEach((button) =>
+    button.addEventListener('click', () => {
+      if (button.dataset.edit !== undefined) {
+        editingComment = +button.dataset.edit
+        renderPoll()
+      } else if (button.dataset.cancel !== undefined) {
+        editingComment = null
+        renderPoll()
+      } else if (button.dataset.save !== undefined) {
+        const value = $('ceditinput').value.trim()
+        const i = +button.dataset.save
+        if (value) cState()[i].t = value
+        editingComment = null
+        renderPoll()
+      } else if (button.dataset.del !== undefined) {
+        cState().splice(+button.dataset.del, 1)
+        editingComment = null
+        renderPoll()
       }
-    })
-    $('revealbtn')?.addEventListener('click', revealAll)
-    $('clearbtn')?.addEventListener('click', clearHunt)
-    if (questionDone) paintFeedback()
-    return
-  }
-
-  const ta = $('qanswer')
-  ta?.addEventListener('input', () => {
-    answers[ansKey(qIdx)] = ta.value
-    const msg = $('savemsg')
-    if (msg) msg.textContent = ''
-  })
-  $('savebtn')?.addEventListener('click', () => {
-    const value = $('qanswer').value.trim()
-    answers[ansKey(qIdx)] = value
-    qEditing = -1
-    if (value) renderQuestions()
-    else {
-      const msg = $('savemsg')
-      if (msg) msg.textContent = 'Write something first'
     }
-  })
-  $('editbtn')?.addEventListener('click', () => {
-    qEditing = qIdx
-    renderQuestions()
-  })
-}
-
-function huntables() {
-  return $('reader').querySelectorAll('.huntable')
-}
-
-function markedCorrect() {
-  return [...huntables()].filter((el) => el.dataset.correct === '1' && el.classList.contains('marked')).length
-}
-
-function totalCorrect() {
-  return [...huntables()].filter((el) => el.dataset.correct === '1').length
-}
-
-function huntStatus(found) {
-  const need = needCount()
-  if (need > 1) {
-    return `Tap the clues in the passage — find at least <b>${need}</b>. Found: <b>${found}</b>`
-  }
-  return 'Tap the clue in the passage that answers the question.'
-}
-
-function bindToggles() {
-  huntables().forEach((el) => {
-    el.onclick = (event) => {
-      event.stopPropagation()
-      if (questionDone) return
-      el.classList.toggle('marked')
-      const found = markedCorrect()
-      const hint = $('qhint')
-      if (hint) hint.innerHTML = huntStatus(found)
-      if (found >= needCount()) revealAll()
-    }
-  })
-}
-
-function startHunt() {
-  hunting = true
-  questionDone = false
-  $('reader').classList.add('hunting')
-  huntables().forEach((el) => el.classList.remove('marked', 'right', 'wrong', 'missed'))
-  bindToggles()
-  renderQuestions()
-}
-
-function revealAll() {
-  questionDone = true
-  huntables().forEach((el) => {
-    const correct = el.dataset.correct === '1'
-    const marked = el.classList.contains('marked')
-    el.classList.remove('marked')
-    if (correct) el.classList.add(marked ? 'right' : 'missed')
-    else if (marked) el.classList.add('wrong')
-  })
-  renderQuestions()
-}
-
-function paintFeedback() {
-  const fb = $('qfb')
-  if (!fb) return
-  const found = [...huntables()].filter((el) => el.classList.contains('right')).length
-  const need = needCount()
-  fb.className = 'qfeedback show'
-  fb.innerHTML =
-    need > 1
-      ? `You found <b>${found}</b> of the clues. Here's all the evidence in the passage — <b>${totalCorrect()}</b> in total.`
-      : found
-        ? "That's it — nicely found."
-        : "Here's the clue you were looking for."
-}
-
-function clearHunt() {
-  questionDone = false
-  huntables().forEach((el) => el.classList.remove('marked', 'right', 'wrong', 'missed'))
-  bindToggles()
-  const hint = $('qhint')
-  if (hint) hint.innerHTML = huntStatus(0)
-  const fb = $('qfb')
-  if (fb) {
-    fb.className = 'qfeedback'
-    fb.innerHTML = ''
-  }
-}
-
-function exitHunt() {
-  hunting = false
-  questionDone = false
-  const reader = $('reader')
-  if (!reader) return
-  reader.classList.remove('hunting')
-  reader.querySelectorAll('.huntable').forEach((el) => {
-    el.classList.remove('marked', 'right', 'wrong', 'missed')
-    el.onclick = null
-  })
+  ))
 }
 
 /* ---- wiring ---- */
 
 document.querySelectorAll('.booktab').forEach((t) =>
   t.addEventListener('click', () => {
-    exitHunt()
-    qEditing = -1
+    commentsOpen = false
+    editingComment = null
     bookKey = t.dataset.b
     povIdx = 0
     beatIdx = 0
-    qIdx = 0
     render(true)
   }),
 )

@@ -24,18 +24,23 @@ describe('Matter of Perspective — books data', () => {
     expect(main).toContain('let bookKey = Object.keys(BOOKS)[0]')
   })
 
-  it('includes the question and point-of-view support hooks from the reference page', () => {
+  it('includes the poll and point-of-view support hooks from the reference page', () => {
     const html = fs.readFileSync('index.html', 'utf8')
     const styles = fs.readFileSync('src/styles.css', 'utf8')
     const main = fs.readFileSync('src/main.js', 'utf8')
 
-    expect(html).toContain('<div class="qsection" id="qsection"></div>')
-    expect(styles).toContain('.qsection')
+    expect(html).toContain('<div class="pollsection" id="pollsection"></div>')
+    expect(styles).toContain('.pollcard')
+    expect(styles).toContain('.pollopt')
+    expect(styles).toContain('.cbtn')
+    expect(styles).toContain('.pchip')
+    expect(styles).toContain('.picon')
+    expect(main).toContain('<div class="prow">')
+    expect(main).toContain('<div class="pchip"><button class="picon" id="povinfo"')
+    expect(main).toContain('<div class="pchip"><button class="picon" id="thinkbtn"')
     expect(styles).toContain('.recap')
-    expect(styles).toContain('.povinfo')
-    expect(styles).toContain('.huntable')
-    expect(main).toContain('function renderQuestions')
-    expect(main).toContain('function bindPovInfo')
+    expect(main).toContain('function renderPoll')
+    expect(main).not.toContain('function renderQuestions')
   })
 
   it('uses deploy-safe relative paths for GitHub Pages project hosting', () => {
@@ -58,16 +63,18 @@ describe('Matter of Perspective — books data', () => {
     expect(workflow).toContain('actions/deploy-pages@v5')
   })
 
-  it('adds setup, point-of-view info, and passage-owned questions for every book', () => {
+  it('adds setup, point-of-view info, and passage-owned polls for every book', () => {
     for (const [key, book] of Object.entries(BOOKS)) {
       expect(book.setup, key).toEqual(expect.any(String))
       expect(book.setup.length, key).toBeGreaterThan(20)
       expect(book.povInfo, key).toContain('<b>')
-      expect(book.questions, key).toHaveLength(3)
-      expect(book.questions.every((q) => q.part && q.q && q.type), key).toBe(true)
-      expect(book.questions.some((q) => q.type === 'find'), key).toBe(true)
-      expect(book.excerpt, key).toContain('class="huntable"')
-      expect(book.excerpt, key).toContain('data-correct="1"')
+      expect(book.think, key).toEqual(expect.any(String))
+      expect(book.poll.q, key).toEqual(expect.any(String))
+      expect(book.poll.options.length, key).toBeGreaterThanOrEqual(3)
+      expect(book.poll.votes, key).toHaveLength(book.poll.options.length)
+      expect(book.comments, key).toHaveLength(4)
+      expect(book.comments.every((comment) => comment.n && comment.t), key).toBe(true)
+      expect(book.questions, key).toBeUndefined()
     }
   })
 
@@ -93,7 +100,6 @@ describe('Matter of Perspective — books data', () => {
       { key: 'table', n: 'Beat 1', label: 'The clean table' },
       { key: 'glance', n: 'Beat 2', label: 'The green glance' },
     ])
-    expect(snicker.questions.map((q) => q.part)).toEqual(['Part 1', 'Part 2', 'Whole scene'])
     expect(snicker.excerpt).not.toContain('Beat 3')
     expect(snicker.excerpt).toContain('<span class="btag">Beat 2 &middot; The green glance</span>')
     expect(snicker.excerpt).toContain('<p>"Pumpernickel?" I whispered.</p>')

@@ -45,6 +45,16 @@ describe('Matter of Perspective — books data', () => {
     expect(main).not.toContain('function renderQuestions')
   })
 
+  it('boosts beat video audio beyond the native video volume ceiling', () => {
+    const main = fs.readFileSync('src/main.js', 'utf8')
+
+    expect(main).toContain('const BEAT_VIDEO_GAIN = 5')
+    expect(main).toContain('createMediaElementSource(video)')
+    expect(main).toContain('gain.gain.value = BEAT_VIDEO_GAIN')
+    expect(main).toContain('gain.connect(audioContext.destination)')
+    expect(main).toContain('video.volume = 1')
+  })
+
   it('uses deploy-safe relative paths for GitHub Pages project hosting', () => {
     const html = fs.readFileSync('index.html', 'utf8')
     const config = fs.readFileSync('vite.config.js', 'utf8')

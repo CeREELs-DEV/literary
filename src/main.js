@@ -148,11 +148,67 @@ function setPlayingUi(on) {
   $('player').classList.toggle('playing', on)
 }
 
+const BEAT_VIDEO_GAIN = 13
+let beatAudioContext = null
+
+function getBeatAudioContext() {
+  const AudioContextCtor = globalThis.AudioContext || globalThis.webkitAudioContext
+  if (!AudioContextCtor) return null
+  beatAudioContext ||= new AudioContextCtor()
+  return beatAudioContext
+}
+
+function boostVideoAudio(video) {
+  video.volume = 1
+  video.muted = false
+
+  let audioContext = null
+  let source = null
+  let gain = null
+  let failed = false
+
+  const connect = () => {
+    if (gain || failed) return
+    try {
+      audioContext = getBeatAudioContext()
+      if (!audioContext) return
+      source = audioContext.createMediaElementSource(video)
+      gain = audioContext.createGain()
+      gain.gain.value = BEAT_VIDEO_GAIN
+      source.connect(gain)
+      gain.connect(audioContext.destination)
+    } catch {
+      failed = true
+    }
+  }
+
+  return {
+    resume() {
+      connect()
+      if (audioContext?.state === 'suspended') audioContext.resume?.().catch?.(() => {})
+    },
+    dispose() {
+      try {
+        source?.disconnect?.()
+      } catch {}
+      try {
+        gain?.disconnect?.()
+      } catch {}
+      source = null
+      gain = null
+    },
+  }
+}
+
 // Controls a real <video> cell through the shared transport bar.
 function realController(video) {
+  const audio = boostVideoAudio(video)
   const dur = () => (Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 8)
   const onTime = () => paint(video.currentTime, dur())
-  const onPlay = () => setPlayingUi(true)
+  const onPlay = () => {
+    audio.resume()
+    setPlayingUi(true)
+  }
   const onPause = () => setPlayingUi(false)
   const onEnded = () => {
     setPlayingUi(false)
@@ -167,7 +223,10 @@ function realController(video) {
   paint(0, dur())
   return {
     isPlaying: () => !video.paused && !video.ended,
-    play: () => video.play?.()?.catch?.(() => {}),
+    play: () => {
+      audio.resume()
+      video.play?.()?.catch?.(() => {})
+    },
     toggle() {
       if (video.paused || video.ended) this.play()
       else video.pause()
@@ -178,6 +237,7 @@ function realController(video) {
     },
     dispose() {
       video.pause()
+      audio.dispose()
       video.removeEventListener('timeupdate', onTime)
       video.removeEventListener('durationchange', onTime)
       video.removeEventListener('play', onPlay)

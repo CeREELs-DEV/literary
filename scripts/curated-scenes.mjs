@@ -2,7 +2,7 @@
 //
 // INTERNAL PRODUCTION DATA — makers/admins only.
 // This module holds the Gemini Omni prompts used to pre-produce the
-// Imagination Player videos: three scenes x three viewpoints = nine films.
+// Imagination Player videos: two scenes x three viewpoints = six films.
 // It is imported only by the production script (make-curated-videos.mjs)
 // and by tests; it must NEVER be imported from src/ — students never see
 // prompts, models, or generation UI.
@@ -35,7 +35,7 @@ export const CURATED_STYLE =
   `text, no runes, no glowing words. No horror, no grotesque imagery, no ` +
   `insects, no liquid coming from eyes. No subtitles, no logos, no watermark.`
 
-// One world, nine films — the place and the two children must be identical
+// One world, six films — the place and the two children must be identical
 // everywhere; only the scene beat and the point of view change.
 export const SCENE_BIBLE =
   `SCENE BIBLE — every video shows the SAME place and the SAME two children. ` +
@@ -117,60 +117,7 @@ export const CURATED_SCENES = [
       `toward him. Mood: "the world keeps one table clean, and waits." ` +
       `Audio: wind, faint birdsong, leaves.`,
   },
-  // ---- Scene 2: The Whisper ("Pumpernickel?") ----
-  {
-    id: 'whisper-felicity',
-    scene: 'whisper',
-    viewpoint: 'FELICITY',
-    status: 'GENERATED',
-    internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE WHISPER — FELICITY'S VIEW. Her gaze, ` +
-      `standing right in front of the clean table: the raised newspaper and ` +
-      `the boy's spiky light-gold hair above it fill the frame; he does not ` +
-      `look at her. His red pen twirls at the newspaper's edge. A beat of ` +
-      `hesitation — then one soft whispered word, and the pen stops dead ` +
-      `mid-turn. He still has not looked up. Camera fixed. Mood: nervous, ` +
-      `comic, tender — a silly word used like a key. Audio: courtyard hush, ` +
-      `one whispered word, sudden quiet.`,
-  },
-  {
-    id: 'whisper-jonah',
-    scene: 'whisper',
-    viewpoint: 'JONAH',
-    status: 'GENERATED',
-    internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE WHISPER — THE BOY'S VIEW. This is a ` +
-      `strict FIRST-PERSON shot from his seat at the clean table: the boy IS ` +
-      `the camera, so he must NOT appear in the frame — only his hands and ` +
-      `the newsprint at the frame bottom, his fingers twirling the red pen at ` +
-      `the edge. The girl is VERY CLOSE: she stands at the opposite edge of ` +
-      `his table, barely an arm's length beyond the newspaper, leaning ` +
-      `slightly over the table toward him — close enough that a whisper ` +
-      `reaches. She is the ONLY person in the frame: this story has exactly ` +
-      `two children, and the boy is the camera, so besides his hands there ` +
-      `must be no other child or person anywhere. Her whispered word crosses ` +
-      `the paper — his fingers freeze ` +
-      `around the pen mid-turn; the newspaper lowers one centimeter, no more. ` +
-      `Camera fixed. Mood: "one word, and the pen forgets how to turn." ` +
-      `Audio: paper rustle, whisper, silence.`,
-  },
-  {
-    id: 'whisper-world',
-    scene: 'whisper',
-    viewpoint: 'WORLD',
-    status: 'GENERATED',
-    internalOmniPrompt:
-      `8-second video, 16:9. SCENE: THE WHISPER — THE WORLD'S VIEW. A calm ` +
-      `medium shot from the side of the clean table: the girl stands RIGHT AT ` +
-      `the table's edge, directly across from the boy, leaning slightly over ` +
-      `the table toward his raised newspaper — whisper-close, almost touching ` +
-      `distance. The red pen turns between them like the scene's small clock. ` +
-      `She says one soft word — the pen stops, drifting leaves seem to pause, ` +
-      `and the courtyard falls gently quiet all at once. Camera still. Mood: ` +
-      `"the world goes quiet for one small word." Audio: wind fading out, a ` +
-      `soft voice, calm.`,
-  },
-  // ---- Scene 3: The Green Glance ----
+  // ---- Scene 2: The Green Glance ----
   {
     id: 'glance-felicity',
     scene: 'glance',

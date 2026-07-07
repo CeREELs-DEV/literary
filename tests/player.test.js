@@ -71,9 +71,35 @@ describe('Matter of Perspective — books data', () => {
     }
   })
 
-  it('cuentista offers Camera plus the two character POVs across three beats', () => {
+  it('cuentista offers Bystander plus the two character POVs across three beats', () => {
     expect(BOOKS.cuentista.povs.map((p) => p.key)).toEqual(['wide', 'petra', 'javier'])
     expect(BOOKS.cuentista.beats).toHaveLength(3)
+  })
+
+  it('labels frame POVs as Bystander instead of Camera', () => {
+    for (const [key, book] of Object.entries(BOOKS)) {
+      const framePov = book.povs.find((pov) => pov.icon === 'frame')
+
+      expect(framePov, key).toBeTruthy()
+      expect(framePov.label, key).toBe('Bystander')
+      expect(book.povs.map((pov) => pov.label), key).not.toContain('Camera')
+    }
+  })
+
+  it('snicker merges the password line into the green glance beat', () => {
+    const snicker = BOOKS.snicker
+
+    expect(snicker.beats).toEqual([
+      { key: 'table', n: 'Beat 1', label: 'The clean table' },
+      { key: 'glance', n: 'Beat 2', label: 'The green glance' },
+    ])
+    expect(snicker.questions.map((q) => q.part)).toEqual(['Part 1', 'Part 2', 'Whole scene'])
+    expect(snicker.excerpt).not.toContain('Beat 3')
+    expect(snicker.excerpt).toContain('<span class="btag">Beat 2 &middot; The green glance</span>')
+    expect(snicker.excerpt).toContain('<p>"Pumpernickel?" I whispered.</p>')
+    expect(snicker.cells['world|whisper']).toBeUndefined()
+    expect(snicker.cells['felicity|whisper']).toBeUndefined()
+    expect(snicker.cells['jonah|whisper']).toBeUndefined()
   })
 
   it('every book fills its full povs x beats grid with a playable cell', () => {
@@ -97,7 +123,7 @@ describe('Matter of Perspective — books data', () => {
     }
   })
 
-  it('snicker plays the nine real films, and the assets exist on disk', () => {
+  it('snicker plays the six real films, and the assets exist on disk', () => {
     const snicker = BOOKS.snicker
     for (const pov of snicker.povs) {
       for (const beat of snicker.beats) {

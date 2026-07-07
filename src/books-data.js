@@ -21,27 +21,23 @@ snicker:{
   passage:'The Beedle', book:'A Snicker of Magic', author:'Natalie Lloyd', chap:'Chapter 5',
   setup:'On her first day at a new school, Felicity gets a note from the town\'s secret gift-giver, "the Beedle," asking to meet at a picnic table on the playground.',
   povInfo:'This story is written in <b>first person</b>. Felicity tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
-  povs:[{key:'world',label:'Camera',icon:'frame'},{key:'felicity',label:'Felicity',icon:'eye'},{key:'jonah',label:'The Beedle',icon:'eye'}],
-  beats:[{key:'table',n:'Beat 1',label:'The clean table'},{key:'whisper',n:'Beat 2',label:'The password'},{key:'glance',n:'Beat 3',label:'The green glance'}],
+  povs:[{key:'world',label:'Bystander',icon:'frame'},{key:'felicity',label:'Felicity',icon:'eye'},{key:'jonah',label:'The Beedle',icon:'eye'}],
+  beats:[{key:'table',n:'Beat 1',label:'The clean table'},{key:'glance',n:'Beat 2',label:'The green glance'}],
   questions:[
     {part:'Part 1',q:'What does Felicity notice about the boy at the table, and why is she surprised?',type:'open'},
     {part:'Part 2',q:'Tap the words that describe the boy\'s bright green eyes.',type:'find',need:1},
-    {part:'Part 3',q:'How does Felicity\'s point of view shape the way we understand this first meeting?',type:'open'},
+    {part:'Whole scene',q:'How does Felicity\'s point of view shape the way we understand this first meeting?',type:'open'},
   ],
   excerpt:`
    <div class="beatblock b1" data-beat="0"><span class="btag">Beat 1 &middot; The clean table</span>
     <p>But the boy sitting at the bird-poopless table looked &hellip; <i>normal</i>. He was reading the newspaper and twirling a red pen in his fingers. He had narrow shoulders and a head full of <span class="huntable" data-correct="0">messy-spiky blond hair that reminded me of a crown</span>. He didn't look at me.</p></div>
-   <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The password</span>
-    <p>"Pumpernickel?" I whispered.</p></div>
-   <div class="beatblock b3" data-beat="2"><span class="btag">Beat 3 &middot; The green glance</span>
+   <div class="beatblock b2" data-beat="1"><span class="btag">Beat 2 &middot; The green glance</span>
+    <p>"Pumpernickel?" I whispered.</p>
     <p>The boy glanced up then. His eyes were the greenest green I'd ever seen, <span class="huntable" data-correct="1">like somebody had taken a neon marker and colored them in</span> just before I walked up to him and called him a Beedle.</p></div>`,
   cells:{
    'world|table':{video:asset('curated/table-world.mp4'),poster:asset('curated/table-world.jpg'),notes:'The world keeps one table clean, and waits.'},
    'felicity|table':{video:asset('curated/table-felicity.mp4'),poster:asset('curated/table-felicity.jpg'),notes:"He looks so normal - so why can't I stop noticing him?"},
    'jonah|table':{video:asset('curated/table-jonah.mp4'),poster:asset('curated/table-jonah.jpg'),notes:"Don't look up. She's coming closer."},
-   'world|whisper':{video:asset('curated/whisper-world.mp4'),poster:asset('curated/whisper-world.jpg'),notes:'The whole courtyard holds its breath for one word.'},
-   'felicity|whisper':{video:asset('curated/whisper-felicity.mp4'),poster:asset('curated/whisper-felicity.jpg'),notes:"It's a silly word - but it's the right key."},
-   'jonah|whisper':{video:asset('curated/whisper-jonah.mp4'),poster:asset('curated/whisper-jonah.jpg'),notes:'One word, and the pen forgets how to turn.'},
    'world|glance':{video:asset('curated/glance-world.mp4'),poster:asset('curated/glance-world.jpg'),notes:'When he looks up, the world repaints its greens.'},
    'felicity|glance':{video:asset('curated/glance-felicity.mp4'),poster:asset('curated/glance-felicity.jpg'),notes:"His eyes are the greenest green I've ever seen."},
    'jonah|glance':{video:asset('curated/glance-jonah.mp4'),poster:asset('curated/glance-jonah.jpg'),notes:'She said the word. Now she gets the real me.'}
@@ -51,7 +47,7 @@ james:{
   passage:'Aren\u2019t you hungry?', book:'James and the Giant Peach', author:'Roald Dahl', chap:'Chapter 11',
   setup:'After climbing inside a giant, magical peach, James comes face to face with the enormous insects who live there.',
   povInfo:'This story is written in <b>third person omniscient</b>. A narrator outside the story tells it using "he" and "James," and can share what different characters are thinking and feeling.',
-  povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'james',label:"James",icon:'eye'},{key:'bugs',label:"The insects",icon:'eye'}],
+  povs:[{key:'wide',label:'Bystander',icon:'frame'},{key:'james',label:"James",icon:'eye'},{key:'bugs',label:"The insects",icon:'eye'}],
   beats:[{key:'b1',n:'Beat 1',label:'\u201cI\u2019m hungry!\u201d'},{key:'b2',n:'Beat 2',label:'One of us'}],
   questions:[
     {part:'Part 1',q:'Why does James think the creatures want to eat him? Tap the clues in the text — find at least 3.',type:'find',need:3},
@@ -91,7 +87,7 @@ cuentista:{
   passage:'Leaving Earth', book:'The Last Cuentista', author:'Donna Barba Higuera', chap:'Chapter 2',
   setup:'A comet is about to destroy Earth. Petra\u2019s family is among the few chosen to leave on a spaceship, and they hike through the forest to reach it with her little brother, Javier.',
   povInfo:'This story is written in <b>first person</b>. Petra tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
-  povs:[{key:'wide',label:'Camera',icon:'frame'},{key:'petra',label:"Petra",icon:'eye'},{key:'javier',label:"Javier",icon:'eye'}],
+  povs:[{key:'wide',label:'Bystander',icon:'frame'},{key:'petra',label:"Petra",icon:'eye'},{key:'javier',label:"Javier",icon:'eye'}],
   beats:[{key:'b1',n:'Beat 1',label:'The ship'},{key:'b2',n:'Beat 2',label:'The memory'},{key:'b3',n:'Beat 3',label:'The march'}],
   questions:[
     {part:'Part 1',q:'How does Petra feel about leaving Earth, and how does she act in front of her little brother Javier? Why might those be different?',type:'open'},

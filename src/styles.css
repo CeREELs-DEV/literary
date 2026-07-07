@@ -66,10 +66,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .cbtn svg{width:18px;height:18px}
 .cbtn .ccount{font-size:13px;font-weight:900;letter-spacing:0;background:none;padding:0;color:inherit}
 .pollopts{display:flex;flex-direction:column;gap:8px}
-.pollopt{display:flex;align-items:center;gap:11px;text-align:left;padding:12px 14px;border-radius:11px;border:1.5px solid rgba(58,48,112,.18);background:#FBF9F4;font-size:13.5px;font-weight:800;color:#4A4453;cursor:pointer;transition:.14s}
+.pollopt{display:flex;align-items:center;gap:11px;text-align:left;padding:8px 14px 8px 8px;border-radius:11px;border:1.5px solid rgba(58,48,112,.18);background:#FBF9F4;font-size:13.5px;font-weight:800;color:#4A4453;cursor:pointer;transition:.14s}
 .pollopt:hover{border-color:var(--vio);background:rgba(106,76,224,.06);transform:translateY(-1px)}
+.pollthumb{flex-shrink:0;width:88px;height:88px;border-radius:8px;overflow:hidden;background:#F0EBDF;display:flex;align-items:center;justify-content:center}
+.pollthumb img{width:100%;height:100%;object-fit:contain;display:block}
 .poplabel{flex:1}
-.pollbar{position:relative;overflow:hidden;padding:12px 14px;border-radius:11px;border:1.5px solid rgba(58,48,112,.12);background:#F4F1EA;cursor:pointer;display:flex;align-items:center;gap:11px}
+.pollbar{position:relative;overflow:hidden;padding:8px 14px 8px 8px;border-radius:11px;border:1.5px solid rgba(58,48,112,.12);background:#F4F1EA;cursor:pointer;display:flex;align-items:center;gap:11px}
 .pbfill{position:absolute;left:0;top:0;bottom:0;background:rgba(106,76,224,.16);width:0;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .pollbar.mine{border-color:rgba(106,76,224,.5)}
 .pollbar.mine .pbfill{background:rgba(106,76,224,.28)}

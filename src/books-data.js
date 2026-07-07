@@ -15,6 +15,8 @@ import {
 
 const PUBLIC_BASE = import.meta.env?.BASE_URL || './public/'
 const asset = (path) => `${PUBLIC_BASE.replace(/\/?$/, '/')}${path.replace(/^\//, '')}`
+const pollThumbs = (book, count, ext = 'png') =>
+  Array.from({ length: count }, (_, index) => asset(`poll/${book}-${index}.${ext}`))
 
 const BOOK_DEFINITIONS = {
 snicker:{
@@ -22,7 +24,7 @@ snicker:{
   setup:'On her first day at a new school, Felicity gets a note from the town\'s secret gift-giver, "the Beedle," asking to meet at a picnic table on the playground.',
   povInfo:'This story is written in <b>first person</b>. Felicity tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
   think:'How does point of view help us understand characters and themes?',
-  poll:{q:'When you meet someone new, what do you notice first?',options:['Face','Hair','Clothes','Body','Vibe'],votes:[34,22,18,9,41]},
+  poll:{q:'When you meet someone new, what do you notice first?',options:['Face','Hair','Clothes','Body','Vibe'],votes:[34,22,18,9,41],thumbs:pollThumbs('snicker',5),thumbBg:['#FCF5E8','#F6E1BA','#FBE8C0','#F4E4C3','#C19A6A'],thumbFit:['contain','contain','contain','contain','cover']},
   comments:[
     {n:'Maya',t:'the vibe for sure. you just get a feeling before you even really look'},
     {n:'Deon',t:'Felicity noticed his messy blond hair first! it reminded her of a crown'},
@@ -56,7 +58,7 @@ james:{
   setup:'After climbing inside a giant, magical peach, James comes face to face with the enormous insects who live there.',
   povInfo:'This story is written in <b>third person omniscient</b>. A narrator outside the story tells it using "he" and "James," and can share what different characters are thinking and feeling.',
   think:'How can a different point of view change the meaning of a story?',
-  poll:{q:'Which giant insect would scare you the most?',options:['Spider','Grasshopper','Ladybug','Centipede'],votes:[54,15,10,21]},
+  poll:{q:'Which giant insect would scare you the most?',options:['Spider','Grasshopper','Ladybug','Centipede'],votes:[54,15,10,21],thumbs:pollThumbs('james',4),thumbBg:['#FFFFFF','#FFFFFF','#FFFFFF','#FFFFFF']},
   comments:[
     {n:'Aisha',t:'the Spider, easy. she LICKED HER LIPS looking at him 😭'},
     {n:'Marcus',t:'a grasshopper as big as a dog?? imagine that thing jumping at you'},
@@ -99,7 +101,7 @@ cuentista:{
   setup:'A comet is about to destroy Earth. Petra\u2019s family is among the few chosen to leave on a spaceship, and they hike through the forest to reach it with her little brother, Javier.',
   povInfo:'This story is written in <b>first person</b>. Petra tells it herself, using "I," so the reader sees everything through her thoughts and feelings.',
   think:'Why is it important to see a story through different points of view?',
-  poll:{q:'The last ships are leaving a dying Earth — but you’d have to leave everyone you love behind. What do you do?',options:['Get on the ship and survive','Stay behind with the people you love','Sabotage the ships so nobody can leave 😈'],votes:[38,44,18]},
+  poll:{q:'The last ships are leaving a dying Earth — but you’d have to leave everyone you love behind. What do you do?',options:['Get on the ship and survive','Stay behind with the people you love','Sabotage the ships so nobody can leave 😈'],votes:[38,44,18],thumbs:pollThumbs('cuentista',3,'jpg')},
   comments:[
     {n:'Camila',t:'i could never leave my family. i’d stay, no question'},
     {n:'Ben',t:'staying just means you die too though. someone has to live and remember them'},

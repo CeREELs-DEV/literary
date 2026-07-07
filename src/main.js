@@ -295,6 +295,21 @@ function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+function attr(s) {
+  return esc(String(s)).replace(/"/g, '&quot;')
+}
+
+function renderPollThumb(poll, i) {
+  const src = poll.thumbs?.[i]
+  if (!src) return ''
+
+  const bg = poll.thumbBg?.[i]
+  const fit = poll.thumbFit?.[i]
+  const thumbStyle = bg ? ` style="background:${attr(bg)}"` : ''
+  const imageStyle = fit ? ` style="object-fit:${attr(fit)}"` : ''
+  return `<span class="pollthumb"${thumbStyle}><img src="${attr(src)}" alt=""${imageStyle}></span>`
+}
+
 function pState() {
   if (!pollState[bookKey]) {
     pollState[bookKey] = { voted: null, votes: B().poll.votes.slice() }
@@ -325,11 +340,16 @@ function renderPoll() {
   const ps = pState()
   const cs = cState()
   const total = ps.votes.reduce((sum, vote) => sum + vote, 0)
+  const thumb = (i) => renderPollThumb(b.poll, i)
   let options
 
   if (ps.voted === null) {
     options = b.poll.options
-      .map((option, i) => `<button class="pollopt" data-i="${i}"><span class="poplabel">${esc(option)}</span></button>`)
+      .map(
+        (option, i) =>
+          `<button class="pollopt" data-i="${i}">` +
+          `${thumb(i)}<span class="poplabel">${esc(option)}</span></button>`,
+      )
       .join('')
   } else {
     options = b.poll.options
@@ -338,6 +358,7 @@ function renderPoll() {
         return (
           `<div class="pollbar${i === ps.voted ? ' mine' : ''}" data-i="${i}">` +
           `<div class="pbfill" style="width:${pct}%"></div>` +
+          thumb(i) +
           `<span class="pblabel">${esc(option)}${i === ps.voted ? ' <span class="pbyou">✓ you</span>' : ''}</span>` +
           `<span class="pbpct">${pct}%</span></div>`
         )

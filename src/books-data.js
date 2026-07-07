@@ -149,7 +149,7 @@ cuentista:{
 };
 
 export const BOOKS = {
-  james: BOOK_DEFINITIONS.james,
   snicker: BOOK_DEFINITIONS.snicker,
   cuentista: BOOK_DEFINITIONS.cuentista,
+  james: BOOK_DEFINITIONS.james,
 };

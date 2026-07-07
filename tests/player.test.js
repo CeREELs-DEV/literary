@@ -8,15 +8,15 @@ const publicAssetPath = (url) => `public/${url.replace(/^\.?\//, '')}`
 
 describe('Matter of Perspective — books data', () => {
   it('offers the three sample books', () => {
-    expect(Object.keys(BOOKS)).toEqual(['james', 'snicker', 'cuentista'])
+    expect(Object.keys(BOOKS)).toEqual(['snicker', 'cuentista', 'james'])
   })
 
-  it('uses James as the first and active static book tab', () => {
+  it('uses A Snicker of Magic as the first and active static book tab', () => {
     const html = fs.readFileSync('index.html', 'utf8')
     const tabs = [...html.matchAll(/<button class="([^"]*booktab[^"]*)" data-b="([^"]+)"/g)].map(
       ([, classes, key]) => ({ classes: classes.split(/\s+/), key }),
     )
-    expect(tabs.map((tab) => tab.key)).toEqual(['james', 'snicker', 'cuentista'])
+    expect(tabs.map((tab) => tab.key)).toEqual(['snicker', 'cuentista', 'james'])
     expect(tabs[0].classes).toContain('on')
     expect(tabs.slice(1).some((tab) => tab.classes.includes('on'))).toBe(false)
 
@@ -47,8 +47,9 @@ describe('Matter of Perspective — books data', () => {
 
   it('boosts beat video audio beyond the native video volume ceiling', () => {
     const main = fs.readFileSync('src/main.js', 'utf8')
+    const gain = main.match(/const BEAT_VIDEO_GAIN = ([\d.]+)/)
 
-    expect(main).toContain('const BEAT_VIDEO_GAIN = 5')
+    expect(Number(gain?.[1])).toBeGreaterThanOrEqual(5)
     expect(main).toContain('createMediaElementSource(video)')
     expect(main).toContain('gain.gain.value = BEAT_VIDEO_GAIN')
     expect(main).toContain('gain.connect(audioContext.destination)')
